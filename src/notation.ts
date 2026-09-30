@@ -1,15 +1,24 @@
 import {
   MAX_DICE,
   MAX_EXPLODING_SIDES,
+  MAX_FACES,
+  MAX_FACE_VALUE,
   MAX_GROUPS,
+  MAX_LABEL,
+  MAX_LOADED_SIDES,
   MAX_MODIFIER,
   MAX_REROLLS,
   MAX_SIDES,
+  MAX_WEIGHT,
   MIN_DICE,
   MIN_SIDES,
+  customFaces,
+  dieName,
   faceRange,
   groupsOf,
+  loadedWeights,
   normalizeSpec,
+  type CustomFace,
   type DiceGroup,
   type Keep,
   type RollSpec,
@@ -23,6 +32,9 @@ import {
  *   dice     = [count] "d" sides { modifier }
  *   count    = 1 to 10 over the whole roll, and 1 when left out
  *   sides    = 2 to 1000, "%" for 100, or "F" for a Fate die
+ *            | number "{" face ":" weight { "," face ":" weight } "}"    a loaded die
+ *            | "[" face { "," face } "]"                                a custom die
+ *   face     = words [ "=" value ] [ "#" colour ]    in a custom die; a number alone is worth itself
  *   modifier = "!"                          the dice explode
  *            | "r<" face | "r<=" face       reroll until clear of a face
  *            | "ro<" face | "ro<=" face     reroll once below (or at) a face
@@ -36,6 +48,13 @@ import {
  * most once; whatever order they are written in, a die is rerolled first,
  * then explodes, and keeping or dropping is decided last. Exploding dice are
  * not kept or dropped.
+ *
+ * A loaded die is a numbered die with some faces weighted: `d6{6:3}` shows
+ * its 6 three times in eight, and every face not named weighs 1. A custom die
+ * is its faces: `d[Yes,No,Maybe]`, `d[Hit=1,Miss=0,Miss=0]`, and a face
+ * written twice comes up twice as often. Neither can be written, read or
+ * shared as a fair die: the braces and the brackets are part of its name.
+ * A custom die takes no modifiers.
  *
  * `r` follows Roll20 and the dice libraries that follow it: it rerolls until
  * the die is clear, and `ro` rerolls once. Until 1.4.0 this package's `r`
@@ -62,7 +81,11 @@ export type NotationProblem =
   /** More than four kinds of dice in one roll. */
   | "kinds"
   /** Dice taken away: only the bonus can be subtracted. */
-  | "minus";
+  | "minus"
+  /** A custom die whose faces cannot be read, or one given modifiers. */
+  | "custom"
+  /** A loaded die whose weights cannot be read: a face the die does not have, a weight past 99, fewer than two faces that can come up, a die too large to load, or weights that are all the same. */
+  | "weights";
 
 /** What `checkNotation` found: the spec, or the part it refused and why. */
 export type NotationCheck =
@@ -82,13 +105,13 @@ export type NotationOptions = {
   legacyReroll?: boolean;
 };
 
-const HEAD = /^\s*(\d*)\s*d\s*(\d+|%|f)/i;
+const HEAD = /^\s*(\d*)\s*d\s*(\d+|%|f|\[[^\]]*\])(\s*\{[^}]*\})?/i;
 const MODIFIER = /^\s*(?:(!)|(ro?)\s*(<=|<)\s*(\d+)|([kd])\s*([hl])\s*(\d*))/i;
 const BONUS = /^\s*([+-])\s*(\d+)\s*$/;
 /** Another kind of dice coming: a sign, then dice and not a bare number. */
-const MORE = /^\s*([+-])\s*(?=\d*\s*d\s*(?:\d|%|f))/i;
-/** Nothing a person types by hand is longer, and nothing longer is read. */
-const LONGEST = 64;
+const MORE = /^\s*([+-])\s*(?=\d*\s*d\s*(?:\d|%|f|\[))/i;
+/** Nothing a person types by hand is longer, and nothing longer is read. Custom dice are what need the room. */
+const LONGEST = 400;
 
 const REASONS: Record<NotationProblem, string> = {
   shape: "this is not dice notation",
@@ -101,7 +124,41 @@ const REASONS: Record<NotationProblem, string> = {
   explode: `dice explode only with ${MAX_EXPLODING_SIDES} sides or fewer, never Fate dice, and not together with keep or drop`,
   kinds: `a roll has at most ${MAX_GROUPS} kinds of dice`,
   minus: "dice are added together; only the bonus can be taken away",
+  custom: `a custom die has 2 to ${MAX_FACES} faces, each up to ${MAX_LABEL} characters with an optional =value (a whole number up to ${MAX_FACE_VALUE} either way) and #colour, and takes no modifiers`,
+  weights: `a loaded die has up to ${MAX_LOADED_SIDES} sides, and names faces it has with weights from 0 to ${MAX_WEIGHT} that are not all the same, leaving at least two faces that can come up`,
 };
+
+/** A custom die's faces from the text between its brackets, or null when a face cannot be read. */
+function readFaces(text: string): CustomFace[] | null {
+  const faces = text.split(",").map((part): CustomFace | null => {
+    const face = /^([^=#]*?)(?:=\s*(-?\d+))?\s*(#[0-9a-fA-F]{3,6})?$/.exec(part.trim());
+    if (face === null) return null;
+    const label = (face[1] as string).trim();
+    const made: CustomFace = { label };
+    // A number on its own is worth itself: d[1,1,2,3,5,8].
+    if (face[2] !== undefined) made.value = Number(face[2]);
+    else if (/^-?\d+$/.test(label)) made.value = Number(label);
+    if (face[3] !== undefined) made.colour = face[3];
+    return made;
+  });
+  return faces.includes(null) ? null : (customFaces(faces) ?? null);
+}
+
+/** A loaded die's weights from the text between its braces: one for every face, 1 where a face is not named. Null when they cannot be read. */
+function readWeights(sides: Sides, text: string): number[] | null {
+  if (sides === "F" || sides > MAX_LOADED_SIDES) return null;
+  const weights = new Array<number>(sides).fill(1);
+  const named = new Set<number>();
+  for (const part of text.split(",")) {
+    const pair = /^\s*(\d+)\s*:\s*(\d+)\s*$/.exec(part);
+    if (pair === null) return null;
+    const face = Number(pair[1]);
+    if (face < 1 || face > sides || named.has(face)) return null;
+    named.add(face);
+    weights[face - 1] = Number(pair[2]);
+  }
+  return loadedWeights(sides, weights) ?? null;
+}
 
 function refuse(problem: NotationProblem, part: string): NotationCheck {
   const shown = part.trim();
@@ -115,9 +172,24 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
   const [whole, countText, sidesText] = head as unknown as [string, string, string];
   const count = countText === "" ? 1 : Number(countText);
   if (count < MIN_DICE || count > MAX_DICE) return refuse("count", countText);
+  if (sidesText.startsWith("[")) {
+    // A custom die: its faces, and nothing after them but the next kind or the bonus.
+    const faces = readFaces(sidesText.slice(1, -1));
+    if (faces === null || head[3] !== undefined) return refuse("custom", `d${sidesText}${head[3] ?? ""}`);
+    const after = text.slice(whole.length);
+    const modifier = MODIFIER.exec(after);
+    if (modifier !== null) return refuse("custom", modifier[0]);
+    return { group: { count, sides: faces.length, keep: "all", faces }, rest: after, countText };
+  }
   const sides: Sides = sidesText === "%" ? 100 : sidesText.toLowerCase() === "f" ? "F" : Number(sidesText);
   if (sides !== "F" && (sides < MIN_SIDES || sides > MAX_SIDES)) return refuse("sides", `d${sidesText}`);
   const { low, high } = faceRange(sides);
+  let weights: number[] | undefined;
+  if (head[3] !== undefined) {
+    const read = readWeights(sides, head[3].trim().slice(1, -1));
+    if (read === null) return refuse("weights", `d${sidesText}${head[3]}`);
+    weights = read;
+  }
 
   let rest = text.slice(whole.length);
   let explode: string | null = null;
@@ -160,6 +232,7 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
   const group: Partial<DiceGroup> & { count: number } = { count, sides, keep, keepCount };
   if (explode !== null) group.explode = true;
   if (reroll !== undefined) group[until ? "rerollUntil" : "reroll"] = reroll;
+  if (weights !== undefined) group.weights = weights;
   return { group, rest, countText };
 }
 
@@ -206,7 +279,7 @@ function formatGroup(group: DiceGroup): string {
   const explode = group.explode === true ? "!" : "";
   const reroll = group.rerollUntil !== undefined ? `r<${group.rerollUntil + 1}` : group.reroll !== undefined ? `ro<${group.reroll + 1}` : "";
   const keep = group.keep === "all" ? "" : `${group.keep === "highest" ? "kh" : "kl"}${group.keepCount ?? 1}`;
-  return `${group.count}d${group.sides}${explode}${reroll}${keep}`;
+  return `${group.count}${dieName(group)}${explode}${reroll}${keep}`;
 }
 
 /**

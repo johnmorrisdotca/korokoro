@@ -46,6 +46,40 @@ export type RollerStrings = {
   heldBadge: string;
   releaseAll: string;
   oddsHolding: string;
+  notationCustom: string;
+  notationWeights: string;
+  dieLoaded: string;
+  loadedBadge: string;
+  result: string;
+  moreDice: string;
+  customTitle: string;
+  customHint: string;
+  customAdd: string;
+  loadedTitle: string;
+  loadedNote: string;
+  loadedOptimist: string;
+  loadedOptimistSays: string;
+  loadedFlat: string;
+  loadedFlatSays: string;
+  loadedOddCouple: string;
+  loadedOddCoupleSays: string;
+  oddsLoaded: string;
+  oddsLoadedMixed: string;
+  oddsFaces: string;
+  setsTitle: string;
+  setName: string;
+  setSave: string;
+  setNone: string;
+  setRoll: string;
+  setDelete: string;
+  setCopy: string;
+  fairnessLopsided: string;
+  fairnessCount: string;
+  testTitle: string;
+  testHint: string;
+  testSides: string;
+  testBad: string;
+  language: string;
   tapToRoll: string;
   tapAgain: string;
   rollLabel: string;
@@ -141,6 +175,40 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     heldBadge: "{n} held",
     releaseAll: "Release all",
     oddsHolding: "{n} held, {notation} still to roll",
+    notationCustom: "“{part}”: a custom die has 2 to 20 faces of up to 16 characters, each with an optional =value and #colour, and takes no modifiers",
+    notationWeights: "“{part}”: a loaded die has up to 100 sides and weights from 0 to 99 that are not all the same, with at least two faces that can come up",
+    dieLoaded: "loaded",
+    loadedBadge: "Loaded dice",
+    result: "Result",
+    moreDice: "Custom dice, loaded dice and sets",
+    customTitle: "Make a die",
+    customHint: "Its faces, with commas between: Yes, No, Maybe",
+    customAdd: "Add it to the roll",
+    loadedTitle: "Loaded dice",
+    loadedNote: "The buttons above roll fair dice. These do not, and they say so: a loaded die is marked on the felt, in the history and in any link to it.",
+    loadedOptimist: "The Optimist",
+    loadedOptimistSays: "A die weighted towards its six, which it shows three times in eight. It believes in you more than the odds do.",
+    loadedFlat: "The Six-Ace Flat",
+    loadedFlatSays: "Shaved a little thin between the 1 and the 6, so those two faces land twice as often as the rest. The oldest job a file ever did.",
+    loadedOddCouple: "The Odd Couple",
+    loadedOddCoupleSays: "Two dice with no even faces. Between them they have never made a seven, and they are not going to start now.",
+    oddsLoaded: "Loaded: {face} comes up {a} in {b}, not {c} in {d}. The marks are the fair die.",
+    oddsLoadedMixed: "Loaded dice. The marks are the same roll with fair dice.",
+    oddsFaces: "Each face of {die}",
+    setsTitle: "Sets",
+    setName: "A name for this roll",
+    setSave: "Save",
+    setNone: "No sets saved yet. Name the roll above to keep it on this device.",
+    setRoll: "Use {name}: {notation}",
+    setDelete: "Delete {name}",
+    setCopy: "Copy a link to {name}",
+    fairnessLopsided: "A fair die would give results this lopsided about 1 time in {odds}. This die has some explaining to do.",
+    fairnessCount: "{n} of {min} throws so far.",
+    testTitle: "Test a real die",
+    testHint: "Type or paste what it rolled: 3 5 6 6 1 …",
+    testSides: "Sides",
+    testBad: "“{part}” is not a face of this die",
+    language: "Language",
     tapToRoll: "Tap anywhere to roll",
     tapAgain: "Tap to roll again",
     rollLabel: "Roll {notation}",
@@ -233,6 +301,40 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     heldBadge: "{n} 個ホールド",
     releaseAll: "すべて解除",
     oddsHolding: "{n} 個ホールド、残りは {notation}",
+    notationCustom: "「{part}」: カスタムダイスは2〜20面、各面16文字まで（=数値と#色は任意）です。修飾は付けられません",
+    notationWeights: "「{part}」: イカサマダイスは100面まで、重みは0〜99です。すべて同じ重みにはできず、出る面が2つ以上必要です",
+    dieLoaded: "イカサマ",
+    loadedBadge: "イカサマダイス",
+    result: "結果",
+    moreDice: "カスタムダイス・イカサマダイス・セット",
+    customTitle: "ダイスを作る",
+    customHint: "面をカンマで区切って入力: はい, いいえ, たぶん",
+    customAdd: "ロールに追加",
+    loadedTitle: "イカサマダイス",
+    loadedNote: "上のボタンは公平なダイスを振ります。こちらは公平ではなく、そのことを必ず表示します。フェルト、履歴、リンクのすべてに印が付きます。",
+    loadedOptimist: "楽天家",
+    loadedOptimistSays: "6に重みを付けたダイスです。8回に3回は6が出ます。確率よりも、あなたを信じています。",
+    loadedFlat: "シックス・エース・フラット",
+    loadedFlatSays: "1と6の面の間を少し薄く削ったダイスです。この2つの面が、ほかの面の2倍出ます。やすりの最も古い仕事です。",
+    loadedOddCouple: "奇数のふたり",
+    loadedOddCoupleSays: "偶数の面がないダイスが2個。合計が7になったことは一度もなく、これからもありません。",
+    oddsLoaded: "イカサマ: {face} は {b} 回に {a} 回出ます（公平なら {d} 回に {c} 回）。印は公平なダイスです。",
+    oddsLoadedMixed: "イカサマダイスです。印は同じロールを公平なダイスで振った場合です。",
+    oddsFaces: "{die} の各面",
+    setsTitle: "セット",
+    setName: "このロールの名前",
+    setSave: "保存",
+    setNone: "保存したセットはまだありません。上でロールに名前を付けると、この端末に保存されます。",
+    setRoll: "{name} を使う: {notation}",
+    setDelete: "{name} を削除",
+    setCopy: "{name} のリンクをコピー",
+    fairnessLopsided: "公平なダイスでここまで偏るのは、およそ {odds} 回に1回です。このダイスには説明が必要です。",
+    fairnessCount: "現在 {n} 回（{min} 回必要）。",
+    testTitle: "本物のダイスを検定",
+    testHint: "出目を入力または貼り付け: 3 5 6 6 1 …",
+    testSides: "面数",
+    testBad: "「{part}」はこのダイスの面ではありません",
+    language: "言語",
     tapToRoll: "どこでもタップして振る",
     tapAgain: "タップしてもう一度",
     rollLabel: "{notation} を振る",

@@ -24,6 +24,9 @@ export const CSS = `
 }
 .kk-root *, .kk-root *::before, .kk-root *::after { box-sizing: border-box; }
 .kk-root button { font: inherit; color: inherit; cursor: pointer; }
+/* Long notation, a custom die's faces above all, wraps where it must and never widens the page. */
+.kk-root > *, .kk-controls > *, .kk-panel > *, .kk-result > * { min-width: 0; max-width: 100%; }
+.kk-total small, .kk-sum, .kk-chart h4, .kk-chart p, .kk-history code, .kk-settings summary, .kk-error { overflow-wrap: anywhere; }
 .kk-root button:focus-visible, .kk-root input:focus-visible, .kk-tray:focus-visible { outline: 3px solid var(--kk-accent); outline-offset: 2px; }
 
 .kk-controls { display: grid; gap: 10px; }
@@ -100,6 +103,11 @@ export const CSS = `
 .kk-pip-one { fill: var(--kk-pip-one); }
 .kk-number { fill: var(--kk-die-ink); paint-order: stroke; stroke: var(--kk-die); stroke-width: 7px; stroke-linejoin: round; font-weight: 800; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 .kk-underline { fill: var(--kk-die-ink); }
+.kk-word { fill: var(--kk-die-ink); font-weight: 800; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+/* A loaded die's mark: a weight on a red disc in its corner, at every size. */
+.kk-loaded circle { fill: var(--kk-bad); stroke: var(--kk-die); stroke-width: 2; }
+.kk-loaded path { fill: #fff; }
+.kk-loaded .kk-loaded-ring { fill: none; stroke: #fff; stroke-width: 2.4; }
 .kk-caption { fill: var(--kk-die-ink); opacity: .6; font-weight: 700; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 /* A die that can be held is a button over the felt; the rest let a tap through to it. */
 button.kk-die { pointer-events: auto; border-radius: 18%; }
@@ -187,6 +195,28 @@ button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: 
 .kk-big { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .kk-settings { display: grid; gap: 8px; font-size: .85rem; }
 .kk-settings p { margin: 0; color: var(--kk-muted); }
+.kk-settings summary { min-height: 44px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.kk-settings summary::before { content: "▸"; }
+.kk-settings[open] > summary::before { content: "▾"; }
+.kk-settings summary::-webkit-details-marker { display: none; }
+.kk-settings summary { list-style: none; }
+.kk-more section { display: grid; gap: 8px; padding: 4px 0 10px; }
+.kk-more h4, .kk-chart h4 { margin: 0; font-size: .85rem; font-weight: 600; }
+.kk-more .kk-row .kk-field { flex: 1 1 12rem; }
+.kk-presets { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; }
+.kk-preset { text-align: left; border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 12px; padding: 10px 12px; display: grid; gap: 3px; min-height: 44px; }
+.kk-preset code, .kk-set-use code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .8rem; color: var(--kk-muted); }
+.kk-preset span { color: var(--kk-muted); font-size: .8rem; }
+.kk-preset:hover, .kk-set-use:hover { border-color: var(--kk-ink); }
+.kk-sets { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.kk-sets li { display: flex; gap: 6px; align-items: center; }
+.kk-set-use { flex: 1 1 auto; min-width: 0; min-height: 44px; text-align: left; border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 12px; padding: 4px 12px; display: grid; }
+.kk-set-use code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kk-sets .kk-link { min-width: 44px; flex: 0 0 auto; }
+.kk-results { flex: 1 1 12rem; padding: 8px 10px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.kk-axis-words span { flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kk-words { font-size: clamp(1.5rem, 7vw, 2.6rem); letter-spacing: 0; overflow-wrap: anywhere; }
+.kk-history .kk-mini span[data-loaded="true"] { border-style: dashed; border-color: var(--kk-bad); }
 .kk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (min-width: 900px) {
   .kk-root[data-wide="true"] { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }

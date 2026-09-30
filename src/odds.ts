@@ -1,4 +1,4 @@
-import { MAX_EXPLOSIONS, MAX_REROLLS, canHold, faceRange, groupsOf, keptCount, rangeOf, type DiceGroup, type RollSpec } from "./dice.ts";
+import { MAX_EXPLOSIONS, MAX_REROLLS, canHold, chancesOf, dieName, faceRange, groupsOf, keptCount, rangeOf, valueOfFace, type DiceGroup, type RollSpec } from "./dice.ts";
 
 /**
  * Exact odds for a spec, worked out rather than simulated: every total the
@@ -81,13 +81,16 @@ function share(count: bigint, outcomes: bigint): number {
  * clear, the die is thrown again up to `MAX_REROLLS` times, and a low face
  * stands only if the last of those throws shows one.
  */
-function standingFace(faces: number, rerolled: number, until: boolean): number[] {
-  const again = rerolled / faces;
-  if (!until) return Array.from({ length: faces }, (_, i) => (i < rerolled ? 0 : 1 / faces) + again / faces);
+function standingFace(chances: number[], rerolled: number, until: boolean): number[] {
+  if (rerolled === 0) return chances;
+  // The chance one throw shows a face that is thrown again.
+  let again = 0;
+  for (let i = 0; i < rerolled; i++) again += chances[i] as number;
+  if (!until) return chances.map((p, i) => (i < rerolled ? 0 : p) + again * p);
   const stuck = again ** MAX_REROLLS;
   // A high face stands on the first throw, or the second, and so on: 1 + again + … + again^MAX_REROLLS throws of it.
-  const high = (1 - again * stuck) / (1 - again) / faces;
-  return Array.from({ length: faces }, (_, i) => (i < rerolled ? stuck / faces : high));
+  const throws = (1 - again * stuck) / (1 - again);
+  return chances.map((p, i) => (i < rerolled ? stuck * p : throws * p));
 }
 
 /**
@@ -172,59 +175,136 @@ function sumOfHighest(die: number[], count: number, keep: number): number[] {
   return out;
 }
 
-/** The counts for one kind of dice whose outcomes are equally likely and quick to count, or null for the rest. */
-function waysOf(group: DiceGroup): bigint[] | null {
-  if (group.reroll !== undefined || group.rerollUntil !== undefined || group.explode === true) return null;
-  const { low, high } = faceRange(group.sides);
-  const faces = high - low + 1;
-  if (group.keep === "all") return waysToSum(group.count, faces);
-  if (keptCount(group) === 1) return waysToKeepOne(group.count, faces, group.keep === "highest");
-  return null;
+/** Whether every face of a group's die is as likely as the next and worth its own number: a fair numbered die or a Fate die. */
+function plain(group: DiceGroup): boolean {
+  return group.weights === undefined && group.faces === undefined;
 }
 
-function outcomesOf(group: DiceGroup): bigint {
-  const { low, high } = faceRange(group.sides);
-  return BigInt(high - low + 1) ** BigInt(group.count);
+/**
+ * One die of a group as whole numbers: how many of its equally likely
+ * outcomes are worth each amount, from the least any face is worth. A fair
+ * die has one outcome a face; a loaded die has as many as the face weighs; a
+ * custom die has one for each time a face is written.
+ */
+function outcomesOfDie(group: DiceGroup): { least: number; ways: bigint[] } {
+  const low = group.faces !== undefined ? 1 : faceRange(group.sides).low;
+  const count = group.faces !== undefined ? group.faces.length : faceRange(group.sides).high - low + 1;
+  const worth = Array.from({ length: count }, (_, i) => valueOfFace(group, low + i));
+  const least = Math.min(...worth);
+  const ways = new Array<bigint>(Math.max(...worth) - least + 1).fill(0n);
+  worth.forEach((value, i) => (ways[value - least] = (ways[value - least] as bigint) + BigInt(group.weights?.[i] ?? 1)));
+  return { least, ways };
 }
 
-/** Past this many pairs of totals, several kinds of dice are put together as probabilities and not as whole numbers. */
+/** The least one die of a group can be worth, over every face it has, whether or not the face can come up. */
+function leastOf(group: DiceGroup): number {
+  return outcomesOfDie(group).least;
+}
+
+/** Past this many pairs of totals, dice are put together as probabilities and not as whole numbers. */
 const MOST_EXACT_PAIRS = 400_000;
+
+function multiply(a: bigint[], b: bigint[]): bigint[] {
+  const out = new Array<bigint>(a.length + b.length - 1).fill(0n);
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === 0n) continue;
+    for (let j = 0; j < b.length; j++) out[i + j] = (out[i + j] as bigint) + (a[i] as bigint) * (b[j] as bigint);
+  }
+  return out;
+}
+
+/**
+ * The counts for one kind of dice whose outcomes can be counted quickly, with
+ * how many outcomes there are, or null for the rest. Index 0 is the kept dice
+ * at their least.
+ */
+function waysOf(group: DiceGroup): { ways: bigint[]; outcomes: bigint } | null {
+  if (group.reroll !== undefined || group.rerollUntil !== undefined || group.explode === true) return null;
+  const kept = keptCount(group);
+  if (group.keep !== "all" && kept !== 1) return null;
+  if (plain(group)) {
+    const { low, high } = faceRange(group.sides);
+    const faces = high - low + 1;
+    const outcomes = BigInt(faces) ** BigInt(group.count);
+    return { ways: group.keep === "all" ? waysToSum(group.count, faces) : waysToKeepOne(group.count, faces, group.keep === "highest"), outcomes };
+  }
+  // A loaded or custom die: the same counting, with each face standing for as many outcomes as it weighs.
+  const die = outcomesOfDie(group).ways;
+  const each = die.reduce((a, b) => a + b, 0n);
+  const outcomes = each ** BigInt(group.count);
+  if (group.keep === "all") {
+    let ways = die;
+    for (let d = 1; d < group.count; d++) {
+      if (ways.length * die.length > MOST_EXACT_PAIRS) return null;
+      ways = multiply(ways, die);
+    }
+    return { ways, outcomes };
+  }
+  // One kept: the highest is at most a value when every die is, counted by the outcomes at or below it.
+  const n = BigInt(group.count);
+  const order = group.keep === "highest" ? die : [...die].reverse();
+  let below = 0n;
+  const ways = order.map((w) => {
+    const upTo = below + w;
+    const made = upTo ** n - below ** n;
+    below = upTo;
+    return made;
+  });
+  return { ways: group.keep === "highest" ? ways : ways.reverse(), outcomes };
+}
+
+/** A distribution with the totals that cannot happen taken off its ends: a loaded die's weightless faces leave some. */
+function trimmed<T extends number | bigint>(min: number, values: T[]): { min: number; values: T[] } {
+  let from = 0;
+  let to = values.length;
+  while (from < to - 1 && Number(values[from]) === 0) from += 1;
+  while (to > from + 1 && Number(values[to - 1]) === 0) to -= 1;
+  return { min: min + from, values: values.slice(from, to) };
+}
+
+/** The least total a spec could make if every face of every die could come up: where its odds are counted from. */
+function anchorOf(spec: RollSpec): number {
+  return groupsOf(spec).reduce((sum, group) => sum + keptCount(group) * leastOf(group), spec.modifier);
+}
 
 /**
  * The odds as exact whole numbers, for the dice that have them: plain dice
- * added up, one die kept from a pool (advantage), and several such kinds
- * added together while that stays quick. Null for rerolled or exploding dice,
- * for several dice kept, and for large mixed pools, whose odds are worked out
- * as probabilities; `distributionOf` answers for every roll.
+ * added up, one die kept from a pool (advantage), loaded and custom dice the
+ * same way (their weights are whole numbers, so their odds are exact
+ * fractions), and several such kinds added together while that stays quick.
+ * Null for rerolled or exploding dice, for several dice kept, and for large
+ * mixed pools, whose odds are worked out as probabilities; `distributionOf`
+ * answers for every roll.
  */
 export function exactCounts(spec: RollSpec): ExactCounts | null {
   let counts: bigint[] = [1n];
   let outcomes = 1n;
   for (const group of groupsOf(spec)) {
-    const ways = waysOf(group);
-    if (ways === null || counts.length * ways.length > MOST_EXACT_PAIRS) return null;
-    const next = new Array<bigint>(counts.length + ways.length - 1).fill(0n);
-    for (let i = 0; i < counts.length; i++) {
-      for (let j = 0; j < ways.length; j++) next[i + j] = (next[i + j] as bigint) + (counts[i] as bigint) * (ways[j] as bigint);
-    }
-    counts = next;
-    outcomes *= outcomesOf(group);
+    const counted = waysOf(group);
+    if (counted === null || counts.length * counted.ways.length > MOST_EXACT_PAIRS) return null;
+    counts = multiply(counts, counted.ways);
+    outcomes *= counted.outcomes;
   }
-  return { min: rangeOf(spec).min, counts, outcomes };
+  const { min, values } = trimmed(anchorOf(spec), counts);
+  return { min, counts: values, outcomes };
 }
 
-/** One kind of dice: the chance of each total its kept dice make, from their lowest. */
+/** One kind of dice: the chance of each total its kept dice make, from the least they could. */
 function probabilitiesOf(group: DiceGroup): number[] {
-  const { low, high } = faceRange(group.sides);
-  const faces = high - low + 1;
   const kept = keptCount(group);
-  const ways = waysOf(group);
-  if (ways !== null) {
-    const outcomes = outcomesOf(group);
-    return ways.map((w) => share(w, outcomes));
+  const counted = waysOf(group);
+  if (counted !== null) return counted.ways.map((w) => share(w, counted.outcomes));
+  let face: number[];
+  if (group.faces !== undefined) {
+    // A custom die's chances by what each face is worth.
+    const die = outcomesOfDie(group);
+    const each = Number(die.ways.reduce((a, b) => a + b, 0n));
+    face = die.ways.map((w) => Number(w) / each);
+  } else {
+    const { low } = faceRange(group.sides);
+    const mark = group.rerollUntil ?? group.reroll;
+    face = standingFace(chancesOf(group), mark === undefined ? 0 : mark - low + 1, group.rerollUntil !== undefined);
   }
-  const mark = group.rerollUntil ?? group.reroll;
-  const face = standingFace(faces, mark === undefined ? 0 : mark - low + 1, group.rerollUntil !== undefined);
   if (group.keep === "all") {
     const die = group.explode === true ? explodingDie(face) : face;
     let sum = die;
@@ -239,7 +319,7 @@ function probabilitiesOf(group: DiceGroup): number[] {
 const cache = new Map<string, Distribution>();
 
 function keyOf(group: DiceGroup): string {
-  return `${group.count}d${group.sides}${group.keep}${group.keepCount ?? 1}${group.explode === true ? "!" : ""}r${group.reroll ?? ""}u${group.rerollUntil ?? ""}`;
+  return `${group.count}${dieName(group)}${group.keep}${group.keepCount ?? 1}${group.explode === true ? "!" : ""}r${group.reroll ?? ""}u${group.rerollUntil ?? ""}`;
 }
 
 /**
@@ -253,15 +333,23 @@ export function distributionOf(spec: RollSpec): Distribution {
   const key = `${groups.map(keyOf).join("+")}m${spec.modifier}`;
   const known = cache.get(key);
   if (known !== undefined) return known;
-  const { min, max } = rangeOf(spec);
-  let probabilities: number[];
-  if (groups.length === 1) probabilities = probabilitiesOf(groups[0] as DiceGroup);
-  else {
+  let made: Distribution;
+  if (groups.every(plain)) {
+    const { min, max } = rangeOf(spec);
+    let probabilities: number[];
+    if (groups.length === 1) probabilities = probabilitiesOf(groups[0] as DiceGroup);
+    else {
+      const exact = exactCounts(spec);
+      if (exact !== null) probabilities = exact.counts.map((c) => share(c, exact.outcomes));
+      else probabilities = groups.map(probabilitiesOf).reduce(convolve);
+    }
+    made = { min, max, probabilities };
+  } else {
+    // Loaded and custom dice: counted from the least their faces are worth, and the totals that cannot come up taken off the ends.
     const exact = exactCounts(spec);
-    if (exact !== null) probabilities = exact.counts.map((c) => share(c, exact.outcomes));
-    else probabilities = groups.map(probabilitiesOf).reduce(convolve);
+    const all = exact !== null ? { min: exact.min, values: exact.counts.map((c) => share(c, exact.outcomes)) } : trimmed(anchorOf(spec), groups.map(probabilitiesOf).reduce(convolve));
+    made = { min: all.min, max: all.min + all.values.length - 1, probabilities: all.values };
   }
-  const made = { min, max, probabilities };
   if (cache.size > 200) cache.clear();
   cache.set(key, made);
   return made;
@@ -277,23 +365,21 @@ export function distributionHolding(spec: RollSpec, faces: readonly number[], he
   if (!canHold(spec)) throw new RangeError("korokoro: only plain dice can be held");
   let settled = spec.modifier;
   let probabilities = [1];
-  let min = 0;
-  let max = 0;
+  let least = 0;
   let at = 0;
   for (const group of groupsOf(spec)) {
     let free = 0;
     for (let n = 0; n < group.count; n++, at++) {
-      if (held[at] === true) settled += faces[at] as number;
+      if (held[at] === true) settled += valueOfFace(group, faces[at] as number);
       else free += 1;
     }
     if (free === 0) continue;
-    const rest: DiceGroup = { count: free, sides: group.sides, keep: "all" };
-    const { low, high } = faceRange(group.sides);
+    const rest: DiceGroup = { ...group, count: free };
     probabilities = convolve(probabilities, probabilitiesOf(rest));
-    min += free * low;
-    max += free * high;
+    least += free * leastOf(group);
   }
-  return { min: min + settled, max: max + settled, probabilities };
+  const { min, values } = trimmed(least + settled, probabilities);
+  return { min, max: min + values.length - 1, probabilities: values };
 }
 
 /** Any of the odds functions takes a spec, or a distribution already in hand (one from `distributionHolding`, say). */

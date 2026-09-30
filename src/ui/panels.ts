@@ -1,8 +1,9 @@
 import type { Roll, RollSpec } from "../dice.ts";
-import { diceOf, faceRange, groupsOf, sidesOf, type Sides } from "../dice.ts";
+import { diceOf, dieName, faceRange, groupOf, groupsOf, hasTotal, isLoaded, type DiceGroup } from "../dice.ts";
+import { faceChances, loadingOf } from "../loaded.ts";
 import { formatNotation } from "../notation.ts";
 import { chanceAtLeast, distributionHolding, distributionOf, expectedTotal, luckOf, mostLikely, spreadOf, type Distribution } from "../odds.ts";
-import { statsOf } from "../stats.ts";
+import { fairnessTest, readResults, statsOf, type Fairness } from "../stats.ts";
 import { h } from "./dom.ts";
 import { faceText } from "./faces.ts";
 import { fillIn, type RollerStrings } from "./strings.ts";
@@ -36,14 +37,14 @@ export function historyPanel(history: readonly Roll[], t: RollerStrings, locale:
       ...diceOf(r).map((die, i, all) =>
         h(
           "span",
-          { "data-kept": String(die.status === "kept"), "data-exploded": die.exploded ? "true" : null, "data-held": r.held?.[i] === true ? "true" : null, "data-first": i > 0 && die.group !== all[i - 1]?.group ? "true" : null },
-          `${faceText(sidesOf(r.spec, die), die.face)}${die.exploded ? "!" : die.status === "rerolled" ? "↻" : ""}`,
+          { "data-kept": String(die.status === "kept"), "data-exploded": die.exploded ? "true" : null, "data-held": r.held?.[i] === true ? "true" : null, "data-first": i > 0 && die.group !== all[i - 1]?.group ? "true" : null, "data-loaded": groupOf(r.spec, die).weights !== undefined ? "true" : null },
+          `${faceText(groupOf(r.spec, die), die.face)}${die.exploded ? "!" : die.status === "rerolled" ? "↻" : ""}`,
         ),
       ),
     );
     // A roll with dice held is judged against the dice thrown again.
     const luck = luckOf(r.held !== undefined ? distributionHolding(r.spec, r.faces, r.held) : r.spec, r.total);
-    const heldNote = r.held !== undefined ? ` · ${fillIn(t.heldBadge, { n: r.held.filter(Boolean).length })}` : "";
+    const heldNote = `${r.held !== undefined ? ` · ${fillIn(t.heldBadge, { n: r.held.filter(Boolean).length })}` : ""}${isLoaded(r.spec) ? ` · ${t.dieLoaded}` : ""}`;
     list.append(
       h(
         "li",
@@ -54,7 +55,7 @@ export function historyPanel(history: readonly Roll[], t: RollerStrings, locale:
           "span",
           { style: "display:inline-flex;align-items:center;gap:8px" },
           h("span", { class: "kk-dot", style: `background:${luckColour(luck)}`, title: fillIn(t.luckier, { percent: percent(luck, locale) }) }),
-          h("strong", {}, String(r.total)),
+          h("strong", {}, hasTotal(r.spec) ? String(r.total) : ""),
         ),
       ),
     );
@@ -118,15 +119,68 @@ function bars(all: number[], allExpected: number[] | null, nowAt: number | null)
   );
 }
 
+/** The words of a custom die's faces under their bars, each cut short where it would not fit. */
+function labelAxis(labels: string[]): HTMLElement {
+  return h("div", { class: "kk-axis kk-axis-words" }, ...labels.map((label) => h("span", { title: label }, label)));
+}
+
 function axis(from: number, to: number): HTMLElement {
   const mid = Math.round((from + to) / 2);
   return h("div", { class: "kk-axis" }, h("span", {}, String(from)), h("span", {}, String(mid)), h("span", {}, String(to)));
 }
 
+/** What a fairness test found, as a plain sentence: never a verdict on a handful of rolls, and the odds exact when there is one. */
+export function fairnessWords(test: Fairness, t: RollerStrings, locale: string): string {
+  if (test.verdict === "too-few") return `${t.fairnessWait} ${fillIn(t.fairnessCount, { n: test.rolls, min: test.minimum })}`;
+  const p = test.p as number;
+  if (test.verdict === "fair") return fillIn(t.fairnessOk, { percent: percent(p, locale) });
+  if (test.verdict === "unusual") return fillIn(t.fairnessOdd, { percent: percent(p, locale) });
+  // Past a million to one the exact figure stops meaning anything to anybody.
+  const odds = p < 1e-6 ? new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 0 }).format(1e6) + "+" : new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(1 / p);
+  return fillIn(t.fairnessLopsided, { odds });
+}
+
+/** What somebody has typed into "Test a real die", kept by the tray so that a roll does not wipe it. */
+export type RealDie = { open: boolean; text: string; sides: string };
+
+/** Results from a real die, typed or pasted, and what the fairness test makes of them. It makes no roll. */
+function realDieSection(real: RealDie, t: RollerStrings, locale: string): HTMLElement {
+  const box = h("textarea", { class: "kk-field kk-results", rows: 2, placeholder: t.testHint, "aria-label": t.testHint, inputmode: "numeric", autocomplete: "off", "data-testid": "kk-test-results" });
+  box.value = real.text;
+  const sides = h("input", { type: "text", class: "kk-field", inputmode: "numeric", value: real.sides, placeholder: "6", "aria-label": t.testSides, style: "width:4.5rem", "data-testid": "kk-test-sides" });
+  const verdict = h("p", { "aria-live": "polite", "data-testid": "kk-test-verdict" });
+  const chart = h("div", {});
+  const judge = () => {
+    real.text = box.value;
+    real.sides = sides.value;
+    const size = /^\d{1,3}$/.test(sides.value.trim()) && Number(sides.value) >= 2 ? Number(sides.value) : undefined;
+    const typed = readResults(box.value, size);
+    chart.replaceChildren();
+    if (!typed.ok) {
+      verdict.textContent = fillIn(t.testBad, { part: typed.part });
+      return;
+    }
+    if (typed.rolls === 0) {
+      verdict.textContent = "";
+      return;
+    }
+    const test = fairnessTest(typed.counts);
+    verdict.textContent = fairnessWords(test, t, locale);
+    chart.append(h("h4", {}, fillIn(t.faces, { sides: typed.sides, n: typed.rolls })), bars(typed.counts, test.expected, null), axis(1, typed.sides));
+  };
+  box.addEventListener("input", judge);
+  sides.addEventListener("input", judge);
+  judge();
+  const details = h("details", { class: "kk-settings", open: real.open, "data-testid": "kk-test" }, h("summary", {}, t.testTitle), h("div", { class: "kk-row" }, box, h("label", { class: "kk-label" }, t.testSides), sides), h("section", { class: "kk-chart" }, chart, verdict));
+  details.addEventListener("toggle", () => (real.open = details.open));
+  return details;
+}
+
 /** The history in numbers: luck, streaks, each face's count and the totals against the odds. */
-export function statsPanel(history: readonly Roll[], spec: RollSpec, sides: Sides, t: RollerStrings, locale: string): HTMLElement {
-  if (history.length === 0) return h("p", { class: "kk-empty" }, t.noRolls);
-  const stats = statsOf(history, spec, sides);
+export function statsPanel(history: readonly Roll[], spec: RollSpec, kind: DiceGroup, t: RollerStrings, locale: string, real: RealDie): HTMLElement {
+  const test = realDieSection(real, t, locale);
+  if (history.length === 0) return h("div", { class: "kk-panel", style: "padding:0" }, h("p", { class: "kk-empty" }, t.noRolls), test);
+  const stats = statsOf(history, spec, kind);
   const panel = h("div", { class: "kk-panel", style: "padding:0", "data-testid": "kk-stats" });
   const cards = h(
     "div",
@@ -145,23 +199,22 @@ export function statsPanel(history: readonly Roll[], spec: RollSpec, sides: Side
 
   const faces = stats.faces;
   if (faces !== null && faces.dice > 0) {
-    const verdict =
-      faces.fairness === null
-        ? t.fairnessWait
-        : fillIn(faces.fairness < 0.01 ? t.fairnessOdd : t.fairnessOk, { percent: percent(faces.fairness, locale) });
+    // A numbered die, loaded or not, is tested against the fair die of its size: that is how a loaded one is found out.
+    const verdict = fairnessWords(fairnessTest(faces.counts), t, locale);
+    const name = dieName(kind);
     panel.append(
       h(
         "section",
-        { class: "kk-chart" },
-        h("h4", {}, fillIn(t.faces, { sides: faces.sides, n: faces.dice })),
+        { class: "kk-chart", "data-testid": "kk-faces" },
+        h("h4", {}, `${fillIn(t.faces, { sides: name.slice(1), n: faces.dice })}${faces.loaded === true ? ` · ${t.dieLoaded}` : ""}`),
         bars(faces.counts, faces.counts.map(() => faces.dice / faces.counts.length), null),
-        axis(faceRange(faces.sides).low, faceRange(faces.sides).high),
-        h("p", {}, verdict),
+        faces.labels !== undefined ? labelAxis(faces.labels) : axis(faceRange(faces.sides).low, faceRange(faces.sides).high),
+        h("p", { "data-testid": "kk-fairness" }, verdict),
       ),
     );
   }
   const totals = stats.totals;
-  if (totals !== null && totals.rolls > 0) {
+  if (totals !== null && totals.rolls > 0 && hasTotal(spec)) {
     const end = chartEnd(spec, totals.expectedShare, totals.highest - totals.min);
     panel.append(
       h(
@@ -175,7 +228,20 @@ export function statsPanel(history: readonly Roll[], spec: RollSpec, sides: Side
       ),
     );
   }
+  panel.append(test);
   return panel;
+}
+
+/** The same roll with every die fair: a loaded roll's odds are drawn against it. */
+function specFair(spec: RollSpec): RollSpec {
+  const [first, ...more] = groupsOf(spec).map((g) => {
+    const fair = { ...g };
+    delete fair.weights;
+    return fair;
+  });
+  const out: RollSpec = { ...(first as DiceGroup), modifier: spec.modifier };
+  if (more.length > 0) out.more = more;
+  return out;
 }
 
 /** The odds of the dice showing: the average, the spread, every total's chance and the chance to reach a target. */
@@ -188,8 +254,30 @@ export function oddsPanel(
   onTarget: (value: number) => void,
   holding: { odds: Distribution; held: number; rest: string } | null = null,
 ): HTMLElement {
+  const kinds = groupsOf(spec);
+  const only = kinds.length === 1 ? (kinds[0] as DiceGroup) : null;
+  // A die of words has no totals to have odds of: its odds are how often each face comes up.
+  if (!hasTotal(spec) && only !== null) {
+    const faces = faceChances(only);
+    return h(
+      "div",
+      { class: "kk-panel", style: "padding:0", "data-testid": "kk-odds" },
+      h(
+        "section",
+        { class: "kk-chart" },
+        h("h4", { "data-testid": "kk-odds-title" }, fillIn(t.oddsFaces, { die: dieName(only) })),
+        bars(faces.map((f) => f.chance), null, null),
+        labelAxis(faces.map((f) => f.label)),
+        h("p", {}, faces.map((f) => `${f.label} ${percent(f.chance, locale)}`).join(" · ")),
+      ),
+    );
+  }
   // With dice held, the odds are those of the dice still to roll, on top of the held ones.
   const d = holding?.odds ?? distributionOf(spec);
+  // A loaded roll is drawn over the fair one: the bars are the dice as loaded, the marks the same dice if they were fair.
+  const loading = holding === null && isLoaded(spec) ? (only !== null ? loadingOf(only) : null) : null;
+  const fair = holding === null && isLoaded(spec) ? distributionOf(specFair(spec)) : null;
+  const fairMarks = fair === null ? null : d.probabilities.map((_, i) => fair.probabilities[d.min + i - fair.min] ?? 0);
   const { min, max } = d;
   const now = holding === null && current !== null && formatNotation(current.spec) === formatNotation(spec) ? current.total - d.min : null;
   const end = chartEnd(spec, d.probabilities, now ?? 0);
@@ -228,9 +316,14 @@ export function oddsPanel(
       "section",
       { class: "kk-chart" },
       h("h4", { "data-testid": "kk-odds-title" }, holding === null ? formatNotation(spec) : fillIn(t.oddsHolding, { n: holding.held, notation: holding.rest })),
-      bars(d.probabilities.slice(0, end + 1), null, now),
+      bars(d.probabilities.slice(0, end + 1), fairMarks === null ? null : fairMarks.slice(0, end + 1), now),
       axis(min, min + end),
       tailNote(d, end, t, locale),
+      loading !== null
+        ? h("p", { "data-testid": "kk-odds-loaded" }, fillIn(t.oddsLoaded, { face: loading.face, a: loading.loaded[0], b: loading.loaded[1], c: loading.fair[0], d: loading.fair[1] }))
+        : fair !== null
+          ? h("p", { "data-testid": "kk-odds-loaded" }, t.oddsLoadedMixed)
+          : null,
     ),
     h(
       "div",

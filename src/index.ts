@@ -12,6 +12,8 @@ export * from "./odds.ts";
 export * from "./stats.ts";
 export * from "./history.ts";
 export * from "./share.ts";
+export * from "./sets.ts";
+export * from "./loaded.ts";
 export { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
 export { STRINGS, type RollerStrings } from "./ui/strings.ts";
 export { createRollSound, type PlaySound, type RollSound, type SoundThrow } from "./ui/sound.ts";

@@ -18,12 +18,6 @@ Tap dice to build a roll, up to ten in any mix from a d4 to a d100, or type any 
   <img src="docs/phone.jpg" alt="Four d6 with the lowest dropped, on a phone in dark mode: the dropped die struck through" width="220">
 </p>
 
-*Korokoro* is the sound of dice tumbling, in Japanese. It began as the dice
-roller on [Itsutsu](https://itsutsu.com/dice), a site for board games, which
-uses this package exactly as published.
-
-## What it is
-
 A dice roller and a dice notation parser for tabletop games, RPGs and board
 games, with the exact odds of every roll.
 
@@ -33,86 +27,76 @@ games, with the exact odds of every roll.
   checked by anybody, die for die.
 - **What it costs a project.** Nothing: no dependencies, and one import.
 
-### Who it is for
+## Roll in 30 seconds
+
+```sh
+npm install @johnmorrisdotca/korokoro    # or pnpm add, or yarn add
+```
+
+```ts
+import { chanceAtLeast, parseNotation, roll } from "@johnmorrisdotca/korokoro";
+
+const attack = parseNotation("2d20kh1+5")!;  // advantage, plus 5
+roll(attack).total;                          // 6 to 25, from the crypto generator
+chanceAtLeast(attack, 15);                   // 0.7975: the exact chance of 15 or more
+```
+
+Or with nothing to install, [roll some dice in the demo](https://johnmorrisdotca.github.io/korokoro/).
+
+## Who it is for
 
 - **Roleplaying games.** A d20 with advantage (`2d20kh1+5`), ability scores
   (`4d6dl1`), a fireball's damage (`8d6`), a d20 and a d4 together
-  (`1d20+1d4`).
+  (`1d20+1d4`). For Dungeons & Dragons, Pathfinder and anything else that
+  rolls polyhedral dice.
 - **Board games and dice games.** `2d6` for the table; five dice with holds
-  for Yacht (`5d6`); six for Farkle (`6d6`).
+  for Yahtzee (`5d6`); six for Farkle (`6d6`); a die with your game's own
+  faces (`d[Hit,Miss,Miss]`).
 - **Fun.** Tap the felt.
 - **Teaching and research.** The exact odds and a chart for any roll: `2d6`
   makes 7 one time in 6. A seed makes a classroom's rolls repeatable.
+- **The curious and the suspicious.** Loaded dice that say they are loaded
+  (`d6{6:3}`), and a test for whether a real die is fair.
 
-### What is in the package
+Game names are trademarks of their respective owners. Korokoro is not
+affiliated with or endorsed by them; it rolls the dice their rules call for.
 
-Three things, each usable without the others:
+## Use it in your project
 
-- **A tray** you put on any page: tap dice to add them, tap the felt to roll,
-  read the total, the odds, the history and the stats. Plain DOM, no framework.
-- **A React component** that wraps the tray.
-- **A core of plain functions**: roll dice, read dice notation, work out exact
-  odds, keep a history and summarise it. No DOM, so it runs in Node, Deno and
-  Bun as well as a browser.
+Korokoro is three things, each usable without the others: **an API** of plain
+functions (roll, read notation, work out odds, keep a history), **a tray** you
+mount into any element, and **a React component** that wraps the tray.
 
-## Features
+### 1. The API alone
 
-- **Every die a table needs, in any mix.** Tap a die to add it: up to ten of
-  d4, d6, d8, d10, d12, d20, d30 and d100, up to four kinds in one roll
-  (`1d20+2d4+3`), with a bonus, and advantage or disadvantage.
-- **Hold and roll again.** After a roll, tap a die to hold it and roll the
-  rest, as Yacht and Farkle do. The odds follow the dice still to roll.
-- **And any other dice, by notation.** A die of any size from 2 sides to 1000,
-  Fate dice, keep or drop (`4d6dl1`), rerolls (`2d6r<3`, `2d6ro<3`) and
-  exploding dice (`3d6!`), with what became of each die shown on the felt.
-- **Fair by construction.** Rolls come from `crypto.getRandomValues`, turned
-  into faces by rejection sampling, so no face is favoured by a modulo.
-- **Reproducible when asked.** A seeded mode throws the same dice for the same
-  seed on every device, so a table can check a roll.
-- **Exact odds.** Each total's chance is worked out, never simulated: the
-  chance to meet a target, the average, the spread and how lucky a throw was.
-- **History and stats.** Up to 500 rolls kept on the device: luck, hot and cold
-  streaks, matching dice, natural 20s and 1s, each face's count with a
-  chi-square fairness test, and your totals drawn against the odds.
-- **Shareable.** Any roll becomes a link that shows exactly what was thrown.
-- **Made for a phone.** One thumb does everything: every control is at least
-  44px, nothing needs a hover or a long press, and nothing moves when the dice
-  land. English and Japanese.
-- **It feels like dice.** Tap anywhere on the felt or press Space. The dice
-  tumble for about half a second and land, with the sound of real dice and a
-  mute button. Light and dark, and themeable. Under reduced motion there is no
-  tumble and the sound starts off.
-- **Small and dependency-free.** About 57 kB minified (21 kB gzipped), plus
-  36 kB of recorded sound that is fetched only when a roll first needs it.
+```ts
+import { checkNotation, distributionOf, roll, seededSource } from "@johnmorrisdotca/korokoro";
 
-## Install
-
-```sh
-pnpm add @johnmorrisdotca/korokoro    # or npm install, or yarn add
+const read = checkNotation("4d6dl1");            // { ok: true, spec } or the part refused and why
+if (read.ok) {
+  const thrown = roll(read.spec, seededSource("table-7"));
+  thrown.faces;                                  // [6, 4, 2, 1]: every die, in the order thrown
+  thrown.kept;                                   // [true, true, true, false]: the 1 was dropped
+  thrown.total;                                  // 12
+  distributionOf(read.spec).probabilities;       // the exact chance of every total from 3 to 18
+}
 ```
 
-ES modules with TypeScript types, and no dependencies. The React component
-needs React 18 or later. It works through Vite, Next.js and a plain
-`<script type="module">` with nothing to configure.
-
-## Quick start
-
-### The tray, on any page
+### 2. The tray, in plain HTML
 
 ```html
 <div id="dice"></div>
 <script type="module">
   import { mountRoller } from "@johnmorrisdotca/korokoro";
 
-  const roller = mountRoller(document.getElementById("dice"), {
-    wide: true,                          // tray and panels side by side on a wide screen
+  mountRoller(document.getElementById("dice"), {
     spec: { count: 1, sides: 20, modifier: 5 },
     onRoll: (roll) => console.log(roll.total),
   });
 </script>
 ```
 
-### In React
+### 3. React
 
 ```tsx
 import { DiceRoller } from "@johnmorrisdotca/korokoro/react";
@@ -127,16 +111,153 @@ The component takes the tray's options as props, plus any attribute for its
 rendering draws an empty box and nothing needs a provider. In Next.js, use it
 from a client component (`"use client"`).
 
-### Just the numbers
+### 4. Vue
+
+```vue
+<script setup>
+import { onBeforeUnmount, onMounted, ref } from "vue";
+import { mountRoller } from "@johnmorrisdotca/korokoro";
+
+const box = ref(null);
+let roller;
+onMounted(() => (roller = mountRoller(box.value, { onRoll: (roll) => console.log(roll.total) })));
+onBeforeUnmount(() => roller?.destroy());
+</script>
+
+<template><div ref="box"></div></template>
+```
+
+### 5. Svelte and Angular
+
+The same one call in the framework's mount hook, and `destroy()` on the way
+out:
+
+```svelte
+<script>
+  import { onMount } from "svelte";
+  import { mountRoller } from "@johnmorrisdotca/korokoro";
+  let box;
+  onMount(() => {
+    const roller = mountRoller(box);
+    return () => roller.destroy();
+  });
+</script>
+
+<div bind:this={box}></div>
+```
 
 ```ts
-import { chanceAtLeast, parseNotation, roll, seededSource } from "@johnmorrisdotca/korokoro";
-
-const attack = parseNotation("2d20kh1+5")!; // advantage, +5
-roll(attack).total;                         // 6 to 25, from the crypto generator
-roll(attack, seededSource("table-7"));      // the same throw every time
-chanceAtLeast(attack, 15);                  // 0.7975
+// Angular: in a standalone component with <div #box></div> in its template
+private box = viewChild.required<ElementRef<HTMLElement>>("box");
+constructor() {
+  afterNextRender(() => (this.roller = mountRoller(this.box().nativeElement)));
+}
+ngOnDestroy() {
+  this.roller?.destroy();
+}
 ```
+
+Each of the five is built from the packed tarball and rolled in Chromium and
+WebKit by `scripts/check-frameworks.mjs` before a release names it.
+
+### What a developer gets
+
+- **Typed results.** TypeScript types for everything, with a doc comment on
+  every export.
+- **A random source you can replace.** The default is the platform's
+  cryptographic generator; `seededSource("any text")` is reproducible; and
+  anything with a `next()` that returns a 32-bit number will do.
+- **No dependencies**, ES modules, a `default` export condition for tools that
+  resolve from CommonJS, and `sideEffects: false`, so a bundler drops what
+  you do not import.
+- **Sizes.** Rolling, notation and odds alone are about 16 kB minified (6 kB
+  gzipped) once a bundler has shaken the rest out. With the tray it is about
+  98 kB (35 kB gzipped). The recorded sounds are another 36 kB (23 kB
+  gzipped), fetched only when a roll first needs them.
+- **Where it runs.** Browsers from Chrome and Edge 111, Firefox 113 and Safari
+  16.2. The core runs in Node 20 and later, Deno and Bun.
+
+## The name
+
+*Korokoro* (コロコロ) is a Japanese sound-word for something small and round
+rolling or tumbling along: a die across a table, an acorn down a slope.
+Japanese has a great many words of this kind, which name a thing by the sound
+or the feel of it, and this one is the sound of what the package does. Say it
+in four even beats: ko-ro-ko-ro.
+
+Dice, as it happens, are *saikoro* (サイコロ) in Japanese, which ends on the
+same two beats. We make no claim about where either word comes from; it is a
+pleasant echo.
+
+## Where it comes from, and where it is used
+
+Korokoro was built for [Itsutsu](https://itsutsu.com), a site for board games,
+puzzles, card games and dice games played at your own pace. *Itsutsu* (五つ) is
+Japanese for "five", after five in a row, the game the site began with. The
+site needed dice that were fair and that anybody could check, and once they
+existed they seemed worth sharing.
+
+### Used by
+
+- [Itsutsu](https://itsutsu.com), for its dice.
+
+That is the whole list so far. Using Korokoro in something? Open an *Add my
+project* issue and we will add you.
+
+### The family
+
+Korokoro has siblings, each made for the same site, each MIT, each at
+[github.com/johnmorrisdotca](https://github.com/johnmorrisdotca):
+
+- [Kyuubu](https://github.com/johnmorrisdotca/kyuubu) (キューブ, how Japanese
+  says "cube"): a turning cube for the browser, 2×2 to 7×7, drawn in CSS 3D.
+- [Toranpu](https://github.com/johnmorrisdotca/toranpu) (トランプ, the everyday
+  Japanese word for a deck of playing cards): ten card games as pure rules.
+- [Tane](https://github.com/johnmorrisdotca/tane) (種, a seed, the kind you
+  plant): seeded random numbers and daily seeds. Korokoro's seeded rolls are
+  the same idea.
+- [Hitotsu](https://github.com/johnmorrisdotca/hitotsu) (一つ, "one"): a
+  colour-card game, named for the call a player makes with one card left.
+- [Narabe](https://github.com/johnmorrisdotca/narabe) (並べ, "line them up"):
+  a rules engine for gomoku, Reversi, Go, checkers and many more.
+- [Tenka](https://github.com/johnmorrisdotca/tenka) (天下, "under heaven"):
+  a world-conquest game for two to six.
+- [Kumimoji](https://github.com/johnmorrisdotca/kumimoji) (組み文字, "letters
+  put together"): a crossword tile race in English and Japanese.
+
+## Features
+
+- **Every die a table needs, in any mix.** Tap a die to add it: up to ten of
+  d4, d6, d8, d10, d12, d20, d30 and d100, up to four kinds in one roll
+  (`1d20+2d4+3`), with a bonus, and advantage or disadvantage.
+- **Hold and roll again.** After a roll, tap a die to hold it and roll the
+  rest, as Yahtzee and Farkle do. The odds follow the dice still to roll.
+- **And any other dice, by notation.** A die of any size from 2 sides to 1000,
+  Fate dice, keep or drop (`4d6dl1`), rerolls (`2d6r<3`, `2d6ro<3`) and
+  exploding dice (`3d6!`), with what became of each die shown on the felt.
+- **Dice of your own.** A die with any faces you like, words or numbers
+  (`d[Yes,No,Maybe]`), and sets of dice saved by name on the device and shared
+  by a link.
+- **Loaded dice, honestly marked, and a fairness test.** A die weighted to
+  order (`d6{6:3}`) that says so everywhere it appears, and a chi-square test
+  that tells you whether a die, ours or a real one, looks fair.
+- **Fair by construction.** Rolls come from `crypto.getRandomValues`, turned
+  into faces by rejection sampling, so no face is favoured by a modulo.
+- **Reproducible when asked.** A seeded mode throws the same dice for the same
+  seed on every device, so a table can check a roll.
+- **Exact odds.** Each total's chance is worked out, never simulated: the
+  chance to meet a target, the average, the spread and how lucky a throw was.
+- **History and stats.** Up to 500 rolls kept on the device: luck, hot and cold
+  streaks, matching dice, natural 20s and 1s, each face's count with a
+  fairness test, and your totals drawn against the odds.
+- **Shareable.** Any roll becomes a link that shows exactly what was thrown.
+- **Made for a phone.** One thumb does everything: every control is at least
+  44px, nothing needs a hover or a long press, and nothing moves when the dice
+  land. English and Japanese.
+- **It feels like dice.** Tap anywhere on the felt or press Space. The dice
+  tumble for about half a second and land, with the sound of real dice and a
+  mute button. Light and dark, and themeable. Under reduced motion there is no
+  tumble and the sound starts off.
 
 ## Dice notation
 
@@ -162,12 +283,19 @@ chanceAtLeast(attack, 15);                  // 0.7975
 | `1d20+1d4` | a d20 and a d4, added |
 | `2d6+1d8+3` | two d6, a d8, plus 3 |
 | `2d20kh1+1d4+5` | advantage, a d4 on top, plus 5: each kind keeps its own rules |
+| `d[Yes,No,Maybe]` | a custom die: its faces are whatever you write |
+| `2d[Hit=1,Miss=0,Miss=0]` | two custom dice whose faces are worth numbers; a face written twice comes up twice as often |
+| `d[1,1,2,3,5,8]` | a custom die of numbers, each worth itself |
+| `d6{6:3}` | a loaded d6: its 6 weighs three times the rest, and it is marked as loaded everywhere |
 
 ```
 roll     = dice { "+" dice } [bonus]
 dice     = [count] "d" sides { modifier }
 count    = 1 to 10 over the whole roll, and 1 when left out
 sides    = 2 to 1000, "%" for 100, or "F" for a Fate die
+         | number "{" face ":" weight { "," face ":" weight } "}"     a loaded die
+         | "[" face { "," face } "]"                                 a custom die
+face     = words [ "=" value ] [ "#" colour ]      in a custom die
 modifier = "!" | "r<" face | "r<=" face | "ro<" face | "ro<=" face
          | "kh" [n] | "kl" [n] | "dh" [n] | "dl" [n]
 bonus    = "+" or "-", then 0 to 99
@@ -216,6 +344,8 @@ than quietly rolling something different:
 | `1d4+1d6+1d8+1d10+1d12` | a roll has at most four kinds of dice |
 | `6d6+5d8` | ten dice at most over the whole roll |
 | `1d20-1d4` | dice are added together; only the bonus can be taken away |
+| `d[only]`, `2d[Yes,No]kh1` | a custom die has 2 to 20 faces and takes no modifiers |
+| `d6{7:2}`, `d6{6:1}` | a loaded die names faces it has, and a die whose weights are all the same is not loaded |
 | `4d6!kh3` | exploding dice are not kept or dropped: tables disagree on whether an explosion is a new die in the pool or part of the die that threw it |
 | `4dF!`, `2d1000!` | Fate dice do not explode, nor do dice of more than 100 sides |
 
@@ -280,11 +410,84 @@ dice   // group 0 (the d20): 10 · group 1 (the d4s): 2, 4
 total  // 19
 ```
 
+## Custom dice
+
+A custom die is its faces: up to 20 of them, each up to 16 characters.
+
+```ts
+const spec = parseNotation("3d[Hit=1,Miss=0,Miss=0]")!;
+const thrown = roll(spec, seededSource("table-7"));
+thrown.dice.map((d) => d.label);   // ["Miss", "Hit", "Miss"]
+thrown.faces;                      // [3, 1, 2]: each face by its place on the die, from 1
+thrown.total;                      // 1: the faces' values added up
+expectedTotal(spec);               // 1: three dice, each a hit one time in three
+```
+
+- **`Hit=1`** gives a face a value for the total. A number alone is worth
+  itself (`d[1,1,2,3,5,8]`). A face with no value adds nothing.
+- **`Yes#2a7`** gives a face a colour, as `#rgb` or `#rrggbb`.
+- **A face written twice** comes up twice as often.
+- **A die of words only**, such as `d[Yes,No,Maybe]`, has no total: the roll is
+  what the faces say, `hasTotal(spec)` is false, and its odds are how often
+  each face comes up (`faceChances`).
+- **A face's words are text.** They are never read as HTML, in the tray or
+  anywhere else, and the characters notation is written with (`, [ ] { } = # +`)
+  cannot be part of one.
+- A custom die takes no modifiers, and `isFair` is false for it: its faces are
+  whatever somebody made them.
+
+In the tray, custom dice are made under *Custom dice, loaded dice and sets*,
+one level down: type the faces with commas between them.
+
+## Loaded dice, and testing a die
+
+Korokoro's own dice are fair. It can also load one, and then it tells
+everybody: `d6{6:3}` shows its 6 three times in eight, wears a mark on the
+felt, in the history and in every link, and is `loaded: true` in the data.
+`isFair(spec)` lets a site refuse anything loaded in one call.
+
+```ts
+const optimist = parseNotation("d6{6:3}")!;
+isFair(optimist);                             // false
+roll(optimist).loaded;                        // true
+fairnessTest([30, 30, 30, 30, 30, 90]).verdict;  // "lopsided": a fair d6 does this about never
+fairnessTest([82, 95, 103, 98, 104, 118]).verdict;  // "fair"
+```
+
+`fairnessTest` is a chi-square test of how often each face came up, and works
+on any counts: a history here, or a real die's results typed into **Stats →
+Test a real die**. It says nothing until it has at least five throws expected
+of each face.
+
+The whole story, with the three house dice, the two sets of odds and a short
+history of crooked dice, is in
+[Loaded dice, and how to catch one](./docs/loaded-dice.md).
+
+## Sets of dice
+
+A set is a roll with a name, kept on the device: "Longsword" for `1d8+3`,
+"Skirmish" for `3d[Hit=1,Miss=0,Miss=0]`. In the tray they live under *Custom
+dice, loaded dice and sets*: name the roll showing, and it is there next time.
+A set is shared by a link, which anybody can open and keep:
+
+```
+?dice=3d%5BHit%3D1%2CMiss%3D0%2CMiss%3D0%5D&name=Skirmish&v=2
+```
+
+```ts
+const set = makeSet("Skirmish", "3d[Hit=1,Miss=0,Miss=0]")!;
+setQuery(set);                  // the query above
+readSet(setQuery(set));         // { name: "Skirmish", notation: "3d[Hit=1,Miss=0,Miss=0]" }
+```
+
+Sets are kept in the browser's storage and nowhere else: there is no account
+and no server. Up to 50 of them.
+
 ## Holding dice
 
 `rollHeld` keeps some dice of a roll and throws the rest again, from the same
 source, so a seeded game replays. Only plain dice can be held (`canHold`): no
-keep or drop, reroll or explosion.
+keep or drop, reroll or explosion. Custom and loaded dice can be held too.
 
 ```ts
 const dice = seededSource("yacht");
@@ -330,6 +533,7 @@ Nothing is simulated and nothing is left out:
 | Keep or drop several | The sum of the highest *n*, dealt out value by value over the pool |
 | Rerolls, once or until clear | Each face's chance of being the one left standing, then as above |
 | Exploding dice | Each chain's chance up to the limit, then summed over the dice |
+| Loaded and custom dice | Counted in whole numbers like fair dice, each face standing for as many outcomes as it weighs |
 | Several kinds of dice | Each kind as above, then every pair of their totals: a convolution |
 | Dice held | The dice still to roll as above, moved up by the held faces |
 
@@ -438,6 +642,30 @@ checkNotation(text: string, options?): { ok: true; spec: RollSpec } | { ok: fals
 formatNotation(spec: RollSpec): string
 ```
 
+### Custom dice, loaded dice and sets
+
+```ts
+type CustomFace = { label: string; value?: number; colour?: string };
+// on a DiceGroup: faces?: CustomFace[] for a custom die, weights?: number[] for a loaded one
+
+isFair(spec): boolean                    // plain fair dice and nothing else
+isLoaded(spec): boolean                  // a loaded die is in the roll
+hasTotal(spec): boolean                  // false for a roll of words only
+dieName(group): string                   // "d6", "d6{6:3}", "d[Yes,No,Maybe]"
+chancesOf(group): number[]               // the chance of each face
+faceChances(group): { face, label, chance, fair }[]
+loadingOf(group): { face, loaded: [a, b], fair: [c, d] } | null   // "6 comes up 3 in 8, not 1 in 6"
+LOADED_PRESETS                           // the three house dice
+
+fairnessTest(counts: number[], chances?: number[]): Fairness   // { rolls, minimum, enough, statistic, p, verdict, … }
+readResults(text: string, sides?: number)                     // results typed from a real die, as counts
+
+makeSet(name, dice): DiceSet | null      // { name, notation }
+loadSets(storage, key) / storeSets(storage, key, sets)
+withSet(sets, set) / withoutSet(sets, name)
+setQuery(set): string / readSet(query): DiceSet | null
+```
+
 ### Randomness
 
 ```ts
@@ -507,12 +735,14 @@ mountRoller(element: HTMLElement, options?: RollerOptions): RollerHandle
 | `playSound` | the recorded dice | Your own sound for each throw: `({ dice, ms, landings }) => void` |
 | `hold` | `true` | `false` stops dice being held: a tap anywhere on the felt rolls, a die included |
 | `placeholder` | `true` | `false` makes the opening dice the user's own roll, so the first die tapped adds to them |
+| `languageChooser` | `false` | `true` adds a small choice of English or 日本語 to the tray, remembered on the device |
 
 ```ts
 type RollerHandle = {
   roll(): void;                         // throw the dice showing
   history(): readonly Roll[];
   setSpec(spec: Partial<RollSpec>): void;  // part of the dice, or a whole spec
+  setLocale(locale: string): void;         // "ja…" for Japanese, anything else English
   destroy(): void;
 };
 ```
@@ -614,12 +844,17 @@ them by name.
 | Dice in one roll | 1 to 10 | `MIN_DICE`, `MAX_DICE` |
 | Kinds of dice in one roll | 4 | `MAX_GROUPS` |
 | Rerolls until clear, for each die | 10 | `MAX_REROLLS` |
+| Faces of a custom die | 2 to 20 | `MAX_FACES` |
+| Characters in a custom face | 16 | `MAX_LABEL` |
+| A custom face's value | −9999 to 9999 | `MAX_FACE_VALUE` |
+| A loaded die | up to 100 sides, weights 0 to 99 | `MAX_LOADED_SIDES`, `MAX_WEIGHT` |
+| Sets kept on a device | 50, names up to 40 characters | `MAX_SETS`, `MAX_SET_NAME` |
 | Sides of a die | 2 to 1000, or `F` | `MIN_SIDES`, `MAX_SIDES` |
 | Bonus | −99 to +99 | `MAX_MODIFIER` |
 | Explosions for each die | 10 more dice | `MAX_EXPLOSIONS` |
 | Largest die that may explode | d100 | `MAX_EXPLODING_SIDES` |
 | Rolls kept in a history | 500 | `HISTORY_LIMIT` |
-| Length of notation read | 64 characters | |
+| Length of notation read | 400 characters | |
 
 ## Browser support
 
@@ -632,7 +867,10 @@ touch. The core also runs in Node 20 and later, Deno and Bun.
 
 ## Languages
 
-English and Japanese, chosen by `locale` or the page's `lang`. **Japanese:
+English and Japanese, chosen by `locale` or the page's `lang`, or by the
+reader where a page turns on `languageChooser`. The demo has a chooser of its
+own, follows the browser's language on a first visit, and takes `?lang=ja` or
+`?lang=en` in the address. **Japanese:
 included; not yet reviewed by a native reader. Corrections welcome.** Every
 Japanese string is listed beside its English in
 [docs/strings-ja.md](./docs/strings-ja.md), and there is an issue template
@@ -640,15 +878,21 @@ for fixing one. Any other language is a table of your own passed as `strings`.
 
 ## Roadmap
 
-- Custom dice with your own faces, and sets of dice saved on the device
+- Rolling a set several times at once (`4d6dl1` six times for ability scores)
 - More notation: counting successes, more kinds of explosion, arithmetic
-- A command-line tool
-- Presets for games, from Yacht to chinchirorin
+- Export of a history as CSV, JSON and plain text, and import of the JSON
+- A command-line tool for Linux, macOS and Windows
+- A web component and a Vue wrapper, and a documentation site
+- Presets for games, from Yahtzee and craps to chō-han and chinchirorin
+- Ports to other languages are welcome; a conformance suite is planned so
+  that a port can be checked against this one
+- A hosted HTTP API: not planned, because it needs a server. The command line
+  and the package will cover programs.
 - Exploding dice that are kept or dropped, once a table's rule is chosen
 - Export the history as CSV
 
-Left out on purpose: shared live rooms, which need a server, and dice skins
-for sale. Korokoro runs from a static page and costs nothing to host.
+Left out on purpose: shared live rooms, which need a server, dice skins for
+sale, and 3D dice. Korokoro runs from a static page and costs nothing to host.
 
 Ideas and pull requests are welcome.
 

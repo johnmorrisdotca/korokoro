@@ -6,6 +6,57 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-09-30
+
+### Added
+
+- **Custom dice.** A die with any faces you like: `d[Yes,No,Maybe]`,
+  `2d[Hit=1,Miss=0,Miss=0]`, `d[1,1,2,3,5,8]`. Up to 20 faces, each up to 16
+  characters, with an optional value for totals and an optional colour; a face
+  written twice comes up twice as often. Exact odds over what the faces are
+  worth, and how often each face comes up where they are only words. A face's
+  words are text and are never read as HTML.
+- **Sets of dice**, saved by name on the device and shared by a link
+  (`?dice=…&name=…`). `makeSet`, `loadSets`, `storeSets`, `setQuery`,
+  `readSet`.
+- **Loaded dice, for the curious and the suspicious.** `d6{6:3}` is a d6 that
+  favours its six. Korokoro's own dice remain fair; these are the world's most
+  conscientious cheats, marked on the felt, in the history, beside the total,
+  in the data (`loaded: true`) and in every link, with no way to share one as
+  fair. Three house dice come with it: the Optimist, the Six-Ace Flat and the
+  Odd Couple, who have never made a seven. `isFair(spec)` refuses the lot in
+  one call.
+- **A fairness test.** `fairnessTest(counts)` is a chi-square test of whether a
+  die's results look fair, with the chance worked out exactly and no verdict
+  on a handful of rolls. The Stats tab uses it, and *Test a real die* takes
+  results typed or pasted from a die you can pick up.
+- In the tray, all of the above lives one level down, under *Custom dice,
+  loaded dice and sets*. The buttons still roll fair dice and nothing else.
+- The odds of a loaded roll drawn over the same dice if they were fair, with a
+  line such as "6 comes up 3 in 8, not 1 in 6".
+- A language choice: `languageChooser: true` adds English and 日本語 to the
+  tray, `setLocale` changes it from code, and the demo has a chooser of its
+  own that follows the browser, remembers the choice and takes `?lang=ja`.
+- `docs/loaded-dice.md`: how to load a die, how to catch one, and a short
+  history of crooked dice with its sources.
+- The README gains *Roll in 30 seconds*, *Use it in your project* (the API,
+  plain HTML, React, Vue, Svelte and Angular, each proved from the packed
+  tarball by `scripts/check-frameworks.mjs`), *The name*, *Used by* and *The
+  family*.
+- `isFair`, `isLoaded`, `hasTotal`, `dieName`, `chancesOf`, `valueOfFace`,
+  `groupOf`, `rollFrom`, `faceChances`, `loadingOf`, `LOADED_PRESETS`,
+  `readResults`, and the limits for custom and loaded dice.
+
+### Changed
+
+- `chiSquareTail` is now exact (the incomplete gamma function), where it was
+  an approximation good to a couple of digits. Fairness figures in the Stats
+  tab may differ in their last digit.
+- `faceStats` counts only fair dice when given a number of sides, so a loaded
+  d6's results are never mixed into the fair d6's.
+- Notation may be up to 400 characters, to make room for a custom die.
+- Long notation wraps in the tray and no longer widens the page.
+
 ## [1.4.0] - 2026-09-30
 
 ### Changed
@@ -168,7 +219,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.5.0...HEAD
+[1.5.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.5.0
 [1.4.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.4.0
 [1.3.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.3.0
 [1.2.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.2.0

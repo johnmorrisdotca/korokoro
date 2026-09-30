@@ -1,4 +1,4 @@
-import { canHold, readDice, totalOf, type Roll } from "./dice.ts";
+import { canHold, rollFrom, type Roll } from "./dice.ts";
 import { formatNotation, parseNotation } from "./notation.ts";
 
 /**
@@ -29,21 +29,10 @@ export function readShared(query: string | URLSearchParams): Roll | null {
   if (spec === null) return null;
   const given = (params.get("faces") ?? "").split(",");
   if (given.some((f) => f.trim() === "")) return null;
-  const dice = readDice(spec, given.map(Number));
-  if (dice === null) return null;
-  const faces = dice.map((d) => d.face);
-  const kept = dice.map((d) => d.status === "kept");
   const at = Number(params.get("at"));
-  const read: Roll = {
-    id: `shared-${Number.isFinite(at) ? at.toString(36) : "0"}`,
-    spec,
-    faces,
-    kept,
-    total: totalOf(faces, kept, spec.modifier),
-    at: Number.isFinite(at) ? at : 0,
-    seed: params.get("seed"),
-    dice,
-  };
+  const read: Roll | null = rollFrom(spec, given.map(Number), `shared-${Number.isFinite(at) ? at.toString(36) : "0"}`, Number.isFinite(at) ? at : 0, params.get("seed"));
+  if (read === null) return null;
+  const faces = read.faces;
   const held = params.get("held");
   if (held !== null) {
     const which = held === "" ? [] : held.split(",").map(Number);

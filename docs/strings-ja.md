@@ -49,6 +49,40 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `heldBadge` | {n} held | {n} 個ホールド |
 | `releaseAll` | Release all | すべて解除 |
 | `oddsHolding` | {n} held, {notation} still to roll | {n} 個ホールド、残りは {notation} |
+| `notationCustom` | “{part}”: a custom die has 2 to 20 faces of up to 16 characters, each with an optional =value and #colour, and takes no modifiers | 「{part}」: カスタムダイスは2〜20面、各面16文字まで（=数値と#色は任意）です。修飾は付けられません |
+| `notationWeights` | “{part}”: a loaded die has up to 100 sides and weights from 0 to 99 that are not all the same, with at least two faces that can come up | 「{part}」: イカサマダイスは100面まで、重みは0〜99です。すべて同じ重みにはできず、出る面が2つ以上必要です |
+| `dieLoaded` | loaded | イカサマ |
+| `loadedBadge` | Loaded dice | イカサマダイス |
+| `result` | Result | 結果 |
+| `moreDice` | Custom dice, loaded dice and sets | カスタムダイス・イカサマダイス・セット |
+| `customTitle` | Make a die | ダイスを作る |
+| `customHint` | Its faces, with commas between: Yes, No, Maybe | 面をカンマで区切って入力: はい, いいえ, たぶん |
+| `customAdd` | Add it to the roll | ロールに追加 |
+| `loadedTitle` | Loaded dice | イカサマダイス |
+| `loadedNote` | The buttons above roll fair dice. These do not, and they say so: a loaded die is marked on the felt, in the history and in any link to it. | 上のボタンは公平なダイスを振ります。こちらは公平ではなく、そのことを必ず表示します。フェルト、履歴、リンクのすべてに印が付きます。 |
+| `loadedOptimist` | The Optimist | 楽天家 |
+| `loadedOptimistSays` | A die weighted towards its six, which it shows three times in eight. It believes in you more than the odds do. | 6に重みを付けたダイスです。8回に3回は6が出ます。確率よりも、あなたを信じています。 |
+| `loadedFlat` | The Six-Ace Flat | シックス・エース・フラット |
+| `loadedFlatSays` | Shaved a little thin between the 1 and the 6, so those two faces land twice as often as the rest. The oldest job a file ever did. | 1と6の面の間を少し薄く削ったダイスです。この2つの面が、ほかの面の2倍出ます。やすりの最も古い仕事です。 |
+| `loadedOddCouple` | The Odd Couple | 奇数のふたり |
+| `loadedOddCoupleSays` | Two dice with no even faces. Between them they have never made a seven, and they are not going to start now. | 偶数の面がないダイスが2個。合計が7になったことは一度もなく、これからもありません。 |
+| `oddsLoaded` | Loaded: {face} comes up {a} in {b}, not {c} in {d}. The marks are the fair die. | イカサマ: {face} は {b} 回に {a} 回出ます（公平なら {d} 回に {c} 回）。印は公平なダイスです。 |
+| `oddsLoadedMixed` | Loaded dice. The marks are the same roll with fair dice. | イカサマダイスです。印は同じロールを公平なダイスで振った場合です。 |
+| `oddsFaces` | Each face of {die} | {die} の各面 |
+| `setsTitle` | Sets | セット |
+| `setName` | A name for this roll | このロールの名前 |
+| `setSave` | Save | 保存 |
+| `setNone` | No sets saved yet. Name the roll above to keep it on this device. | 保存したセットはまだありません。上でロールに名前を付けると、この端末に保存されます。 |
+| `setRoll` | Use {name}: {notation} | {name} を使う: {notation} |
+| `setDelete` | Delete {name} | {name} を削除 |
+| `setCopy` | Copy a link to {name} | {name} のリンクをコピー |
+| `fairnessLopsided` | A fair die would give results this lopsided about 1 time in {odds}. This die has some explaining to do. | 公平なダイスでここまで偏るのは、およそ {odds} 回に1回です。このダイスには説明が必要です。 |
+| `fairnessCount` | {n} of {min} throws so far. | 現在 {n} 回（{min} 回必要）。 |
+| `testTitle` | Test a real die | 本物のダイスを検定 |
+| `testHint` | Type or paste what it rolled: 3 5 6 6 1 … | 出目を入力または貼り付け: 3 5 6 6 1 … |
+| `testSides` | Sides | 面数 |
+| `testBad` | “{part}” is not a face of this die | 「{part}」はこのダイスの面ではありません |
+| `language` | Language | 言語 |
 | `tapToRoll` | Tap anywhere to roll | どこでもタップして振る |
 | `tapAgain` | Tap to roll again | タップしてもう一度 |
 | `rollLabel` | Roll {notation} | {notation} を振る |

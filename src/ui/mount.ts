@@ -7,8 +7,12 @@ import {
   canHold,
   diceCount,
   diceOf,
+  dieName,
   faceRange,
+  groupOf,
   groupsOf,
+  hasTotal,
+  isLoaded,
   normalizeSpec,
   rangeOf,
   roll,
@@ -27,10 +31,12 @@ import { addToHistory, loadHistory, saveHistory, type StorageLike } from "../his
 import { checkNotation, formatNotation, type NotationProblem } from "../notation.ts";
 import { chanceExactly, distributionHolding, expectedTotal, luckOf, type Distribution } from "../odds.ts";
 import { cryptoSource, newSeed, seededSource, type RandomSource } from "../random.ts";
+import { loadSets, makeSet, readSet, setQuery, storeSets, withSet, withoutSet, type DiceSet } from "../sets.ts";
 import { readShared, shareQuery } from "../share.ts";
 import { h, refill, s } from "./dom.ts";
 import { dieFace, dieIcon, faceText } from "./faces.ts";
-import { historyPanel, oddsPanel, percent, statsPanel } from "./panels.ts";
+import { morePanel, type MoreState } from "./more.ts";
+import { historyPanel, oddsPanel, percent, statsPanel, type RealDie } from "./panels.ts";
 import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
 import { injectStyle } from "./style.ts";
 import { STRINGS, fillIn, type RollerStrings } from "./strings.ts";
@@ -81,6 +87,8 @@ export type RollerOptions = {
    * roll that arrives by a shared link is always the user's.
    */
   placeholder?: boolean;
+  /** Whether the tray offers its own small choice of language, English or 日本語, remembered on the device. Off unless asked for, so the tray stays as plain as it was. */
+  languageChooser?: boolean;
 };
 
 /** What `mountRoller` hands back: the tray, driven from code. */
@@ -91,6 +99,8 @@ export type RollerHandle = {
   history(): readonly Roll[];
   /** Change part of the dice, or all of them: a spec with its count, sides, bonus and keep all given, as `parseNotation` returns, replaces the lot. */
   setSpec(spec: Partial<RollSpec>): void;
+  /** Change the tray's language: "ja…" for Japanese, anything else for English, with `strings` still laid over it. */
+  setLocale(locale: string): void;
   /** Take the tray out of the page and stop its timers and its sound. */
   destroy(): void;
 };
@@ -123,6 +133,8 @@ const REFUSALS: Record<NotationProblem, keyof RollerStrings> = {
   explode: "notationExplode",
   kinds: "notationKinds",
   minus: "notationMinus",
+  custom: "notationCustom",
+  weights: "notationWeights",
 };
 
 function defaultStorage(): StorageLike | undefined {
@@ -151,20 +163,41 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   const doc = target.ownerDocument;
   const win = doc.defaultView;
   injectStyle(doc);
-  const locale = options.locale ?? doc.documentElement.lang ?? "en";
-  const t: RollerStrings = { ...(locale.toLowerCase().startsWith("ja") ? STRINGS.ja : STRINGS.en), ...options.strings };
+  const wordsFor = (tag: string): RollerStrings => ({ ...(tag.toLowerCase().startsWith("ja") ? STRINGS.ja : STRINGS.en), ...options.strings });
+  let locale = options.locale ?? doc.documentElement.lang ?? "en";
+  let t: RollerStrings = wordsFor(locale);
   const storage = options.storage === null ? undefined : (options.storage ?? defaultStorage());
   const storageKey = options.storageKey ?? "korokoro.history";
   const query = options.query ?? win?.location.search ?? "";
   const reduced = win?.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   const animationMs = reduced ? 0 : (options.animationMs ?? 650);
   const mutedKey = `${storageKey}.muted`;
+  const languageKey = `${storageKey}.lang`;
+  if (options.languageChooser === true) {
+    // What this device chose last time, when the tray has its own chooser.
+    try {
+      const kept = storage?.getItem(languageKey);
+      if (kept === "en" || kept === "ja") {
+        locale = kept;
+        t = wordsFor(kept);
+      }
+    } catch {
+      // A storage that refuses to be read leaves the page's language.
+    }
+  }
   const hasSound = options.sound !== false;
   const mayHold = options.hold !== false;
 
   const params = new URLSearchParams(query.replace(/^\?/, ""));
   const shared = readShared(params);
-  let spec = normalizeSpec(shared?.spec ?? options.spec ?? DEFAULT_SPEC);
+  // A link to a set of dice: the dice to roll, not a roll already made.
+  const linked = shared === null ? readSet(params) : null;
+  const linkedSpec = linked === null ? null : checkNotation(linked.notation);
+  let spec = normalizeSpec(shared?.spec ?? (linkedSpec?.ok === true ? linkedSpec.spec : null) ?? options.spec ?? DEFAULT_SPEC);
+  const setsKey = `${storageKey}.sets`;
+  let sets: DiceSet[] = loadSets(storage, setsKey);
+  const more: MoreState = { open: false, faces: "", name: linked?.name ?? "", error: "" };
+  const realDie: RealDie = { open: false, text: "", sides: "" };
   /** The pool with every die taken away: the spec is kept for its bonus, and nothing can be thrown. */
   let empty = false;
   /** Which kind of dice the number row and the keep row are about: the one last touched. */
@@ -175,7 +208,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
    * anything makes the roll the user's: a die tapped, a chip, a number, typed
    * notation, a spec set from code. Rolling, the bonus and the keep row do not.
    */
-  let suggested = options.placeholder !== false && shared === null;
+  let suggested = options.placeholder !== false && shared === null && linked === null;
   let history = loadHistory(storage, storageKey);
   let current: Roll | null = shared;
   let showingShared = shared !== null;
@@ -255,7 +288,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
 
   const notation = () => (empty ? "" : formatNotation(spec));
   const kinds = (): DiceGroup[] => (empty ? [] : groupsOf(spec));
-  const dieName = (sides: Sides) => `d${sides}`;
+  /** The plain die of a size, as a kind: what a die button stands for. */
+  const plainDie = (sides: Sides): DiceGroup => ({ count: 1, sides, keep: "all" });
 
   /** The spec changed: nothing is held any more, and the target follows the new average. */
   function settle(before: string) {
@@ -268,11 +302,11 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   }
 
   /** The pool, set from its kinds. The kind last touched stays lit, found again by its sides. */
-  function setKinds(next: DiceGroup[], touched: Sides | null) {
+  function setKinds(next: DiceGroup[], touched: string | null) {
     const before = notation();
     empty = next.length === 0;
     if (!empty) spec = specOf(next, spec.modifier);
-    const found = touched === null ? -1 : groupsOf(spec).findIndex((g) => g.sides === touched);
+    const found = touched === null ? -1 : groupsOf(spec).findIndex((g) => dieName(g) === touched);
     lit = empty ? 0 : found >= 0 ? found : Math.min(lit, groupsOf(spec).length - 1);
     settle(before);
   }
@@ -300,7 +334,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     if (mine === undefined) return;
     if (next.count !== undefined) suggested = false;
     all[lit] = { ...mine, ...next };
-    setKinds(all, mine.sides);
+    setKinds(all, dieName(mine));
   }
 
   /**
@@ -308,13 +342,19 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
    * On the dice the tray opened with, a different kind takes their place, and
    * the same kind is simply one more of them.
    */
-  function addDie(sides: Sides) {
-    const all = suggested && !kinds().some((g) => g.sides === sides) ? [] : kinds();
+  function addDie(die: DiceGroup, count = 1) {
+    const name = dieName(die);
+    const all = suggested && !kinds().some((g) => dieName(g) === name) ? [] : kinds();
     suggested = false;
-    const at = all.findIndex((g) => g.sides === sides);
-    if (at >= 0) all[at] = { ...(all[at] as DiceGroup), count: (all[at] as DiceGroup).count + 1 };
-    else all.push({ count: 1, sides, keep: "all" });
-    setKinds(all, sides);
+    const at = all.findIndex((g) => dieName(g) === name);
+    // Never past the limits: the buttons dim there, and a die made or loaded below is held to them too.
+    const room = MAX_DICE - all.reduce((sum, g) => sum + g.count, 0);
+    const adding = Math.min(count, room);
+    if (adding < 1 || (at < 0 && all.length >= MAX_GROUPS)) return false;
+    if (at >= 0) all[at] = { ...(all[at] as DiceGroup), count: (all[at] as DiceGroup).count + adding };
+    else all.push({ ...die, count: adding, keep: "all" });
+    setKinds(all, name);
+    return true;
   }
 
   /** One die fewer of a kind; its last die takes the kind out of the pool. */
@@ -325,7 +365,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     suggested = false;
     if (mine.count > 1) all[index] = { ...mine, count: mine.count - 1 };
     else all.splice(index, 1);
-    setKinds(all, mine.count > 1 ? mine.sides : null);
+    setKinds(all, mine.count > 1 ? dieName(mine) : null);
   }
 
   function renderControls() {
@@ -333,6 +373,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const total = all.reduce((sum, g) => sum + g.count, 0);
     const mine = all[lit];
     const room = MAX_DICE - total;
+    const full = room < 1;
     const counts = Array.from({ length: MAX_DICE - MIN_DICE + 1 }, (_, i) => i + MIN_DICE);
     const minus = h("button", { type: "button", "aria-label": `${t.modifier} −1`, "data-testid": "kk-mod-down" }, "−");
     const plus = h("button", { type: "button", "aria-label": `${t.modifier} +1`, "data-testid": "kk-mod-up" }, "+");
@@ -381,7 +422,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       const text = formatNotation(specOf([group]));
       const chip = h(
         "button",
-        { type: "button", class: "kk-chip", "data-testid": "kk-chip", "data-value": String(group.sides), "data-lit": String(index === lit), "data-suggested": String(suggested), "aria-label": fillIn(t.takeOne, { die: dieName(group.sides), n: group.count }), title: text },
+        { type: "button", class: "kk-chip", "data-testid": "kk-chip", "data-value": dieName(group).slice(1), "data-lit": String(index === lit), "data-suggested": String(suggested), "aria-label": fillIn(t.takeOne, { die: dieName(group), n: group.count }), title: text },
         h("span", {}, text),
         h("i", { "aria-hidden": "true" }, "−"),
       );
@@ -397,16 +438,16 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     });
 
     // A button that would take the roll past a limit is dimmed, and the row's label says which limit.
-    const full = room < 1;
     const allKinds = all.length >= MAX_GROUPS;
-    const cannotAdd = (sides: Sides) => full || (allKinds && !all.some((g) => g.sides === sides));
+    const inRoll = (sides: Sides) => all.some((g) => dieName(g) === dieName(plainDie(sides)));
+    const cannotAdd = (sides: Sides) => full || (allKinds && !inRoll(sides));
     // While the dice are only suggested, a tap chooses; after that, it adds. The label says which.
     const addLabel = full ? fillIn(t.limitDice, { n: MAX_DICE }) : allKinds ? fillIn(t.limitKinds, { n: MAX_GROUPS }) : suggested ? t.choose : t.add;
 
     refill(controls,
       h("div", { class: "kk-row" }, h("span", { class: "kk-label" }, t.pool), h("div", { class: "kk-pool", role: "group", "aria-label": t.pool, "data-testid": "kk-pool", "data-suggested": String(suggested) }, ...chips)),
       segment(
-        all.length > 1 && mine !== undefined ? dieName(mine.sides) : t.dice,
+        all.length > 1 && mine !== undefined ? dieName(mine) : t.dice,
         counts,
         mine?.count ?? null,
         (n) => String(n),
@@ -418,13 +459,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       segment<Sides>(
         addLabel,
         DIE_SIDES,
-        mine?.sides ?? null,
-        (n) => h("span", { style: "display:inline-flex;align-items:center;gap:4px" }, dieIcon(n as DieSides), dieName(n)),
-        addDie,
+        // A loaded or custom die lights no button: the buttons are the fair dice.
+        mine !== undefined && mine.weights === undefined && mine.faces === undefined ? mine.sides : null,
+        (n) => h("span", { style: "display:inline-flex;align-items:center;gap:4px" }, dieIcon(n as DieSides), `d${n}`),
+        (n) => void addDie(plainDie(n)),
         "kk-sides",
         cannotAdd,
         clear,
-        (sides) => all.some((g) => g.sides === sides),
+        inRoll,
       ),
       h(
         "div",
@@ -452,9 +494,57 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         h("p", {}, seeded ? t.seededHint : t.fairHint),
         seeded ? h("div", { class: "kk-row" }, seedInput, fresh) : null,
       ),
+      // The tray's own language chooser, for a page that asks for one: quiet, and last but for what is one level down.
+      options.languageChooser === true
+        ? segment(t.language, ["en", "ja"] as const, locale.toLowerCase().startsWith("ja") ? "ja" : "en", (l) => (l === "en" ? "English" : "日本語"), (l) => setLocale(l, true), "kk-language")
+        : null,
+      morePanel(more, sets, !empty, t, {
+        add(text) {
+          const read = checkNotation(text);
+          if (!read.ok) return fillIn(t[REFUSALS[read.problem]], { part: read.part });
+          // A die made or picked here joins the roll like a tapped one: every kind in what was typed, as many as there is room for.
+          for (const group of groupsOf(read.spec)) if (!addDie(group, group.count)) return fillIn(full ? t.limitDice : t.limitKinds, { n: full ? MAX_DICE : MAX_GROUPS });
+          return null;
+        },
+        save(name) {
+          const set = makeSet(name, spec);
+          if (set === null) return;
+          sets = withSet(sets, set);
+          storageWorks = storeSets(storage, setsKey, sets) && storageWorks;
+        },
+        use(set) {
+          const read = checkNotation(set.notation);
+          if (read.ok) changeSpec(read.spec);
+        },
+        remove(set) {
+          sets = withoutSet(sets, set.name);
+          storeSets(storage, setsKey, sets);
+          renderControls();
+        },
+        copy(set, button) {
+          copyLink(linkTo(setQuery(set)), button);
+        },
+        redraw: renderControls,
+      }),
     );
     const saying = empty ? t.addToRoll : fillIn(t.poolSays, { notation: notation() });
     if (said.textContent !== saying) said.textContent = saying;
+  }
+
+  /** The tray in another language. A choice made with the tray's own chooser is remembered on the device. */
+  function setLocale(next: string, remember: boolean) {
+    locale = next;
+    t = wordsFor(next);
+    if (remember) {
+      try {
+        storage?.setItem(languageKey, next);
+      } catch {
+        // Not remembered on a device that keeps nothing.
+      }
+    }
+    release.textContent = t.releaseAll;
+    renderMute();
+    render();
   }
 
   function useSeed(next: string | null) {
@@ -464,17 +554,19 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   }
 
   /** What a die is and what became of it, in words: "d6: 6, exploded". */
-  function dieLabel(sides: Sides, die: DieRoll, isHeld: boolean): string {
-    const words = [die.status === "dropped" ? t.dieDropped : die.status === "rerolled" ? t.dieRerolled : null, die.exploded ? t.dieExploded : null, isHeld ? t.held : null].filter((w) => w !== null);
-    return `${dieName(sides)}: ${faceText(sides, die.face)}${words.length > 0 ? `, ${words.join(", ")}` : ""}`;
+  function dieLabel(group: DiceGroup, die: DieRoll, isHeld: boolean): string {
+    const words = [group.weights !== undefined ? t.dieLoaded : null, die.status === "dropped" ? t.dieDropped : die.status === "rerolled" ? t.dieRerolled : null, die.exploded ? t.dieExploded : null, isHeld ? t.held : null].filter((w) => w !== null);
+    // A custom die is named by what it shows; its list of faces would be a mouthful.
+    return `${group.faces !== undefined ? "" : `${dieName(group)}: `}${faceText(group, die.face)}${words.length > 0 ? `, ${words.join(", ")}` : ""}`;
   }
 
   /** One die on the felt. `hold` makes it a button that holds it; without, it is a picture and a tap goes through to the felt. */
-  function dieElement(sides: Sides, die: DieRoll, index: number, first: boolean, hold: ((index: number) => void) | null = null): HTMLElement {
+  function dieElement(group: DiceGroup, die: DieRoll, index: number, first: boolean, hold: ((index: number) => void) | null = null): HTMLElement {
+    const sides = group.sides;
     const kept = die.status === "kept";
     const isHeld = held[index] === true;
-    const hit = sides === 20 && kept ? (die.face === 20 ? "crit" : die.face === 1 ? "fumble" : null) : null;
-    const label = dieLabel(sides, die, isHeld);
+    const hit = sides === 20 && group.faces === undefined && kept ? (die.face === 20 ? "crit" : die.face === 1 ? "fumble" : null) : null;
+    const label = dieLabel(group, die, isHeld);
     const attrs = {
       class: "kk-die",
       "data-kept": String(kept),
@@ -486,16 +578,19 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       "data-face": String(die.face),
       "data-index": String(index),
       "data-sides": String(sides),
-      title: kept && !die.exploded ? null : label,
+      "data-loaded": group.weights !== undefined ? "true" : null,
+      "data-custom": group.faces !== undefined ? "true" : null,
+      title: kept && !die.exploded && group.weights === undefined ? null : label,
     };
-    if (hold === null) return h("span", attrs, dieFace(sides, die.face, label));
-    const button = h("button", { ...attrs, type: "button", "aria-pressed": String(isHeld), "data-tag": t.held }, dieFace(sides, die.face, label));
+    if (hold === null) return h("span", attrs, dieFace(group, die.face, label));
+    const button = h("button", { ...attrs, type: "button", "aria-pressed": String(isHeld), "data-tag": t.held }, dieFace(group, die.face, label));
     button.addEventListener("click", () => hold(index));
     return button;
   }
 
-  function randomFace(sides: Sides): number {
-    const { low, high } = faceRange(sides);
+  /** A face to show while a die tumbles. It is for show: the roll was made before anything moved. */
+  function randomFace(group: DiceGroup): number {
+    const { low, high } = group.faces !== undefined ? { low: 1, high: group.faces.length } : faceRange(group.sides);
     return low + Math.floor(Math.random() * (high - low + 1));
   }
 
@@ -507,8 +602,10 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       for (let n = 0; n < group.count; n++) {
         const at = dice.length;
         const face = group.sides === "F" ? (RESTING_FATE[at] as number) : Math.min(RESTING[at] as number, group.sides);
+        const custom = group.faces?.[face - 1];
         const one: DieRoll = { face, status: "kept", exploded: false, die: at };
         if (all.length > 1) one.group = index;
+        if (custom !== undefined) one.label = custom.label;
         dice.push(one);
       }
     });
@@ -547,7 +644,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     tray.disabled = empty || (holding > 0 && holding === thrown.length);
     felt.setAttribute("data-rolling", String(rolling));
     diceBox.setAttribute("data-count", thrown.length > MAX_DICE ? "many" : String(thrown.length));
-    diceBox.replaceChildren(...thrown.map((die, i) => dieElement(sidesOf(from, die), die, i, i > 0 && die.group !== thrown[i - 1]?.group, hold)));
+    diceBox.replaceChildren(...thrown.map((die, i) => dieElement(groupOf(from, die), die, i, i > 0 && die.group !== thrown[i - 1]?.group, hold)));
     const words = empty
       ? t.addToRoll
       : current === null
@@ -571,13 +668,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const line = h("div", { class: "kk-sum", "data-testid": "kk-sum" });
     all.forEach((group, index) => {
       const mine = thrown.filter((die) => (die.group ?? 0) === index);
-      const joiner = group.sides === "F" ? " " : " + ";
+      // Signs and words sit side by side; numbers are added.
+      const joiner = group.sides === "F" ? " " : group.faces !== undefined && group.faces.every((f) => f.value === undefined) ? " · " : " + ";
       if (index > 0) line.append(" + ");
       const bracket = all.length > 1 && mine.length > 1;
       if (bracket) line.append("(");
       mine.forEach((die, i) => {
         if (i > 0) line.append(joiner);
-        const face = faceText(group.sides, die.face);
+        const face = faceText(group, die.face);
         if (die.status === "kept") line.append(`${face}${die.exploded ? "!" : ""}`);
         else line.append(h("s", { title: die.status === "rerolled" ? t.dieRerolled : t.dieDropped }, `${face}${die.status === "rerolled" ? "↻" : ""}`));
       });
@@ -593,6 +691,24 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       h("div", { class: "kk-luck", "data-waiting": "true", "aria-hidden": "true" }, h("div", { class: "kk-meter" })),
       h("div", { class: "kk-actions" }, h("button", { type: "button", class: "kk-link", disabled: true }, t.copyLink)),
     ];
+  }
+
+  /** A link to this page carrying a query. A share base that has a query of its own, such as a language, keeps it. */
+  function linkTo(query: string): string {
+    const base = options.shareBase ?? (win ? `${win.location.origin}${win.location.pathname}` : "");
+    return `${base}${base.includes("?") ? "&" : "?"}${query}`;
+  }
+
+  /** Put a link on the clipboard and say so on the button that asked; where there is no clipboard, show it to be copied by hand. */
+  function copyLink(url: string, button: HTMLElement) {
+    const was = button.textContent;
+    const done = () => {
+      button.textContent = t.copied;
+      later(() => (button.textContent = was), 1800);
+    };
+    const clipboard = win?.navigator.clipboard;
+    if (clipboard) clipboard.writeText(url).then(done, () => win?.prompt(t.copyLink, url));
+    else win?.prompt(t.copyLink, url);
   }
 
   function renderResult() {
@@ -630,17 +746,19 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     if (r.spec.more === undefined && r.faces.length > 1 && r.faces.length === diceCount(r.spec) && r.faces.every((f) => f === r.faces[0])) badges.push(h("span", { class: "kk-badge", "data-tone": "good" }, t.allMatch));
 
     const copy = h("button", { type: "button", class: "kk-link", "data-testid": "kk-copy" }, t.copyLink);
-    copy.addEventListener("click", () => {
-      const base = options.shareBase ?? (win ? `${win.location.origin}${win.location.pathname}` : "");
-      const url = `${base}?${shareQuery(r)}`;
-      const done = () => {
-        copy.textContent = t.copied;
-        later(() => (copy.textContent = t.copyLink), 1800);
-      };
-      const clipboard = win?.navigator.clipboard;
-      if (clipboard) clipboard.writeText(url).then(done, () => win?.prompt(t.copyLink, url));
-      else win?.prompt(t.copyLink, url);
-    });
+    copy.addEventListener("click", () => copyLink(linkTo(shareQuery(r)), copy));
+    // A loaded roll says so beside its total, whatever else it says.
+    if (isLoaded(r.spec)) badges.unshift(h("span", { class: "kk-badge", "data-tone": "bad", "data-testid": "kk-loaded-badge" }, t.loadedBadge));
+    // A roll of words is its words: there is no total to show, and no luck to measure.
+    if (!hasTotal(r.spec)) {
+      refill(result,
+        h("div", { class: "kk-total kk-words", "data-testid": "kk-total" }, h("small", {}, `${t.result} · ${formatNotation(r.spec)}`), thrown.map((die) => die.label ?? String(die.face)).join(" · ")),
+        h("div", { class: "kk-sum" }, "\u00a0"),
+        (waiting()[0] as HTMLElement),
+        h("div", { class: "kk-actions" }, ...badges, copy),
+      );
+      return;
+    }
     refill(result,
       h("div", { class: "kk-total", "data-testid": "kk-total" }, h("small", {}, `${t.total} · ${formatNotation(r.spec)}`), String(r.total)),
       r.faces.length > 1 || r.spec.modifier !== 0 ? sumLine(r) : null,
@@ -691,7 +809,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       }
       if (!storageWorks) body.append(h("p", { class: "kk-empty", style: "padding:0" }, t.savedNowhere));
     } else if (tab === "stats") {
-      body.append(statsPanel(history, spec, kinds()[lit]?.sides ?? spec.sides, t, locale));
+      body.append(statsPanel(history, spec, kinds()[lit] ?? spec, t, locale, realDie));
     } else if (empty) {
       body.append(h("p", { class: "kk-empty" }, t.addToRoll));
     } else {
@@ -765,15 +883,15 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     renderResult();
     felt.setAttribute("data-rolling", "true");
     const dice = diceOf(thrown);
-    const shapes: [HTMLElement, Sides][] = [];
+    const shapes: [HTMLElement, DiceGroup][] = [];
     diceBox.setAttribute("data-count", dice.length > MAX_DICE ? "many" : String(dice.length));
     diceBox.replaceChildren(
       ...dice.map((die, i) => {
-        const sides = sidesOf(thrown.spec, die);
+        const kind = groupOf(thrown.spec, die);
         const first = i > 0 && die.group !== dice[i - 1]?.group;
         // A held die stays where it is, showing its face.
-        if (!moving[i]) return dieElement(sides, die, i, first);
-        const el = dieElement(sides, { face: randomFace(sides), status: "kept", exploded: false, die: i }, i, first);
+        if (!moving[i]) return dieElement(kind, die, i, first);
+        const el = dieElement(kind, { face: randomFace(kind), status: "kept", exploded: false, die: i }, i, first);
         el.removeAttribute("aria-pressed");
         el.classList.add("kk-tumble");
         el.style.setProperty("--kk-x0", `${Math.round((Math.random() - 0.5) * 160)}px`);
@@ -781,14 +899,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         el.style.setProperty("--kk-r0", `${Math.round((Math.random() - 0.5) * 720)}deg`);
         el.style.setProperty("--kk-t", `${tumbles[i]}ms`);
         el.style.setProperty("--kk-wait", `${waits[i]}ms`);
-        shapes.push([el, sides]);
+        shapes.push([el, kind]);
         return el;
       }),
     );
     refill(hint, " ");
     release.hidden = true;
     const flicker = () => {
-      for (const [el, sides] of shapes) el.replaceChildren(dieFace(sides, randomFace(sides), t.rolling));
+      for (const [el, kind] of shapes) el.replaceChildren(dieFace(kind, randomFace(kind), t.rolling));
     };
     const step = Math.max(60, Math.round(animationMs / 9));
     for (let at = step; at < animationMs; at += step) later(flicker, at);
@@ -847,6 +965,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     roll: throwDice,
     history: () => history,
     setSpec: (next) => changeSpec(next),
+    setLocale: (next) => setLocale(next, false),
     destroy() {
       for (const id of timers) clearTimeout(id);
       doc.removeEventListener("keydown", onKey);

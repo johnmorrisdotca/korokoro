@@ -5,9 +5,12 @@ import process from "node:process";
 
 import { describe, expect, it } from "vitest";
 
-import { roll, rollHeld } from "./dice.ts";
+import { chancesOf, groupsOf, hasTotal, isFair, roll, rollHeld } from "./dice.ts";
+import { LOADED_PRESETS, faceChances, loadingOf } from "./loaded.ts";
+import { makeSet, readSet, setQuery } from "./sets.ts";
+import { fairnessTest, readResults } from "./stats.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
-import { chanceAtLeast, chanceExactly, distributionHolding, exactCounts, expectedTotal, luckOf, mostLikely, spreadOf } from "./odds.ts";
+import { chanceAtLeast, chanceExactly, distributionHolding, distributionOf, exactCounts, expectedTotal, luckOf, mostLikely, spreadOf } from "./odds.ts";
 import { seededSource } from "./random.ts";
 import { shareQuery } from "./share.ts";
 import { STRINGS } from "./ui/strings.ts";
@@ -66,7 +69,12 @@ describe("the README's examples", () => {
 
   it("the quick start's numbers", () => {
     expect(chanceAtLeast(spec("2d20kh1+5"), 15)).toBeCloseTo(0.7975, 12);
-    expect(readme).toContain("chanceAtLeast(attack, 15);                  // 0.7975");
+    expect(readme).toContain("chanceAtLeast(attack, 15);                   // 0.7975");
+    // The API example: every line's comment is what the line gives.
+    const read = checkNotation("4d6dl1");
+    const thrown = roll(read.spec, seededSource("table-7"));
+    expect([thrown.faces, thrown.kept, thrown.total]).toEqual([[6, 4, 2, 1], [true, true, true, false], 12]);
+    expect(readme).toContain("thrown.faces;                                  // [6, 4, 2, 1]");
   });
 
   it("what a roll returns", () => {
@@ -120,13 +128,13 @@ describe("the README's examples", () => {
 });
 
 describe("the README's list of who it is for", () => {
-  const from = readme.indexOf("### Who it is for");
-  const list = readme.slice(from, readme.indexOf("### What is in the package"));
+  const from = readme.indexOf("## Who it is for");
+  const list = readme.slice(from, readme.indexOf("Game names are trademarks"));
 
   it("names notation that rolls, every piece of it", () => {
     const found = codes(list);
-    expect(found).toEqual(["2d20kh1+5", "4d6dl1", "8d6", "1d20+1d4", "2d6", "5d6", "6d6", "2d6"]);
-    for (const text of found) expect(roll(parseNotation(text), seededSource(text)).total, text).toBeGreaterThan(0);
+    expect(found).toEqual(["2d20kh1+5", "4d6dl1", "8d6", "1d20+1d4", "2d6", "5d6", "6d6", "d[Hit,Miss,Miss]", "2d6", "d6{6:3}"]);
+    for (const text of found) expect(roll(parseNotation(text), seededSource(text)).faces.length, text).toBeGreaterThan(0);
   });
 
   it("and the dice do what it says of them", () => {
@@ -136,6 +144,110 @@ describe("the README's list of who it is for", () => {
     expect(rollHeld(first, [true, true, false, false, false], seededSource("again"), 2).faces.slice(0, 2)).toEqual(first.faces.slice(0, 2));
     // A seed makes a classroom's rolls repeatable.
     expect(roll(parseNotation("6d6"), seededSource("class"), 1).faces).toEqual(roll(parseNotation("6d6"), seededSource("class"), 1).faces);
+  });
+});
+
+describe("the README on custom dice, loaded dice and sets", () => {
+  const spec = (text) => parseNotation(text);
+
+  it("custom dice", () => {
+    const thrown = roll(spec("3d[Hit=1,Miss=0,Miss=0]"), seededSource("table-7"), 1);
+    expect(thrown.dice.map((d) => d.label)).toEqual(["Miss", "Hit", "Miss"]);
+    expect(thrown.faces).toEqual([3, 1, 2]);
+    expect(thrown.total).toBe(1);
+    expect(expectedTotal(spec("3d[Hit=1,Miss=0,Miss=0]"))).toBeCloseTo(1, 12);
+    expect(hasTotal(spec("d[Yes,No,Maybe]"))).toBe(false);
+    expect(isFair(spec("d[Yes,No,Maybe]"))).toBe(false);
+    for (const line of ['thrown.dice.map((d) => d.label);   // ["Miss", "Hit", "Miss"]', "thrown.faces;                      // [3, 1, 2]"]) expect(readme).toContain(line);
+  });
+
+  it("loaded dice and the fairness test", () => {
+    expect(isFair(spec("d6{6:3}"))).toBe(false);
+    expect(roll(spec("d6{6:3}")).loaded).toBe(true);
+    expect(fairnessTest([30, 30, 30, 30, 30, 90]).verdict).toBe("lopsided");
+    expect(fairnessTest([82, 95, 103, 98, 104, 118]).verdict).toBe("fair");
+  });
+
+  it("sets", () => {
+    const set = makeSet("Skirmish", "3d[Hit=1,Miss=0,Miss=0]");
+    expect(readme).toContain(`?${setQuery(set)}`);
+    expect(readSet(setQuery(set))).toEqual({ name: "Skirmish", notation: "3d[Hit=1,Miss=0,Miss=0]" });
+  });
+
+  it("names the family as each sibling names itself", () => {
+    for (const name of ["Kyuubu", "Toranpu", "Tane", "Hitotsu", "Narabe", "Tenka", "Kumimoji"]) expect(readme).toContain(`https://github.com/johnmorrisdotca/${name.toLowerCase()}`);
+    expect(readme).toContain("Game names are trademarks of their respective owners.");
+  });
+});
+
+describe("the page on loaded dice", () => {
+  const page = readFileSync("docs/loaded-dice.md", "utf8");
+  const spec = (text) => parseNotation(text);
+
+  it("every notation in its table is a loaded die", () => {
+    const from = page.indexOf("| Notation | The die |");
+    const rows = page.slice(from).split("\n").slice(2).filter((line, i, all) => line.startsWith("|") && all.slice(0, i).every((l) => l.startsWith("|")));
+    expect(rows).toHaveLength(4);
+    for (const row of rows) for (const text of codes(row.split("|")[1])) expect(isFair(spec(text)), text).toBe(false);
+    expect(checkNotation("d6{6:1}")).toMatchObject({ ok: false, problem: "weights" });
+  });
+
+  it("the Optimist is as it says", () => {
+    const optimist = spec("d6{6:3}");
+    expect(optimist.weights).toEqual([1, 1, 1, 1, 1, 3]);
+    const thrown = roll(optimist, seededSource("table-7"), 1);
+    expect(thrown.faces).toEqual([2]);
+    expect(thrown.loaded).toBe(true);
+    expect(expectedTotal(optimist)).toBe(4.125);
+    expect(loadingOf(optimist)).toEqual({ face: 6, loaded: [3, 8], fair: [1, 6] });
+    expect(faceChances(optimist)[5]).toMatchObject({ face: 6, label: "6", chance: 0.375 });
+    expect(chancesOf(groupsOf(optimist)[0])[5]).toBe(3 / 8);
+    const pair = exactCounts(spec("2d6{6:3}"));
+    expect(pair.outcomes).toBe(64n);
+    expect(pair.counts.at(-1)).toBe(9n);
+    expect(page).toContain("roll=1d6%7B6%3A3%7D");
+  });
+
+  it("the house dice are the presets, word for word", () => {
+    for (const preset of LOADED_PRESETS) {
+      expect(page).toContain(`**${preset.name}**, \`${preset.notation}\`.`);
+      expect(page.replace(/\n {2}/g, " ")).toContain(preset.says);
+    }
+    const couple = spec("2d6{2:0,4:0,6:0}");
+    expect(chanceExactly(couple, 7)).toBe(0);
+    expect([distributionOf(couple).min, distributionOf(couple).max]).toEqual([2, 10]);
+  });
+
+  it("the fairness test gives the figures printed", () => {
+    const a = fairnessTest([82, 95, 103, 98, 104, 118]);
+    expect([a.rolls, a.statistic.toFixed(2), a.p.toFixed(3), a.verdict]).toEqual([600, "7.02", "0.219", "fair"]);
+    const b = fairnessTest([58, 28, 41, 36, 47, 30]);
+    expect([b.rolls, b.statistic.toFixed(2), b.p.toFixed(4), b.verdict]).toEqual([240, "15.85", "0.0073", "unusual"]);
+    const c = fairnessTest([30, 30, 30, 30, 30, 90]);
+    expect([c.rolls, c.statistic, c.p.toFixed(16), c.verdict]).toEqual([240, 75, "0.0000000000000093", "lopsided"]);
+    for (const line of ["statistic 7.02 · p 0.219", "statistic 15.85 · p 0.0073", "statistic 75 · p 0.0000000000000093"]) expect(page).toContain(line);
+    const typed = readResults("3 5 6 6 1");
+    expect(typed.counts).toEqual([1, 0, 1, 0, 1, 2]);
+    expect(fairnessTest(typed.counts)).toMatchObject({ verdict: "too-few", rolls: 5, minimum: 30, p: null });
+    expect(fairnessTest(new Array(20).fill(1)).minimum).toBe(100);
+  });
+
+  it("catches the Optimist, and clears the fair die, from the seeds it names", () => {
+    const count = (notation, seed) => {
+      const source = seededSource(seed);
+      const counts = [0, 0, 0, 0, 0, 0];
+      for (let i = 0; i < 240; i++) counts[roll(spec(notation), source).total - 1] += 1;
+      return counts;
+    };
+    const suspect = count("d6{6:3}", "suspect");
+    expect(suspect).toEqual([31, 21, 34, 21, 34, 99]);
+    expect(fairnessTest(suspect).verdict).toBe("lopsided");
+    const honest = count("1d6", "honest");
+    expect(honest).toEqual([33, 44, 44, 39, 42, 38]);
+    expect(fairnessTest(honest).verdict).toBe("fair");
+    expect(page).toContain("[31, 21, 34, 21, 34, 99]");
+    expect(page).toContain("[33, 44, 44, 39, 42, 38]");
+    expect(12 * 26306).toBe(315672);
   });
 });
 

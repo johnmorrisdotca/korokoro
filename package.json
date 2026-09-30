@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.4.0",
-  "description": "Dice roller and dice notation parser with exact odds for every roll: d4, d6, d8, d10, d12, d20, d30, d100 and any die up to d1000, mixed, held and rerolled. For D&D and tabletop RPGs, board games and dice games, teaching probability, or just rolling. A ready-made dice tray with real dice sounds and seeded rolls anyone can verify. Zero dependencies.",
+  "version": "1.5.0",
+  "description": "Dice roller and dice notation parser with exact odds for every roll: d4, d6, d8, d10, d12, d20, d100, any die up to d1000, custom and loaded dice. A typed JavaScript and TypeScript API, and a ready-made dice tray for React, Vue, Svelte, Angular or plain HTML. For D&D and tabletop RPGs, board games, dice games and teaching probability. Zero dependencies.",
   "keywords": [
     "dice",
     "dice-roller",
@@ -45,7 +45,18 @@
     "statistics",
     "education",
     "typescript",
-    "react"
+    "react",
+    "api",
+    "javascript",
+    "vue",
+    "svelte",
+    "angular",
+    "vanilla-js",
+    "esm",
+    "custom-dice",
+    "loaded-dice",
+    "fairness-test",
+    "chi-square"
   ],
   "homepage": "https://johnmorrisdotca.github.io/korokoro/",
   "bugs": {

@@ -1,4 +1,4 @@
-import { isDieSides, type DieSides, type Sides } from "../dice.ts";
+import { isDieSides, type DiceGroup, type DieSides, type Sides } from "../dice.ts";
 import { s } from "./dom.ts";
 
 /**
@@ -45,19 +45,74 @@ const NUMBER_Y: Record<DieSides, number> = { 4: 68, 6: 50, 8: 52, 10: 44, 12: 52
 
 const TOKEN = "M31 4 L69 4 L96 31 L96 69 L69 96 L31 96 L4 69 L4 31 Z";
 
-/** What a face reads as: a Fate die shows a sign, every other die its number. */
-export function faceText(sides: Sides, face: number): string {
-  if (sides !== "F") return String(face);
+/** What a face reads as: a custom die's words, a Fate die's sign, every other die its number. */
+export function faceText(group: DiceGroup, face: number): string {
+  const custom = group.faces?.[face - 1];
+  if (custom !== undefined) return custom.label;
+  if (group.sides !== "F") return String(face);
   return face > 0 ? "+" : face < 0 ? "−" : "0";
+}
+
+/** How large a custom face's words are drawn, by the longest line of them. */
+function wordSize(longest: number): number {
+  return longest <= 1 ? 40 : longest === 2 ? 34 : longest === 3 ? 28 : longest === 4 ? 23 : longest <= 6 ? 17 : longest <= 8 ? 13.5 : longest <= 11 ? 10.5 : 8.5;
+}
+
+/** Dark ink or light, whichever reads on a colour given as #rgb or #rrggbb. */
+function inkOn(colour: string): string {
+  const hex = colour.length === 4 ? [...colour.slice(1)].map((c) => c + c).join("") : colour.slice(1);
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16)) as [number, number, number];
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150 ? "#1f2320" : "#ffffff";
+}
+
+/** A custom face: a plain tile in the face's colour, with its words, on two lines where they are long and have a space to break at. */
+function customFace(svg: SVGElement, label: string, colour: string | undefined) {
+  const body = s("rect", { x: 4, y: 4, width: 92, height: 92, rx: 18, class: "kk-body" });
+  if (colour !== undefined) body.setAttribute("style", `fill:${colour}`);
+  svg.append(body, s("rect", { x: 10, y: 10, width: 80, height: 80, rx: 14, class: "kk-shine" }));
+  const chars = [...label];
+  let lines = [label];
+  if (chars.length > 6 && label.includes(" ")) {
+    // Break at the space nearest the middle.
+    const spaces = chars.flatMap((c, i) => (c === " " ? [i] : []));
+    const at = spaces.reduce((best, i) => (Math.abs(i - chars.length / 2) < Math.abs(best - chars.length / 2) ? i : best));
+    lines = [chars.slice(0, at).join(""), chars.slice(at + 1).join("")];
+  }
+  const size = wordSize(Math.max(...lines.map((line) => [...line].length)));
+  lines.forEach((line, i) => {
+    const text = s("text", { x: 50, y: 50 + (i - (lines.length - 1) / 2) * size * 1.15, "font-size": size, class: "kk-word", "text-anchor": "middle", "dominant-baseline": "central" }, line);
+    if (colour !== undefined) text.setAttribute("style", `fill:${inkOn(colour)}`);
+    svg.append(text);
+  });
+}
+
+/** The mark of a loaded die: a small weight in the corner, on the felt, in every size. */
+function loadedMark(): SVGElement {
+  const mark = s("g", { class: "kk-loaded" });
+  // On the corner and over the edge, clear of every pip and number.
+  mark.append(s("circle", { cx: 9, cy: 9, r: 14 }), s("path", { d: "M4.5 6.5 L2 16.5 L16 16.5 L13.5 6.5 Z" }), s("circle", { cx: 9, cy: 4.2, r: 3, class: "kk-loaded-ring" }));
+  return mark;
+}
+
+/** One die drawn showing a face, as an SVG labelled for a screen reader. A loaded die carries its mark. */
+export function dieFace(group: DiceGroup, face: number, label: string): SVGElement {
+  const svg = drawFace(group, face, label);
+  if (group.weights !== undefined) svg.append(loadedMark());
+  return svg;
 }
 
 function numberSize(text: string): number {
   return text.length >= 4 ? 19 : text.length === 3 ? 24 : text.length === 2 ? 30 : 36;
 }
 
-/** One die drawn showing a face, as an SVG labelled for a screen reader. */
-export function dieFace(sides: Sides, face: number, label: string): SVGElement {
+function drawFace(group: DiceGroup, face: number, label: string): SVGElement {
+  const sides: Sides = group.sides;
   const svg = s("svg", { viewBox: "0 0 100 100", class: "kk-die-svg", role: "img", "aria-label": label });
+  const custom = group.faces?.[face - 1];
+  if (group.faces !== undefined) {
+    customFace(svg, custom?.label ?? "?", custom?.colour);
+    return svg;
+  }
   if (sides === "F") {
     svg.append(s("rect", { x: 4, y: 4, width: 92, height: 92, rx: 18, class: "kk-body" }));
     svg.append(s("rect", { x: 10, y: 10, width: 80, height: 80, rx: 14, class: "kk-shine" }));

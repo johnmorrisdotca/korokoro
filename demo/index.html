@@ -18,12 +18,22 @@
       h1 { margin: 0; font-size: 1.8rem; letter-spacing: -.01em; }
       h1 span { font-size: 1rem; color: var(--muted); margin-left: 6px; font-weight: 500; }
       header p { margin: 2px 0 0; color: var(--muted); }
-      nav { display: flex; gap: 8px; }
-      nav a { text-decoration: none; color: inherit; border: 1px solid var(--rule); border-radius: 999px; padding: 6px 14px; font-size: .9rem; font-weight: 600; }
+      nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      nav a { text-decoration: none; color: inherit; border: 1px solid var(--rule); border-radius: 999px; padding: 0 14px; min-height: 44px; display: inline-flex; align-items: center; font-size: .9rem; font-weight: 600; }
       nav a:hover { border-color: var(--ink); }
       footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
       footer code { font-size: .8rem; }
       a { color: inherit; }
+      .name { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
+      .lang { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; padding: 2px; }
+      .lang button { font: inherit; font-size: .9rem; font-weight: 600; color: var(--muted); background: transparent; border: 0; border-radius: 999px; min-width: 44px; min-height: 44px; padding: 0 14px; cursor: pointer; }
+      .lang button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
+      /* Room for the longer of the two languages, so that switching moves nothing below. */
+      .intro { min-height: 12.5rem; }
+      @media (min-width: 700px) { .intro { min-height: 6.5rem; } }
+      header { align-items: flex-start; }
+      .unreviewed { margin: 14px 0 0; font-size: .85rem; color: var(--muted); }
+      .unreviewed[hidden] { display: none; }
       .more { margin-top: 28px; }
       .more h2 { margin: 0 0 4px; font-size: 1.05rem; }
       .more p { margin: 0 0 12px; color: var(--muted); font-size: .9rem; }
@@ -37,39 +47,118 @@
   <body>
     <main>
       <header>
-        <div>
+        <div class="intro">
           <h1>Korokoro<span lang="ja">コロコロ</span></h1>
-          <p>Fair dice for the table, with the odds of every throw. Tap a die to choose it, tap more to add them, up to ten, and tap the felt to roll.</p>
+          <p data-say="pitch"></p>
+          <p class="name"><span data-say="name"></span> <a href="https://github.com/johnmorrisdotca/korokoro#the-name" data-say="nameLink"></a></p>
         </div>
         <nav>
+          <div class="lang" role="group" aria-label="Language / 言語">
+            <button type="button" data-lang="en" lang="en">English</button>
+            <button type="button" data-lang="ja" lang="ja">日本語</button>
+          </div>
           <a href="https://github.com/johnmorrisdotca/korokoro">GitHub</a>
           <a href="https://www.npmjs.com/package/@johnmorrisdotca/korokoro">npm</a>
         </nav>
       </header>
       <div id="roller"></div>
+      <p class="unreviewed" id="unreviewed" lang="ja" hidden>この日本語は、まだ日本語を母語とする方の確認を受けていません。<a href="https://github.com/johnmorrisdotca/korokoro/issues/new?template=fix-a-translation.md">訂正を歓迎します</a>。</p>
       <section class="more" aria-labelledby="more-title">
-        <h2 id="more-title">More dice, by notation</h2>
-        <p>The buttons are the dice a table owns: d4, d6, d8, d10, d12, d20, d30 and d100, in any mix. After a roll, tap a die on the felt to hold it and roll the rest. Anything else is typed into the notation box beside the bonus, or tapped here.</p>
+        <h2 id="more-title" data-say="moreTitle"></h2>
+        <p data-say="moreText"></p>
         <ul>
-          <li><button type="button" data-roll="4d6dl1"><code>4d6dl1</code><span>Four d6, drop the lowest: an ability score</span></button></li>
-          <li><button type="button" data-roll="3d6!"><code>3d6!</code><span>Exploding dice: a 6 throws another die</span></button></li>
-          <li><button type="button" data-roll="2d6r<3+4"><code>2d6r&lt;3+4</code><span>Reroll every 1 and 2 until they clear, then add 4</span></button></li>
-          <li><button type="button" data-roll="2d8ro<3"><code>2d8ro&lt;3</code><span>Reroll a 1 or a 2 once, and take what comes</span></button></li>
-          <li><button type="button" data-roll="4dF"><code>4dF</code><span>Four Fate dice: plus, blank or minus</span></button></li>
-          <li><button type="button" data-roll="1d20+1d4+3"><code>1d20+1d4+3</code><span>A d20 and a d4 together, plus 3</span></button></li>
-          <li><button type="button" data-roll="1d14"><code>d14</code><span>A die of any size, from 2 sides to 1000</span></button></li>
-          <li><button type="button" data-roll="5d10kl2"><code>5d10kl2</code><span>Five d10, keep the lowest two</span></button></li>
-          <li><button type="button" data-roll="2d20kh1+5"><code>2d20kh1+5</code><span>Advantage: two d20, keep the highest, add 5</span></button></li>
+          <li><button type="button" data-roll="4d6dl1"><code>4d6dl1</code><span data-say="ex1"></span></button></li>
+          <li><button type="button" data-roll="3d6!"><code>3d6!</code><span data-say="ex2"></span></button></li>
+          <li><button type="button" data-roll="2d6r<3+4"><code>2d6r&lt;3+4</code><span data-say="ex3"></span></button></li>
+          <li><button type="button" data-roll="2d8ro<3"><code>2d8ro&lt;3</code><span data-say="ex4"></span></button></li>
+          <li><button type="button" data-roll="4dF"><code>4dF</code><span data-say="ex5"></span></button></li>
+          <li><button type="button" data-roll="1d20+1d4+3"><code>1d20+1d4+3</code><span data-say="ex6"></span></button></li>
+          <li><button type="button" data-roll="1d14"><code>d14</code><span data-say="ex7"></span></button></li>
+          <li><button type="button" data-roll="1d[Yes,No,Maybe]"><code>d[Yes,No,Maybe]</code><span data-say="ex8"></span></button></li>
+          <li><button type="button" data-roll="2d20kh1+5"><code>2d20kh1+5</code><span data-say="ex9"></span></button></li>
         </ul>
       </section>
       <footer>
-        <span>Rolls use your device's cryptographic generator unless you choose a seed. Your history stays on this device. Dice sounds from Kenney's Casino Audio, CC0.</span>
+        <span data-say="foot"></span>
         <span><code>pnpm add @johnmorrisdotca/korokoro</code> · MIT © John Morris</span>
       </footer>
     </main>
     <script type="module">
       import { mountRoller, parseNotation } from "./dist/index.js";
-      const roller = mountRoller(document.getElementById("roller"), { wide: true, locale: navigator.language });
+
+      // The page's own words, in the two languages the tray speaks. Set as text, never as HTML.
+      const WORDS = {
+        en: {
+          pitch: "Fair dice for the table, with the odds of every throw. Tap a die to choose it, tap more to add them, up to ten, and tap the felt to roll.",
+          name: "Korokoro is Japanese for the sound of something small rolling along.",
+          nameLink: "About the name",
+          moreTitle: "More dice, by notation",
+          moreText: "The buttons are the dice a table owns: d4, d6, d8, d10, d12, d20, d30 and d100, in any mix. After a roll, tap a die on the felt to hold it and roll the rest. Anything else is typed into the notation box beside the bonus, made under “Custom dice, loaded dice and sets”, or tapped here.",
+          ex1: "Four d6, drop the lowest: an ability score",
+          ex2: "Exploding dice: a 6 throws another die",
+          ex3: "Reroll every 1 and 2 until they clear, then add 4",
+          ex4: "Reroll a 1 or a 2 once, and take what comes",
+          ex5: "Four Fate dice: plus, blank or minus",
+          ex6: "A d20 and a d4 together, plus 3",
+          ex7: "A die of any size, from 2 sides to 1000",
+          ex8: "A die of your own: any faces you like",
+          ex9: "Advantage: two d20, keep the highest, add 5",
+          foot: "Rolls use your device's cryptographic generator unless you choose a seed. Your history stays on this device. Dice sounds from Kenney's Casino Audio, CC0.",
+        },
+        ja: {
+          pitch: "卓のための公平なダイスです。すべての出目の確率がわかります。ダイスをタップして選び、さらにタップして追加し（10個まで）、フェルトをタップして振ります。",
+          name: "「コロコロ」は、小さなものが転がる音を表す日本語です。",
+          nameLink: "名前について（英語）",
+          moreTitle: "表記で振る、そのほかのダイス",
+          moreText: "ボタンは卓でよく使うダイスです（d4、d6、d8、d10、d12、d20、d30、d100）。組み合わせて振れます。振ったあと、フェルトのダイスをタップするとホールドでき、残りだけを振り直せます。そのほかのダイスは、修正値の横の表記欄に入力するか、「カスタムダイス・イカサマダイス・セット」で作るか、ここでタップします。",
+          ex1: "d6を4個振り、最小の1個を除きます（能力値）",
+          ex2: "爆発ダイス: 6が出たらもう1個振ります",
+          ex3: "1と2を出なくなるまで振り直し、4を足します",
+          ex4: "1か2を一度だけ振り直します",
+          ex5: "フェイトダイス4個: プラス、空白、マイナス",
+          ex6: "d20とd4を一緒に振り、3を足します",
+          ex7: "2面から1000面まで、好きな面数のダイス",
+          ex8: "自分で作るダイス: 面は自由です",
+          ex9: "有利: d20を2個振って大きいほうを採用し、5を足します",
+          foot: "シードを選ばないかぎり、この端末の暗号論的乱数で振ります。履歴はこの端末にだけ保存されます。ダイスの音は Kenney の Casino Audio（CC0）です。",
+        },
+      };
+
+      const KEY = "korokoro.page.lang";
+      const asked = new URLSearchParams(location.search).get("lang");
+      let kept = null;
+      try {
+        kept = localStorage.getItem(KEY);
+      } catch {
+        // A browser that keeps nothing follows its own language.
+      }
+      // The address first, then what this device chose, then the browser's language.
+      const pick = (tag) => (String(tag).toLowerCase().startsWith("ja") ? "ja" : "en");
+      let lang = asked === "ja" || asked === "en" ? asked : kept === "ja" || kept === "en" ? kept : pick(navigator.language);
+
+      // A shared link keeps the language it was made in.
+      const roller = mountRoller(document.getElementById("roller"), { wide: true, locale: lang, shareBase: location.origin + location.pathname + (asked === "ja" || asked === "en" ? "?lang=" + asked : "") });
+
+      function say() {
+        document.documentElement.lang = lang;
+        for (const el of document.querySelectorAll("[data-say]")) el.textContent = WORDS[lang][el.dataset.say];
+        for (const button of document.querySelectorAll("[data-lang]")) button.setAttribute("aria-pressed", String(button.dataset.lang === lang));
+        document.getElementById("unreviewed").hidden = lang !== "ja";
+      }
+      for (const button of document.querySelectorAll("[data-lang]")) {
+        button.addEventListener("click", () => {
+          lang = button.dataset.lang;
+          try {
+            localStorage.setItem(KEY, lang);
+          } catch {
+            // Not remembered; still switched.
+          }
+          roller.setLocale(lang);
+          say();
+        });
+      }
+      say();
+
       for (const button of document.querySelectorAll("[data-roll]")) {
         button.addEventListener("click", () => {
           roller.setSpec(parseNotation(button.dataset.roll));

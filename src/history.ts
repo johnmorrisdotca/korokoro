@@ -1,4 +1,4 @@
-import { canHold, isSides, normalizeSpec, readDice, totalOf, type Roll } from "./dice.ts";
+import { canHold, isSides, normalizeSpec, rollFrom, type Roll } from "./dice.ts";
 
 /** A history keeps the latest rolls and forgets the oldest past this many. */
 export const HISTORY_LIMIT = 500;
@@ -24,25 +24,13 @@ function readRoll(value: unknown): Roll | null {
   if (spec === undefined || !isSides(spec.sides)) return null;
   const fair = normalizeSpec(spec);
   if (!Array.isArray(r.faces)) return null;
-  // The dice are worked out again from the faces, never trusted as stored.
-  const dice = readDice(fair, r.faces as unknown[]);
-  if (dice === null) return null;
   const at = Number(r.at);
   if (!Number.isFinite(at)) return null;
-  const faces = dice.map((d) => d.face);
-  const kept = dice.map((d) => d.status === "kept");
-  const read: Roll = {
-    id: typeof r.id === "string" ? r.id : `${at.toString(36)}-s`,
-    spec: fair,
-    faces,
-    kept,
-    total: totalOf(faces, kept, fair.modifier),
-    at,
-    seed: typeof r.seed === "string" ? r.seed : null,
-    dice,
-  };
+  // The dice, the total and whether the roll was loaded are worked out again from the spec and the faces, never trusted as stored.
+  const read = rollFrom(fair, r.faces as unknown[], typeof r.id === "string" ? r.id : `${at.toString(36)}-s`, at, typeof r.seed === "string" ? r.seed : null);
+  if (read === null) return null;
   // Which dice were held is kept only when it fits the roll: one yes or no for each die of dice that can be held.
-  if (Array.isArray(r.held) && r.held.length === faces.length && canHold(fair)) read.held = r.held.map((h) => h === true);
+  if (Array.isArray(r.held) && r.held.length === read.faces.length && canHold(fair)) read.held = r.held.map((h) => h === true);
   return read;
 }
 
@@ -65,7 +53,7 @@ export function parseHistory(text: string | null): Roll[] {
 /** A history as text, to keep in a browser's storage or anywhere else. `parseHistory` reads it back. */
 export function serializeHistory(history: readonly Roll[]): string {
   // Without `dice`: it is worked out from the faces on the way back in.
-  return JSON.stringify({ version: 1, rolls: history.map((r) => ({ id: r.id, spec: r.spec, faces: r.faces, kept: r.kept, total: r.total, at: r.at, seed: r.seed, held: r.held })) });
+  return JSON.stringify({ version: 1, rolls: history.map((r) => ({ id: r.id, spec: r.spec, faces: r.faces, kept: r.kept, total: r.total, at: r.at, seed: r.seed, held: r.held, loaded: r.loaded })) });
 }
 
 /** Read a kept history. A storage that throws (a private window, blocked cookies) reads as empty. */
