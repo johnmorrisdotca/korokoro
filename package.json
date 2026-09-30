@@ -1,0 +1,64 @@
+{
+  "name": "@johnmorrisdotca/korokoro",
+  "version": "0.1.0",
+  "description": "Fair dice for tabletop games: tap to roll one to five of d4, d6, d8, d10, d12, d20 or d100, with exact odds, roll history and stats. No dependencies; runs anywhere, including GitHub Pages.",
+  "license": "MIT",
+  "author": "John Morris",
+  "homepage": "https://johnmorrisdotca.github.io/korokoro/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/johnmorrisdotca/korokoro.git"
+  },
+  "bugs": {
+    "url": "https://github.com/johnmorrisdotca/korokoro/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "keywords": [
+    "dice",
+    "dice-roller",
+    "rpg",
+    "dnd",
+    "d20",
+    "tabletop",
+    "random",
+    "probability",
+    "react"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "site": "npm run build && node scripts/site.mjs",
+    "prepublishOnly": "npm test && npm run build"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "react": "^19.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.0"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  }
+}

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Korokoro dice roller</title>
+    <meta name="description" content="Tap to roll one to five dice: d4, d6, d8, d10, d12, d20 or d100, with exact odds, roll history and stats." />
+    <meta name="theme-color" content="#2f5d4a" />
+    <style>
+      :root { color-scheme: light dark; --page: #f4efe4; --ink: #1f2320; }
+      @media (prefers-color-scheme: dark) { :root { --page: #141614; --ink: #ece8dc; } }
+      body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+      main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
+      header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+      h1 { margin: 0; font-size: 1.8rem; }
+      h1 span { font-size: 1rem; opacity: .6; margin-left: 6px; font-weight: 500; }
+      header p { margin: 0; opacity: .7; }
+      footer { margin-top: 32px; font-size: .85rem; opacity: .7; }
+      a { color: inherit; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>Korokoro<span lang="ja">コロコロ</span></h1>
+        <p>Fair dice for the table. Tap the felt to roll.</p>
+      </header>
+      <div id="roller"></div>
+      <footer>
+        Open source under the MIT licence. Rolls use your device's cryptographic generator unless you choose a seed.
+        Your history stays on this device.
+      </footer>
+    </main>
+    <script type="module">
+      import { mountRoller } from "./dist/index.js";
+      mountRoller(document.getElementById("roller"), { wide: true, locale: navigator.language });
+    </script>
+  </body>
+</html>
