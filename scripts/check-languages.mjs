@@ -36,7 +36,8 @@ const languages = [
 ];
 let failed = 0;
 for (const [name, tool, args, cwd] of languages) {
-  if (run(tool, ["--version"]).status !== 0) {
+  // Go says its version to `go version`; the others to `--version`.
+  if (run(tool, [tool === "go" ? "version" : "--version"]).status !== 0) {
     if (process.env.KOROKORO_ALL_LANGUAGES !== undefined) {
       failed += 1;
       console.log(`FAIL ${name}: ${tool} is not on this machine`);
