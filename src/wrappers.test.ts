@@ -15,7 +15,7 @@ describe("the custom element, where there is no browser", () => {
   });
 
   it("watches the attributes it documents", () => {
-    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"]);
+    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"]);
   });
 });
 

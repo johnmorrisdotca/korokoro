@@ -16,6 +16,7 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
  *   notation         the dice showing at first, and again whenever it changes
  *   lang             "ja" for Japanese; anything else English. The page's own language when left out
  *   wide             tray and panels side by side on a wide screen
+ *   size             "small" is the felt and the result alone; "medium" adds the choice of dice; "large", or left out, is everything
  *   sound="off"      no sound and no mute button
  *   hold="off"       dice are not held
  *   placeholder="off"   the opening dice are the user's own roll
@@ -36,7 +37,7 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
 export const ROLLER_TAG = "korokoro-roller";
 
 /** The attributes the element watches. */
-const WATCHED = ["notation", "lang", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"] as const;
+const WATCHED = ["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"] as const;
 
 // On a server there is no HTMLElement to extend: the class is still defined, so that importing this module never throws, and is simply never used.
 const Base: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
@@ -104,6 +105,7 @@ export class KorokoroRoller extends Base {
     if (spec !== null) made.spec = spec;
     if (text("lang") !== null) made.locale = text("lang") as string;
     if (this.hasAttribute("wide")) made.wide = !off("wide");
+    if (text("size") === "small" || text("size") === "medium" || text("size") === "large") made.size = text("size") as "small" | "medium" | "large";
     if (this.hasAttribute("sound")) made.sound = !off("sound");
     if (this.hasAttribute("hold")) made.hold = !off("hold");
     if (this.hasAttribute("placeholder")) made.placeholder = !off("placeholder");

@@ -45,7 +45,7 @@ type Language = "en" | "ja";
 
 const WORDS = {
   en: {
-    usage: `Usage: korokoro [options] [dice ...]        (also: koro)
+    usage: `Usage: korokoro [options] [dice ...]        (also: koro, roll)
 
 Roll dice written as notation, with exact odds.
 
@@ -103,7 +103,7 @@ With no dice, rolls 2d6. Exit codes: 0 done, 1 something could not be rolled,
     testLopsided: "{n} results on a d{sides}: lopsided. A fair die strays this far {p} of the time.",
   },
   ja: {
-    usage: `使い方: korokoro [オプション] [ダイス ...]        （koro でも同じです）
+    usage: `使い方: korokoro [オプション] [ダイス ...]        （koro、roll でも同じです）
 
 表記で書いたダイスを振ります。確率は正確に計算します。
 

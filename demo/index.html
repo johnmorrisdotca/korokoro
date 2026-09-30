@@ -34,13 +34,31 @@
           <li><button type="button" data-roll="2d20kh1+5"><code>2d20kh1+5</code><span data-say="ex9"></span></button></li>
         </ul>
       </section>
+      <section class="more" aria-labelledby="embed-title" id="embed">
+        <h2 id="embed-title" data-say="embedTitle"></h2>
+        <p data-say="embedText"></p>
+        <div class="fam-seg embed-sizes" id="embed-size" role="group" data-say-label="embedSize" data-testid="embed-size">
+          <button type="button" data-size="small" data-say="embedSmall"></button>
+          <button type="button" data-size="medium" data-say="embedMedium"></button>
+          <button type="button" data-size="large" data-say="embedLarge"></button>
+        </div>
+        <p class="embed-says" id="embed-says" data-testid="embed-says"></p>
+        <iframe class="embed-preview" id="embed-preview" title="Korokoro" loading="lazy" data-testid="embed-preview"></iframe>
+        <h3 data-say="embedFrame"></h3>
+        <pre><code id="embed-frame" data-testid="embed-frame"></code></pre>
+        <button class="fam-button" type="button" data-copy="embed-frame" data-say="embedCopy"></button>
+        <h3 data-say="embedTag"></h3>
+        <pre><code id="embed-tag" data-testid="embed-tag"></code></pre>
+        <button class="fam-button" type="button" data-copy="embed-tag" data-say="embedCopy"></button>
+        <p class="embed-says" id="embed-copied" aria-live="polite"></p>
+      </section>
       <!-- family:footer -->
     </main>
     <script>
       /* family:script */
     </script>
     <script type="module">
-      import { mountRoller, parseNotation } from "./dist/index.js";
+      import { formatNotation, mountRoller, parseNotation } from "./dist/index.js";
 
       // The page's own words, in the two languages the tray speaks. Set as text, never as HTML.
       const WORDS = {
@@ -62,6 +80,20 @@
           ex10: "Six ability scores in one tap",
           docs: "Read the documentation",
           plain: "Dice as plain text, from an address",
+          embedTitle: "Put the dice on your own page",
+          embedText: "Choose how much of the tray you want, and copy the code. It shows the dice you rolled last here, and works on any site: nothing to install and nothing to pay.",
+          embedSize: "How much of the tray",
+          embedSmall: "Small",
+          embedMedium: "Medium",
+          embedLarge: "Large",
+          saysSmall: "Small: the felt and the result, for the dice you chose. Tap to roll.",
+          saysMedium: "Medium: the felt, the result and the choice of dice and bonus.",
+          saysLarge: "Large: everything, with the history, the stats and the odds.",
+          embedFrame: "An iframe, for a page that allows no scripts",
+          embedTag: "One tag, for a page that does",
+          embedCopy: "Copy",
+          embedCopied: "Copied.",
+          embedNotCopied: "Select the code and copy it.",
           foot: "Rolls use your device's cryptographic generator unless you choose a seed. Your history stays on this device. Dice sounds from Kenney's Casino Audio, CC0.",
         },
         ja: {
@@ -82,15 +114,61 @@
           ex10: "能力値6つを一度に振ります",
           docs: "ドキュメントを読む（英語）",
           plain: "アドレスからダイスを振り、テキストで受け取る",
+          embedTitle: "自分のページにダイスを置く",
+          embedText: "トレイをどこまで表示するかを選び、コードをコピーしてください。ここで最後に振ったダイスが入ります。どのサイトでも使え、インストールも費用も不要です。",
+          embedSize: "トレイの大きさ",
+          embedSmall: "小",
+          embedMedium: "中",
+          embedLarge: "大",
+          saysSmall: "小: フェルトと結果だけ。選んだダイスをタップして振ります。",
+          saysMedium: "中: フェルト、結果、ダイスと修正値の選択。",
+          saysLarge: "大: すべて。履歴、統計、確率も表示します。",
+          embedFrame: "iframe（スクリプトを使えないページ用）",
+          embedTag: "タグひとつ（スクリプトを使えるページ用）",
+          embedCopy: "コピー",
+          embedCopied: "コピーしました。",
+          embedNotCopied: "コードを選択してコピーしてください。",
           foot: "シードを選ばないかぎり、この端末の暗号論的乱数で振ります。履歴はこの端末にだけ保存されます。ダイスの音は Kenney の Casino Audio（CC0）です。",
         },
       };
 
       // The header, the footer and the language chooser are the family's (scripts/family-template.mjs): the address first, then what this device chose, then the browser's language.
       let roller;
-      const language = familyLanguage({ id: "korokoro", words: WORDS, onChange: (lang) => roller.setLocale(lang) });
+      const language = familyLanguage({ id: "korokoro", words: WORDS, onChange: (lang) => { roller.setLocale(lang); embed(); } });
+
+      // The code to put the tray on another page: the dice rolled last here, at the size chosen.
+      const HEIGHTS = { small: 540, medium: 1320, large: 1600 };
+      let embedSize = "medium";
+      let embedDice = "2d6";
+      const escaped = (text) => text.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+      function embed() {
+        const q = new URLSearchParams({ dice: embedDice, size: embedSize });
+        if (language.lang === "ja") q.set("lang", "ja");
+        const src = new URL("embed/", location.href.split(/[?#]/)[0]).href + "?" + q;
+        const frame = document.getElementById("embed-preview");
+        if (frame.getAttribute("src") !== src) frame.setAttribute("src", src);
+        frame.style.height = HEIGHTS[embedSize] + "px";
+        document.getElementById("embed-frame").textContent = `<iframe src="${escaped(src)}" title="Korokoro" width="360" height="${HEIGHTS[embedSize]}" style="border:0;max-width:100%" loading="lazy"></iframe>`;
+        document.getElementById("embed-tag").textContent = `<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></` + `script>\n<korokoro-roller notation="${escaped(embedDice)}" size="${embedSize}"${language.lang === "ja" ? ' lang="ja"' : ""}></korokoro-roller>`;
+        document.getElementById("embed-says").textContent = language.word("says" + embedSize[0].toUpperCase() + embedSize.slice(1));
+        for (const button of document.getElementById("embed-size").children) button.setAttribute("aria-pressed", String(button.dataset.size === embedSize));
+      }
+      for (const button of document.getElementById("embed-size").children) button.addEventListener("click", () => { embedSize = button.dataset.size; embed(); });
+      for (const button of document.querySelectorAll("[data-copy]")) {
+        button.addEventListener("click", async () => {
+          const said = document.getElementById("embed-copied");
+          try {
+            await navigator.clipboard.writeText(document.getElementById(button.dataset.copy).textContent);
+            said.textContent = language.word("embedCopied");
+          } catch {
+            said.textContent = language.word("embedNotCopied");
+          }
+        });
+      }
       // A shared link keeps the language it was made in.
-      roller = mountRoller(document.getElementById("roller"), { wide: true, locale: language.lang, shareBase: location.origin + location.pathname + (language.asked !== null ? "?lang=" + language.asked : "") });
+      roller = mountRoller(document.getElementById("roller"), { onRoll: (roll) => { embedDice = formatNotation(roll.spec); embed(); }, wide: true, locale: language.lang, shareBase: location.origin + location.pathname + (language.asked !== null ? "?lang=" + language.asked : "") });
+
+      embed();
 
       for (const button of document.querySelectorAll("[data-roll]")) {
         button.addEventListener("click", () => {

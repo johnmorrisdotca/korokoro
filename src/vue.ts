@@ -37,6 +37,8 @@ export const DiceRoller = defineComponent({
     shareBase: String,
     theme: Object as PropType<RollerOptions["theme"]>,
     wide: flag,
+    /** How much of the tray is drawn: "small", "medium" or "large". */
+    size: String as PropType<RollerOptions["size"]>,
     animationMs: Number,
     sound: flag,
     playSound: Function as PropType<RollerOptions["playSound"]>,
@@ -59,7 +61,7 @@ export const DiceRoller = defineComponent({
       const options: RollerOptions = { onRoll: (roll) => emit("roll", roll) };
       // Only what was given is passed on, so that everything left out keeps the tray's default.
       const given = props as unknown as Record<string, unknown>;
-      for (const name of ["locale", "strings", "storage", "storageKey", "query", "shareBase", "theme", "wide", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser"] as const) {
+      for (const name of ["locale", "strings", "storage", "storageKey", "query", "shareBase", "theme", "wide", "size", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser"] as const) {
         if (given[name] !== undefined) (options as Record<string, unknown>)[name] = given[name];
       }
       const spec = dice();

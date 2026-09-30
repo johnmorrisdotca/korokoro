@@ -171,6 +171,8 @@ button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: 
 .kk-link { border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 999px; min-height: 44px; padding: 0 14px; font-size: .85rem; }
 .kk-link[data-danger="true"] { border-color: var(--kk-bad); color: var(--kk-bad); }
 
+/* A tray in a small space: the felt and the result alone, or those and the choice of dice. */
+.kk-root[data-size="small"] > .kk-controls, .kk-root[data-size="small"] > .kk-panels, .kk-root[data-size="medium"] > .kk-panels { display: none; }
 .kk-panels { border: 1px solid var(--kk-rule); border-radius: var(--kk-radius); background: var(--kk-surface); overflow: hidden; }
 .kk-tabs { display: flex; border-bottom: 1px solid var(--kk-rule); }
 .kk-tabs button { flex: 1; border: 0; background: transparent; min-height: 44px; font-weight: 600; color: var(--kk-muted); border-bottom: 3px solid transparent; }

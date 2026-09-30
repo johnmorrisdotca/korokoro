@@ -1,0 +1,56 @@
+<!doctype html>
+<!-- The dice and nothing else, for another site's iframe. What it shows comes from its own address:
+     embed/?dice=2d6%2B3&size=small&lang=ja&sound=off&seed=table&felt=%23234
+     size is small (the felt and the result), medium (those and the choice of dice) or large (everything).
+     It tracks nothing and loads nothing from anywhere else; a large tray keeps its history on the visitor's device. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="robots" content="noindex" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Korokoro · dice</title>
+    <style>
+      html, body { margin: 0; }
+      body { padding: 8px; background: transparent; font-family: ui-rounded, "Hiragino Maru Gothic ProN", "Hiragino Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+      .credit { display: block; text-align: right; font-size: 12px; opacity: .7; color: CanvasText; margin-top: 4px; min-height: 24px; }
+    </style>
+  </head>
+  <body>
+    <div id="roller"></div>
+    <a class="credit" href="https://johnmorrisdotca.github.io/korokoro/" target="_blank" rel="noopener">Korokoro</a>
+    <script type="module">
+      import { formatNotation, mountRoller, parseNotation } from "../dist/index.js";
+
+      const q = new URLSearchParams(location.search.length > 1 ? location.search : location.hash.slice(1));
+      const size = ["small", "medium", "large"].includes(q.get("size")) ? q.get("size") : "medium";
+      const off = (name) => ["off", "0", "false", "no"].includes((q.get(name) ?? "").toLowerCase());
+      const lang = q.get("lang") === "ja" ? "ja" : q.get("lang") === "en" ? "en" : navigator.language;
+      document.documentElement.lang = String(lang).toLowerCase().startsWith("ja") ? "ja" : "en";
+      const spec = parseNotation(q.get("dice") ?? q.get("roll") ?? "2d6");
+      // A colour is a colour and nothing else: only what looks like one is handed on.
+      const colour = (name) => (/^#[0-9a-f]{3,8}$/i.test(q.get(name) ?? "") ? q.get(name) : null);
+      const theme = {};
+      if (colour("felt") !== null) theme["--kk-felt"] = colour("felt");
+      if (colour("ink") !== null) theme["--kk-ink"] = colour("ink");
+      const told = (roll) => parent !== window && parent.postMessage({ korokoro: "roll", notation: formatNotation(roll.spec), total: roll.total, dice: roll.faces }, "*");
+      mountRoller(document.getElementById("roller"), {
+        size,
+        locale: lang,
+        spec: spec ?? undefined,
+        // The dice the address names are the ones to roll, so the first tap rolls them.
+        placeholder: q.has("dice") || q.has("roll") ? false : undefined,
+        // Side by side where a large tray is given the room.
+        wide: size === "large",
+        sound: !off("sound"),
+        keyboard: false,
+        storage: size === "large" ? undefined : null,
+        storageKey: "korokoro.embed",
+        query: q.has("seed") ? `?seed=${encodeURIComponent(q.get("seed"))}` : "",
+        shareBase: "https://johnmorrisdotca.github.io/korokoro/",
+        theme,
+        onRoll: told,
+      });
+    </script>
+  </body>
+</html>

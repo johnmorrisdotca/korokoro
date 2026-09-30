@@ -6,3 +6,9 @@
 
 /* The two ways on from this page, the documentation and the plain-output page: links a finger can find. */
 .more .ways a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-weight: 600; }
+
+/* Korokoro's own: the code to put the tray on another page, and a look at what it gives. */
+.embed-sizes { max-width: 22rem; }
+.embed-says { margin: 8px 0; color: var(--muted); font-size: .9rem; min-height: 1.4em; }
+.embed-preview { display: block; width: 360px; max-width: 100%; border: 1px dashed var(--rule); border-radius: var(--radius); background: var(--surface); }
+#embed pre { white-space: pre-wrap; overflow-wrap: anywhere; }

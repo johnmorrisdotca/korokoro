@@ -179,6 +179,7 @@ from your own bundle:
 | `notation` | The dice showing at first, and again whenever it changes |
 | `lang` | `ja` for Japanese, anything else English; the page's own language when left out |
 | `wide` | Tray and panels side by side on a wide screen |
+| `size` | `small` is the felt and the result alone, `medium` adds the choice of dice, `large` (or left out) is everything |
 | `sound="off"` | No sound and no mute button |
 | `hold="off"` | Dice are not held |
 | `placeholder="off"` | The opening dice are the user's own roll |
@@ -191,6 +192,39 @@ What an attribute cannot carry (a theme, your own words, your own sound) goes
 on the element's `options` property. `roll()`, `setSpec()` and `history` are
 on the element. The tray is drawn in the element's own light DOM, so the
 page's `--kk-…` variables theme it as they do a mounted tray.
+
+### Embed it on any site
+
+A tray on a page you do not build: a blog, a wiki, a forum. Choose how much
+of it you want.
+
+| Size | What is shown | Room at 360px wide |
+| --- | --- | --- |
+| `small` | The felt and the result, for the dice you name. Tap to roll | about 540px tall |
+| `medium` | Those, and the choice of dice and bonus | about 1320px |
+| `large` | Everything: history, stats and odds too. Side by side from 900px wide | about 1600px |
+
+An iframe, where the page allows no scripts:
+
+```html
+<iframe src="https://johnmorrisdotca.github.io/korokoro/embed/?dice=2d6%2B3&size=small" title="Korokoro" width="360" height="540" style="border:0;max-width:100%" loading="lazy"></iframe>
+```
+
+The address takes `dice` (any notation), `size`, `lang` (`en` or `ja`),
+`sound=off`, `seed`, and the colours `felt` and `ink` as `#rrggbb`. The page
+tracks nothing and loads nothing from anywhere else; a large tray keeps its
+history on the visitor's own device. Each roll is sent to the page that
+frames it: `{ korokoro: "roll", notation, total, dice }` by `postMessage`.
+
+One tag, where the page may run a script, with nothing to install:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></script>
+<korokoro-roller notation="2d6+3" size="small"></korokoro-roller>
+```
+
+[The demo](https://johnmorrisdotca.github.io/korokoro/#embed) writes both
+for the dice you last rolled there, with a look at each size.
 
 ### 6. Svelte and Angular
 
@@ -853,8 +887,9 @@ probabilities, and `exactCounts` returns `null` for them.
 
 ## The command line
 
-Installing the package puts two commands on the path, `korokoro` and the
-shorter `koro`. They are the same. They need Node 20 or later and nothing
+Installing the package puts three commands on the path: `korokoro`, the
+shorter `koro`, and `roll`, which is the plain English for it (`roll 2d6+3`).
+They are the same. They need Node 20 or later and nothing
 else, and run the same on Linux, macOS and Windows.
 
 ```sh
@@ -943,7 +978,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.11.0", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.12.0", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet
@@ -1205,6 +1240,7 @@ mountRoller(element: HTMLElement, options?: RollerOptions): RollerHandle
 | --- | --- | --- |
 | `spec` | `2d6` | The dice showing at first, as a partial `RollSpec` |
 | `wide` | `false` | Tray and panels side by side on a screen 900px or wider |
+| `size` | `"large"` | How much is drawn. `"small"`: the felt and the result alone, for the dice it was given. `"medium"`: those and the choice of dice. `"large"`: everything, with history, stats and odds |
 | `onRoll` | none | Called with each `Roll` once it has landed |
 | `locale` | the page's `lang` | Numbers and times; `"ja…"` also picks the Japanese words |
 | `strings` | English or Japanese | Your own words, for any language: `{ ...STRINGS.en, total: "Suma" }` |

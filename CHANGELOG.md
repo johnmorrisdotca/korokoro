@@ -6,6 +6,23 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-09-30
+
+### Added
+
+- **Embed the tray on any site.** `embed/` on the demo site is the dice and
+  nothing else, for an iframe: `embed/?dice=2d6%2B3&size=small`. It takes
+  `dice`, `size`, `lang`, `sound=off`, `seed` and the colours `felt` and
+  `ink`, tells the page that frames it each roll, tracks nothing and loads
+  nothing from anywhere else. The demo writes the iframe and the one-tag
+  code for the dice last rolled, with a look at each size.
+- **`size`**, on `mountRoller`, the element (`size="small"`), and the React
+  and Vue components: `"small"` is the felt and the result alone, `"medium"`
+  adds the choice of dice and bonus, `"large"` (the default) is everything.
+  The type is `RollerSize`.
+- **`roll`**, a third name for the command line beside `korokoro` and `koro`:
+  `roll 2d6+3`.
+
 ## [1.11.0] - 2026-09-30
 
 ### Added
@@ -443,7 +460,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/johnmorrisdotca/korokoro/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.11.0
 [1.10.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.10.0
 [1.9.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.9.0

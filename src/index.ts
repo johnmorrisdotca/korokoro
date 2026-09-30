@@ -22,6 +22,6 @@ export { PRESETS, PRESETS as presets, findPresets, getPreset, presetOdds, preset
 export { asChance, chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "./games/odds.ts";
 export { patternsOf, readDiceAs, waysToShut, type Outcome, type ReadingId } from "./games/readings.ts";
 export { READING_WORDS } from "./games/words.ts";
-export { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
+export { mountRoller, type RollerHandle, type RollerOptions, type RollerSize } from "./ui/mount.ts";
 export { STRINGS, type RollerStrings } from "./ui/strings.ts";
 export { createRollSound, type PlaySound, type RollSound, type SoundThrow } from "./ui/sound.ts";

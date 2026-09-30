@@ -102,7 +102,18 @@ export type RollerOptions = {
   keyboard?: boolean;
   /** Whether the tray offers its own small choice of language, English or 日本語, remembered on the device. Off unless asked for, so the tray stays as plain as it was. */
   languageChooser?: boolean;
+  /**
+   * How much of the tray is drawn, for a tray put into a small space on
+   * somebody's page. "small" is the felt and the result and nothing else: the
+   * dice are the ones it was given. "medium" adds the choice of dice and the
+   * bonus. "large", and left out, is everything: the history, the stats and
+   * the odds too.
+   */
+  size?: RollerSize;
 };
+
+/** How much of the tray is drawn: the felt alone, the felt and the choice of dice, or all of it. */
+export type RollerSize = "small" | "medium" | "large";
 
 /** What `mountRoller` hands back: the tray, driven from code. */
 export type RollerHandle = {
@@ -248,7 +259,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   let ownSound: RollSound | null = null;
   const timers = new Set<ReturnType<typeof setTimeout>>();
 
-  const root = h("div", { class: "kk-root", "data-wide": String(options.wide === true), "data-testid": "korokoro" });
+  const root = h("div", { class: "kk-root", "data-wide": String(options.wide === true && (options.size ?? "large") === "large"), "data-size": options.size === "small" || options.size === "medium" ? options.size : "large", "data-testid": "korokoro" });
   for (const [name, value] of Object.entries(options.theme ?? {})) root.style.setProperty(name, value);
   const controls = h("div", { class: "kk-controls" });
   // The felt is the picture; the tray is the button that fills it. The dice sit over the button, so one that can be held is a button of its own.

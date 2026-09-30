@@ -9,7 +9,7 @@ export type DiceRollerProps = RollerOptions & {
   notation?: string;
 } & Omit<HTMLAttributes<HTMLDivElement>, keyof RollerOptions | "notation">;
 
-const OPTION_NAMES = ["notation", "locale", "strings", "storage", "storageKey", "spec", "query", "shareBase", "theme", "wide", "onRoll", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser"] as const;
+const OPTION_NAMES = ["notation", "locale", "strings", "storage", "storageKey", "spec", "query", "shareBase", "theme", "wide", "size", "onRoll", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser"] as const;
 
 /**
  * The tray as a React component: `<DiceRoller wide notation="2d20kh1+5" />`.
