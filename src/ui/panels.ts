@@ -2,7 +2,9 @@ import type { Roll, RollSpec } from "../dice.ts";
 import { diceOf, dieName, faceRange, groupOf, groupsOf, hasTotal, isLoaded, type DiceGroup } from "../dice.ts";
 import { faceChances, loadingOf } from "../loaded.ts";
 import { formatNotation } from "../notation.ts";
-import { chanceAtLeast, distributionHolding, distributionOf, expectedTotal, luckOf, mostLikely, spreadOf, type Distribution } from "../odds.ts";
+import { chanceAnyAtLeast, chanceAtLeast, distributionHolding, distributionOf, expectedHighest, expectedTotal, luckOf, mostLikely, spreadOf, type Distribution } from "../odds.ts";
+import { chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "../games/odds.ts";
+import { presetOdds, type Preset } from "../games/presets.ts";
 import { fairnessTest, readResults, statsOf, type Fairness } from "../stats.ts";
 import { h } from "./dom.ts";
 import { faceText } from "./faces.ts";
@@ -30,7 +32,7 @@ export function historyPanel(history: readonly Roll[], t: RollerStrings, locale:
   if (history.length === 0) return h("p", { class: "kk-empty", "data-testid": "kk-history-empty" }, t.noRolls);
   const time = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const list = h("ol", { class: "kk-history", "data-testid": "kk-history", reversed: true });
-  for (const r of [...history].reverse()) {
+  const row = (r: Roll): HTMLElement => {
     const mini = h(
       "span",
       { class: "kk-mini" },
@@ -45,17 +47,46 @@ export function historyPanel(history: readonly Roll[], t: RollerStrings, locale:
     // A roll with dice held is judged against the dice thrown again.
     const luck = luckOf(r.held !== undefined ? distributionHolding(r.spec, r.faces, r.held) : r.spec, r.total);
     const heldNote = `${r.held !== undefined ? ` · ${fillIn(t.heldBadge, { n: r.held.filter(Boolean).length })}` : ""}${isLoaded(r.spec) ? ` · ${t.dieLoaded}` : ""}`;
+    return h(
+      "li",
+      { "data-testid": "kk-history-row" },
+      h("time", { datetime: new Date(r.at).toISOString() }, r.set === undefined ? time.format(r.at) : `${r.set.index + 1}/${r.set.of}`),
+      h("span", { style: "display:grid;gap:3px" }, h("code", {}, `${formatNotation({ ...r.spec, times: undefined })}${heldNote}`), mini),
+      h(
+        "span",
+        { style: "display:inline-flex;align-items:center;gap:8px" },
+        h("span", { class: "kk-dot", style: `background:${luckColour(luck)}`, title: fillIn(t.luckier, { percent: percent(luck, locale) }) }),
+        h("strong", {}, hasTotal(r.spec) ? String(r.total) : ""),
+      ),
+    );
+  };
+  const newest = [...history].reverse();
+  for (let i = 0; i < newest.length; i++) {
+    const r = newest[i] as Roll;
+    if (r.set === undefined) {
+      list.append(row(r));
+      continue;
+    }
+    // A set thrown together is one entry, which opens to show its rolls.
+    const together = [r];
+    while (newest[i + 1]?.set?.id === r.set.id) together.push(newest[++i] as Roll);
+    together.reverse();
+    const first = together[0] as Roll;
     list.append(
       h(
         "li",
-        { "data-testid": "kk-history-row" },
-        h("time", { datetime: new Date(r.at).toISOString() }, time.format(r.at)),
-        h("span", { style: "display:grid;gap:3px" }, h("code", {}, `${formatNotation(r.spec)}${heldNote}`), mini),
+        { class: "kk-history-set", "data-testid": "kk-history-set" },
         h(
-          "span",
-          { style: "display:inline-flex;align-items:center;gap:8px" },
-          h("span", { class: "kk-dot", style: `background:${luckColour(luck)}`, title: fillIn(t.luckier, { percent: percent(luck, locale) }) }),
-          h("strong", {}, hasTotal(r.spec) ? String(r.total) : ""),
+          "details",
+          {},
+          h(
+            "summary",
+            {},
+            h("time", { datetime: new Date(first.at).toISOString() }, time.format(first.at)),
+            h("code", {}, formatNotation({ ...first.spec, times: together.length })),
+            h("strong", {}, together.map((one) => (hasTotal(one.spec) ? String(one.total) : "·")).join(" · ")),
+          ),
+          h("ol", { class: "kk-history" }, ...together.map(row)),
         ),
       ),
     );
@@ -253,7 +284,28 @@ export function oddsPanel(
   locale: string,
   onTarget: (value: number) => void,
   holding: { odds: Distribution; held: number; rest: string } | null = null,
+  game: Preset | null = null,
+  language: "en" | "ja" = "en",
 ): HTMLElement {
+  const times = spec.times ?? 1;
+  // How the game's roll comes out, outcome by outcome, each counted exactly.
+  const outcomes = game === null || holding !== null ? null : presetOdds(game, spec, language);
+  const share = (ways: bigint, outOf: bigint) => `${percent(Number(ways) / Number(outOf), locale)} · ${ways.toLocaleString(locale)}/${outOf.toLocaleString(locale)}`;
+  const further: [string, [bigint, bigint]][] = game?.id === "yahtzee" ? [[t.yahtzeeWithin, yahtzeeWithin(3)]] : game?.id === "craps" ? [[t.crapsPass, crapsPass()]] : game?.id === "chinchirorin" ? [[t.chinchirorinWithin, chinchirorinHandWithin(3)]] : [];
+  const gameOdds =
+    outcomes === null && further.length === 0
+      ? null
+      : h(
+          "section",
+          { class: "kk-chart", "data-testid": "kk-outcomes" },
+          h("h4", {}, t.outcomes),
+          h(
+            "dl",
+            { class: "kk-outcomes" },
+            ...[...(outcomes ?? [])].sort((a, b) => b.chance - a.chance).flatMap((line) => [h("dt", {}, line.text), h("dd", {}, share(line.ways, line.outOf))]),
+            ...further.flatMap(([words, [ways, outOf]]) => [h("dt", {}, words), h("dd", {}, share(ways, outOf))]),
+          ),
+        );
   const kinds = groupsOf(spec);
   const only = kinds.length === 1 ? (kinds[0] as DiceGroup) : null;
   // A die of words has no totals to have odds of: its odds are how often each face comes up.
@@ -333,5 +385,10 @@ export function oddsPanel(
       chance,
       said,
     ),
+    // A set of rolls: the chance that any one of them reaches the target, and the highest to expect.
+    times > 1 && holding === null
+      ? h("p", { class: "kk-fine", "data-testid": "kk-set-odds" }, `${fillIn(t.anyAtLeast, { n: times, target })}: ${percent(chanceAnyAtLeast(d, target, times), locale)} · ${fillIn(t.expectedHighest, { n: times })}: ${number(expectedHighest(d, times), locale)}`)
+      : null,
+    gameOdds,
   );
 }

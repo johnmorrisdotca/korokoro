@@ -41,6 +41,16 @@ roll(attack).total;                          // 6 to 25, from the crypto generat
 chanceAtLeast(attack, 15);                   // 0.7975: the exact chance of 15 or more
 ```
 
+And 44 games come with their dice and their rules for reading them:
+
+```ts
+import { crapsPass, rollPreset } from "@johnmorrisdotca/korokoro";
+
+rollPreset("yahtzee").reading.text;        // "A full house", "Chance, for 13", …
+rollPreset("チンチロリン", { language: "ja" }).reading.text;  // "シゴロ（4・5・6）", …
+crapsPass();                                // [244n, 495n]: the shooter's exact chance, 244 in 495
+```
+
 Or with nothing to install, [roll some dice in the demo](https://johnmorrisdotca.github.io/korokoro/).
 
 ## Who it is for
@@ -235,6 +245,12 @@ Korokoro has siblings, each made for the same site, each MIT, each at
 - **And any other dice, by notation.** A die of any size from 2 sides to 1000,
   Fate dice, keep or drop (`4d6dl1`), rerolls (`2d6r<3`, `2d6ro<3`) and
   exploding dice (`3d6!`), with what became of each die shown on the felt.
+- **Games, with their dice and their readings.** Yahtzee, Risk, craps,
+  backgammon, Catan, Farkle, chō-han (丁半), chinchirorin (チンチロリン) and
+  more: 44 games in one searchable list, each read the way the game reads
+  it, with the exact odds of each outcome. See [Games](#games).
+- **Several rolls in one tap.** `6#4d6dl1` is six ability scores at once, with
+  the highest, the lowest and the sum.
 - **Dice of your own.** A die with any faces you like, words or numbers
   (`d[Yes,No,Maybe]`), and sets of dice saved by name on the device and shared
   by a link.
@@ -283,13 +299,16 @@ Korokoro has siblings, each made for the same site, each MIT, each at
 | `1d20+1d4` | a d20 and a d4, added |
 | `2d6+1d8+3` | two d6, a d8, plus 3 |
 | `2d20kh1+1d4+5` | advantage, a d4 on top, plus 5: each kind keeps its own rules |
+| `6#4d6dl1` | the whole roll, six times over: six ability scores |
+| `3#2d20kh1+5` | three attacks with advantage, each plus 5 |
 | `d[Yes,No,Maybe]` | a custom die: its faces are whatever you write |
 | `2d[Hit=1,Miss=0,Miss=0]` | two custom dice whose faces are worth numbers; a face written twice comes up twice as often |
 | `d[1,1,2,3,5,8]` | a custom die of numbers, each worth itself |
 | `d6{6:3}` | a loaded d6: its 6 weighs three times the rest, and it is marked as loaded everywhere |
 
 ```
-roll     = dice { "+" dice } [bonus]
+roll     = [times "#"] dice { "+" dice } [bonus]
+times    = 1 to 100: how many times the whole roll is thrown
 dice     = [count] "d" sides { modifier }
 count    = 1 to 10 over the whole roll, and 1 when left out
 sides    = 2 to 1000, "%" for 100, or "F" for a Fate die
@@ -341,6 +360,7 @@ than quietly rolling something different:
 | `4d6kh3dl1`, `3d6!!` | one keep or drop, and each modifier once |
 | `2d6ro<1`, `2d6ro<7` | a reroll has to include the lowest face and spare the highest |
 | `1d6r<5` | a reroll until clear may match at most half the faces, so that it ends; `ro` has no such limit |
+| `0#2d6`, `101#2d6` | a roll is thrown 1 to 100 times |
 | `1d4+1d6+1d8+1d10+1d12` | a roll has at most four kinds of dice |
 | `6d6+5d8` | ten dice at most over the whole roll |
 | `1d20-1d4` | dice are added together; only the bonus can be taken away |
@@ -357,7 +377,10 @@ checkNotation("4d6!kh3");
 
 `formatNotation` writes each roll one way: each kind as its dice, `!`, `r<` or
 `ro<`, `kh` or `kl`; the kinds joined by `+`; then the bonus. So `4d6dl1` is
-written back as `4d6kh3`.
+written back as `4d6kh3`, and `6#4d6dl1` as `6#4d6kh3`.
+
+The `#` stands apart from the dice on purpose: `6#4d6` is six rolls of `4d6`,
+never 6 times their total.
 
 ## What a roll returns
 
@@ -436,7 +459,7 @@ expectedTotal(spec);               // 1: three dice, each a hit one time in thre
 - A custom die takes no modifiers, and `isFair` is false for it: its faces are
   whatever somebody made them.
 
-In the tray, custom dice are made under *Custom dice, loaded dice and sets*,
+In the tray, custom dice are made under *More*,
 one level down: type the faces with commas between them.
 
 ## Loaded dice, and testing a die
@@ -466,8 +489,8 @@ history of crooked dice, is in
 ## Sets of dice
 
 A set is a roll with a name, kept on the device: "Longsword" for `1d8+3`,
-"Skirmish" for `3d[Hit=1,Miss=0,Miss=0]`. In the tray they live under *Custom
-dice, loaded dice and sets*: name the roll showing, and it is there next time.
+"Skirmish" for `3d[Hit=1,Miss=0,Miss=0]`. In the tray they live under
+*More*: name the roll showing, and it is there next time.
 A set is shared by a link, which anybody can open and keep:
 
 ```
@@ -482,6 +505,84 @@ readSet(setQuery(set));         // { name: "Skirmish", notation: "3d[Hit=1,Miss=
 
 Sets are kept in the browser's storage and nowhere else: there is no account
 and no server. Up to 50 of them.
+
+## Several rolls in one go
+
+Ability scores are `4d6dl1` six times; three attacks are the same roll three
+times. `rollMany` throws them one after another from the one generator, so a
+seed replays the whole lot, and each is an ordinary `Roll` that says which
+run it belongs to (`roll.set`).
+
+```ts
+const scores = rollMany(parseNotation("4d6dl1")!, 6, seededSource("table"));
+scores.rolls.map((r) => r.total);   // [8, 12, 11, 9, 13, 12]
+scores.sum;                         // 65
+scores.highest;                     // 13
+scores.lowest;                      // 8
+
+rollMany(parseNotation("6#4d6dl1")!);  // the notation carries the count too
+
+chanceAnyAtLeast(parseNotation("4d6dl1")!, 18, 6);  // 0.0934: at least one 18 among the six
+expectedHighest(parseNotation("4d6dl1")!, 6);       // 15.66: the best of six, on average
+```
+
+In the tray it is **Times**, under *More*, from 1 to 10. One tap throws them
+all: the felt shows the last, and a list under the total gives each roll with
+the highest and the lowest marked, and the sum. The history keeps them as one
+entry that opens, the sound plays once, and *Copy link* shares all of them.
+Dice are held one roll at a time, so holding waits until Times is back at 1,
+and the tray says so.
+
+## Games
+
+Korokoro knows the dice of 44 games, and how each game reads them. Open
+**Games** in the tray, type a few letters, and choose one; or link straight to
+it with `?game=yahtzee`; or call it from code, by any name the game goes by:
+
+```ts
+const thrown = rollPreset("yahtzee", { source: seededSource("table") });
+thrown.roll.faces;       // [1, 2, 1, 5, 4]
+thrown.reading.text;     // "Chance, for 13"
+thrown.reading.outcome;  // "chance": the same in every language
+
+getPreset("Yacht") === getPreset("yahtzee");   // true: other names find it too
+presetOdds(getPreset("craps")!);
+// a natural (7 or 11) 8 of 36, craps (2, 3 or 12) 4 of 36, a point 24 of 36
+```
+
+<p align="center"><img src="docs/games.jpg" alt="Yahtzee chosen on a phone: five d6 on the felt, read as a large straight, on roll 1 of 3" width="260"></p>
+
+| Shelf | Games |
+| --- | --- |
+| Board games | Monopoly, Catan, Backgammon and its doubling cube, Snakes and Ladders, Ludo, Parcheesi, Pachisi (six cowries), Risk |
+| Dice games | Yahtzee, Farkle, Bunco, Pig, Liar's dice, Poker dice, Ship captain and crew, Shut the box, Mexico, Left Center Right |
+| Traditional games | Craps, Sic bo, Chuck-a-luck, Hazard, Chō-han (丁半), Chinchirorin (チンチロリン) |
+| Roleplaying games | a d20 check, advantage and disadvantage, ability scores, Fate, Blades in the Dark, Powered by the Apocalypse, d10 and d6 pools, percentile, 3d6 roll-under, d66 |
+| Handy dice | a coin, yes-no-maybe, pick a number, rock-paper-scissors, a compass, a colour die; and who goes first at a card table |
+
+Every one is in the [gallery](./docs/games.md), with its dice, how it is read,
+the exact odds of each outcome and a link to the rules.
+
+- **A game is read, not run.** Korokoro throws the dice and says what the game
+  makes of them: "a small straight", "8 is the point", "the defender loses 2".
+  Whose turn it is, the board and the score sheet stay on your table.
+- **Turns of several rolls hold dice.** Yahtzee and Ship, captain and crew give
+  three rolls: tap dice to hold them between rolls, and the tray counts.
+- **A roll is read in the light of the ones before it** where the game does:
+  the point in craps, the turn's total in Pig, a third doubles in Monopoly.
+- **Exact odds of each outcome**, counted over every way the dice can fall:
+  Risk's three against two is 2,890, 2,611 and 2,275 of 7,776.
+- **The dice are fair.** A game never loads a die; only you can, and a loaded
+  die stays marked whatever game is showing.
+- **Nothing about stakes.** The traditional games are here for their dice and
+  their odds.
+
+**Is your game missing? [Tell us](https://github.com/johnmorrisdotca/korokoro/issues/new?template=suggest-a-game.md)**,
+or add it: a game is one line of data and a test, and
+[CONTRIBUTING](./CONTRIBUTING.md#adding-a-game) walks through one.
+
+Game names are trademarks of their owners, used here only to say which game's
+dice these are. Korokoro is not affiliated with or endorsed by any of them.
 
 ## Holding dice
 
@@ -624,6 +725,7 @@ type DiceGroup = {       // one kind of dice and its rules
 type RollSpec = DiceGroup & {
   modifier: number;
   more?: DiceGroup[];    // the other kinds of dice; left out when there is one
+  times?: number;        // `6#`: how many times it is thrown; left out when once
 };
 
 roll(spec: Partial<RollSpec>, source?: RandomSource, at?: number): Roll
@@ -635,6 +737,8 @@ diceCount(spec: RollSpec): number                   // dice asked for, over all 
 sidesOf(spec: RollSpec, die: DieRoll): Sides        // the kind of die one die is
 diceOf(roll: Roll): DieRoll[]                       // roll.dice, or worked out from the faces
 readDice(spec: RollSpec, faces: number[]): DieRoll[] | null  // null if the dice could not show them
+rollMany(spec, times?, source?, at?): RollSet        // { rolls, sum, highest, lowest }; times from the spec unless given
+setOf(rolls: Roll[]): RollSet                       // the same summary of rolls already made
 normalizeSpec(spec: Partial<RollSpec>): RollSpec    // brings a spec into range
 rangeOf(spec: RollSpec): { min: number; max: number }
 parseNotation(text: string, options?: { legacyReroll?: boolean }): RollSpec | null
@@ -691,6 +795,26 @@ expectedTotal(spec): number
 spreadOf(spec): number                    // standard deviation
 mostLikely(spec): number[]
 luckOf(spec, total): number               // 0 = worst possible, 0.5 = typical, 1 = best
+chanceAnyAtLeast(spec, target, times): number  // at least one of several rolls reaches the target
+expectedHighest(spec, times): number           // the best of several rolls, on average
+```
+
+### Games
+
+```ts
+PRESETS: readonly Preset[]                // every game; `presets` is the same list
+getPreset(name): Preset | undefined       // by id, name, Japanese name or any other name
+findPresets(search): Preset[]             // what the tray's search finds
+presetSpec(preset): RollSpec              // its dice
+rollPreset(name, { source?, at?, before?, language? }): PresetRoll  // throws RangeError for an unknown name
+readPreset(preset, roll, before?, language?): PresetReading         // { outcome, values, tone, text }
+presetOdds(preset, spec?, language?): OutcomeOdds[] | null          // { outcome, text, ways, outOf, chance }
+readDiceAs(reading, roll, before?, options?): Outcome               // a reading without a game
+patternsOf(spec): { dice, ways }[] | null // every way the dice can fall, counted
+yahtzeeWithin(rolls): [bigint, bigint]    // a Yahtzee within so many rolls, as a fraction
+crapsPass(): [bigint, bigint]             // 244 in 495
+chinchirorinHandWithin(throws): [bigint, bigint]
+waysToShut(total): number[][]             // the tiles a total may shut, in Shut the box
 ```
 
 ### History and stats
@@ -710,6 +834,8 @@ chiSquareTail(statistic, degrees): number
 ```ts
 shareQuery(roll): string                  // "roll=2d20kh1%2B5&faces=17%2C4&at=…"
 readShared(query): Roll | null            // refuses faces the dice could not show
+shareQueryMany(rolls): string             // several rolls of one run in one link
+readSharedMany(query): Roll[] | null
 ```
 
 ### The tray
@@ -853,6 +979,7 @@ them by name.
 | Bonus | −99 to +99 | `MAX_MODIFIER` |
 | Explosions for each die | 10 more dice | `MAX_EXPLOSIONS` |
 | Largest die that may explode | d100 | `MAX_EXPLODING_SIDES` |
+| Times a roll is thrown in one go | 1 to 100 (1 to 10 in the tray) | `MAX_TIMES` |
 | Rolls kept in a history | 500 | `HISTORY_LIMIT` |
 | Length of notation read | 400 characters | |
 
@@ -878,18 +1005,17 @@ for fixing one. Any other language is a table of your own passed as `strings`.
 
 ## Roadmap
 
-- Rolling a set several times at once (`4d6dl1` six times for ability scores)
 - More notation: counting successes, more kinds of explosion, arithmetic
 - Export of a history as CSV, JSON and plain text, and import of the JSON
 - A command-line tool for Linux, macOS and Windows
 - A web component and a Vue wrapper, and a documentation site
-- Presets for games, from Yahtzee and craps to chō-han and chinchirorin
+- More games: [suggest one](https://github.com/johnmorrisdotca/korokoro/issues/new?template=suggest-a-game.md)
+- BCDice's notation, which Japanese tables use, as a candidate
 - Ports to other languages are welcome; a conformance suite is planned so
   that a port can be checked against this one
 - A hosted HTTP API: not planned, because it needs a server. The command line
   and the package will cover programs.
 - Exploding dice that are kept or dropped, once a table's rule is chosen
-- Export the history as CSV
 
 Left out on purpose: shared live rooms, which need a server, dice skins for
 sale, and 3D dice. Korokoro runs from a static page and costs nothing to host.

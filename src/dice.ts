@@ -39,6 +39,8 @@ export const MAX_EXPLODING_SIDES = 100;
 export const MAX_REROLLS = 10;
 /** The most kinds of dice in one roll: `1d20+1d4` is two. */
 export const MAX_GROUPS = 4;
+/** The most times one roll may be repeated as a set: `6#4d6dl1` is six. */
+export const MAX_TIMES = 100;
 /** The most faces a custom die has, and the fewest is two. */
 export const MAX_FACES = 20;
 /** The longest a custom face's words may be, in characters. */
@@ -117,6 +119,8 @@ export type RollSpec = DiceGroup & {
   modifier: number;
   /** The other kinds of dice in the roll, in order. Left out when there is one kind. */
   more?: DiceGroup[];
+  /** How many times `rollMany` throws the roll, as a set: 6 for `6#4d6dl1`. Left out when it is once. `roll` throws it once whatever this says. */
+  times?: number;
 };
 
 /**
@@ -165,6 +169,20 @@ export type Roll = {
   held?: boolean[];
   /** True on a roll of loaded dice, and left out of every other: a loaded roll always says so. */
   loaded?: true;
+  /** On a roll thrown as one of a set: which set, which roll of it from 0, and how many there are. Left out of a roll thrown on its own. */
+  set?: { id: string; index: number; of: number };
+};
+
+/** The same roll thrown several times in one go, with what the set comes to. */
+export type RollSet = {
+  /** Every roll, in the order thrown. */
+  rolls: Roll[];
+  /** The totals added up. */
+  sum: number;
+  /** The highest total. */
+  highest: number;
+  /** The lowest total. */
+  lowest: number;
 };
 
 /** The dice a tray shows when nothing else is asked for: 2d6. */
@@ -396,6 +414,8 @@ export function normalizeSpec(spec: Partial<RollSpec>): RollSpec {
   if (first.faces !== undefined) fair.faces = first.faces;
   if (first.weights !== undefined) fair.weights = first.weights;
   if (more.length > 0) fair.more = more;
+  const times = Math.min(MAX_TIMES, Math.trunc(Number(spec.times) || 1));
+  if (times > 1) fair.times = times;
   return fair;
 }
 
@@ -556,6 +576,29 @@ function made(fair: RollSpec, dice: DieRoll[], source: RandomSource, at: number)
   };
   if (isLoaded(fair)) thrown.loaded = true;
   return thrown;
+}
+
+/** What a set of rolls comes to: their sum, the highest and the lowest. */
+export function setOf(rolls: Roll[]): RollSet {
+  const totals = rolls.map((r) => r.total);
+  return { rolls, sum: totals.reduce((a, b) => a + b, 0), highest: Math.max(...totals), lowest: Math.min(...totals) };
+}
+
+/**
+ * Throw the same dice several times in one go, as ability scores are rolled:
+ * `4d6dl1` six times. The rolls are drawn one after another from the one
+ * source, so a seed replays the whole set, and each is an ordinary roll that
+ * says which set it belongs to. `times` is the spec's own unless given, from
+ * 1 to `MAX_TIMES`.
+ */
+export function rollMany(spec: Partial<RollSpec>, times?: number, source: RandomSource = cryptoSource(), at: number = Date.now()): RollSet {
+  const fair = normalizeSpec(spec);
+  const many = Math.min(MAX_TIMES, Math.max(1, Math.trunc(Number(times ?? fair.times) || 1)));
+  const rolls: Roll[] = [];
+  for (let index = 0; index < many; index++) rolls.push(made(fair, play(fair, draws(source)) as DieRoll[], source, at));
+  const id = rolls[0]?.id ?? "";
+  if (many > 1) rolls.forEach((r, index) => (r.set = { id, index, of: many }));
+  return setOf(rolls);
 }
 
 /**

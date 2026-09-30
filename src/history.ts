@@ -31,6 +31,11 @@ function readRoll(value: unknown): Roll | null {
   if (read === null) return null;
   // Which dice were held is kept only when it fits the roll: one yes or no for each die of dice that can be held.
   if (Array.isArray(r.held) && r.held.length === read.faces.length && canHold(fair)) read.held = r.held.map((h) => h === true);
+  // Which set a roll was one of, when it says so soundly.
+  const set = r.set as Record<string, unknown> | undefined;
+  if (typeof set === "object" && set !== null && typeof set.id === "string" && Number.isInteger(set.index) && Number.isInteger(set.of) && (set.index as number) >= 0 && (set.index as number) < (set.of as number)) {
+    read.set = { id: set.id, index: set.index as number, of: set.of as number };
+  }
   return read;
 }
 
@@ -53,7 +58,7 @@ export function parseHistory(text: string | null): Roll[] {
 /** A history as text, to keep in a browser's storage or anywhere else. `parseHistory` reads it back. */
 export function serializeHistory(history: readonly Roll[]): string {
   // Without `dice`: it is worked out from the faces on the way back in.
-  return JSON.stringify({ version: 1, rolls: history.map((r) => ({ id: r.id, spec: r.spec, faces: r.faces, kept: r.kept, total: r.total, at: r.at, seed: r.seed, held: r.held, loaded: r.loaded })) });
+  return JSON.stringify({ version: 1, rolls: history.map((r) => ({ id: r.id, spec: r.spec, faces: r.faces, kept: r.kept, total: r.total, at: r.at, seed: r.seed, held: r.held, loaded: r.loaded, set: r.set })) });
 }
 
 /** Read a kept history. A storage that throws (a private window, blocked cookies) reads as empty. */

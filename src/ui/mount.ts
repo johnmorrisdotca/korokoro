@@ -17,6 +17,8 @@ import {
   rangeOf,
   roll,
   rollHeld,
+  rollMany,
+  setOf,
   sidesOf,
   specOf,
   type DiceGroup,
@@ -32,7 +34,9 @@ import { checkNotation, formatNotation, type NotationProblem } from "../notation
 import { chanceExactly, distributionHolding, expectedTotal, luckOf, type Distribution } from "../odds.ts";
 import { cryptoSource, newSeed, seededSource, type RandomSource } from "../random.ts";
 import { loadSets, makeSet, readSet, setQuery, storeSets, withSet, withoutSet, type DiceSet } from "../sets.ts";
-import { readShared, shareQuery } from "../share.ts";
+import { readShared, readSharedMany, shareQuery, shareQueryMany } from "../share.ts";
+import { getPreset, presetSpec, readPreset, type Preset } from "../games/presets.ts";
+import { gamesPanel, type GamesState } from "./games.ts";
 import { h, refill, s } from "./dom.ts";
 import { dieFace, dieIcon, faceText } from "./faces.ts";
 import { morePanel, type MoreState } from "./more.ts";
@@ -135,6 +139,7 @@ const REFUSALS: Record<NotationProblem, keyof RollerStrings> = {
   minus: "notationMinus",
   custom: "notationCustom",
   weights: "notationWeights",
+  times: "notationTimes",
 };
 
 function defaultStorage(): StorageLike | undefined {
@@ -189,11 +194,27 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   const mayHold = options.hold !== false;
 
   const params = new URLSearchParams(query.replace(/^\?/, ""));
-  const shared = readShared(params);
+  // A link may hold one roll, or a set of them thrown together.
+  const sharedSet = readSharedMany(params);
+  const shared = sharedSet?.at(-1) ?? readShared(params);
+  // A link to a game: its dice, and its way of reading them.
+  const linkedGame = getPreset(params.get("game") ?? "");
   // A link to a set of dice: the dice to roll, not a roll already made.
   const linked = shared === null ? readSet(params) : null;
   const linkedSpec = linked === null ? null : checkNotation(linked.notation);
-  let spec = normalizeSpec(shared?.spec ?? (linkedSpec?.ok === true ? linkedSpec.spec : null) ?? options.spec ?? DEFAULT_SPEC);
+  let spec = normalizeSpec(shared?.spec ?? (linkedSpec?.ok === true ? linkedSpec.spec : null) ?? (linkedGame === undefined ? null : presetSpec(linkedGame)) ?? options.spec ?? DEFAULT_SPEC);
+  /** The game the rolls are being read as, when one is chosen. */
+  let game: Preset | null = linkedGame ?? null;
+  /** The rolls made since the game was chosen, for a game that reads a roll in the light of the ones before. */
+  let gameRolls: Roll[] = [];
+  /** Which roll of a turn the dice showing are, where a game's turn is several rolls with dice held between them. */
+  let turn = 0;
+  /** The set the roll showing is the last of, when the dice were thrown several times at once. */
+  let currentSet: Roll[] | null = sharedSet;
+  const gamesState: GamesState = { open: false, search: "" };
+  const japanese = () => locale.toLowerCase().startsWith("ja");
+  /** The most times the tray throws a roll as a set. */
+  const TRAY_TIMES = 10;
   const setsKey = `${storageKey}.sets`;
   let sets: DiceSet[] = loadSets(storage, setsKey);
   const more: MoreState = { open: false, faces: "", name: linked?.name ?? "", error: "" };
@@ -208,7 +229,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
    * anything makes the roll the user's: a die tapped, a chip, a number, typed
    * notation, a spec set from code. Rolling, the bonus and the keep row do not.
    */
-  let suggested = options.placeholder !== false && shared === null && linked === null;
+  let suggested = options.placeholder !== false && shared === null && linked === null && linkedGame === undefined;
   let history = loadHistory(storage, storageKey);
   let current: Roll | null = shared;
   let showingShared = shared !== null;
@@ -404,6 +425,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         error.textContent = fillIn(t[REFUSALS[read.problem]], { part: read.part });
         return;
       }
+      // Dice typed by hand are their own roll, not a game's.
+      game = null;
       changeSpec(read.spec);
     };
     input.addEventListener("keydown", (event) => {
@@ -434,6 +457,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     clear.addEventListener("click", () => {
       suggested = false;
       spec = { ...spec, modifier: 0 };
+      game = null;
       setKinds([], null);
     });
 
@@ -498,7 +522,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       options.languageChooser === true
         ? segment(t.language, ["en", "ja"] as const, locale.toLowerCase().startsWith("ja") ? "ja" : "en", (l) => (l === "en" ? "English" : "日本語"), (l) => setLocale(l, true), "kk-language")
         : null,
-      morePanel(more, sets, !empty, t, {
+      gamesPanel(gamesState, game, japanese(), t, chooseGame, () => {
+        game = null;
+        render();
+      }),
+      morePanel(more, sets, !empty, spec.times ?? 1, TRAY_TIMES, t, {
+        times(n) {
+          changeSpec({ times: n });
+        },
         add(text) {
           const read = checkNotation(text);
           if (!read.ok) return fillIn(t[REFUSALS[read.problem]], { part: read.part });
@@ -514,6 +545,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         },
         use(set) {
           const read = checkNotation(set.notation);
+          game = null;
           if (read.ok) changeSpec(read.spec);
         },
         remove(set) {
@@ -545,6 +577,15 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     release.textContent = t.releaseAll;
     renderMute();
     render();
+  }
+
+  /** Take up a game: its dice become the roll, and each roll is read the way the game reads it. */
+  function chooseGame(preset: Preset) {
+    game = preset;
+    gameRolls = [];
+    turn = 0;
+    gamesState.open = false;
+    changeSpec(presetSpec(preset));
   }
 
   function useSeed(next: string | null) {
@@ -615,7 +656,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   /** The roll on the felt, when it is a roll of the pool as it stands now. */
   const showing = () => (current !== null && !empty && (showingShared || formatNotation(current.spec) === formatNotation(spec)) ? current : null);
   /** Whether the dice on the felt can be held: plain dice that have been thrown. */
-  const holdable = () => mayHold && !rolling && !showingShared && showing() !== null && canHold(spec);
+  /** A game's turn of several rolls is over: the dice showing are its last. */
+  const turnOver = () => game?.rolls !== undefined && turn >= game.rolls;
+  const holdable = () => mayHold && !rolling && !showingShared && showing() !== null && canHold(spec) && (spec.times ?? 1) === 1 && !turnOver();
   const heldCount = () => held.filter(Boolean).length;
 
   function toggleHold(index: number) {
@@ -649,10 +692,16 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       ? t.addToRoll
       : current === null
         ? t.tapToRoll
-        : hold === null
-          ? t.tapAgain
-          : holding === 0
-            ? t.tapAgainHold
+        : (spec.times ?? 1) > 1
+          ? fillIn(t.timesHold, { n: spec.times ?? 1 })
+          : turnOver() && shown !== null
+            ? fillIn(t.turnOver, { n: game?.rolls ?? 0 })
+            : hold === null
+              ? t.tapAgain
+              : holding === 0
+                ? game?.rolls !== undefined
+                  ? fillIn(t.turnRoll, { a: turn, n: game.rolls })
+                  : t.tapAgainHold
             : holding === thrown.length
               ? t.allHeld
               : fillIn(t.rollRest, { n: thrown.length - holding });
@@ -696,7 +745,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   /** A link to this page carrying a query. A share base that has a query of its own, such as a language, keeps it. */
   function linkTo(query: string): string {
     const base = options.shareBase ?? (win ? `${win.location.origin}${win.location.pathname}` : "");
-    return `${base}${base.includes("?") ? "&" : "?"}${query}`;
+    // A roll made as a game's is shared as that game's.
+    return `${base}${base.includes("?") ? "&" : "?"}${query}${game === null ? "" : `&game=${game.id}`}`;
   }
 
   /** Put a link on the clipboard and say so on the button that asked; where there is no clipboard, show it to be copied by hand. */
@@ -745,8 +795,40 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     if (natural === 1) badges.push(h("span", { class: "kk-badge", "data-tone": "bad" }, t.fumble));
     if (r.spec.more === undefined && r.faces.length > 1 && r.faces.length === diceCount(r.spec) && r.faces.every((f) => f === r.faces[0])) badges.push(h("span", { class: "kk-badge", "data-tone": "good" }, t.allMatch));
 
+    const set = currentSet !== null && currentSet.at(-1) === r ? currentSet : null;
     const copy = h("button", { type: "button", class: "kk-link", "data-testid": "kk-copy" }, t.copyLink);
-    copy.addEventListener("click", () => copyLink(linkTo(shareQuery(r)), copy));
+    copy.addEventListener("click", () => copyLink(linkTo(set === null ? shareQuery(r) : shareQueryMany(set)), copy));
+    // What the game makes of the roll, in the game's words.
+    const reading = game === null ? null : readPreset(game, r, gameRolls.slice(0, -1), japanese() ? "ja" : "en");
+    const says = reading === null || reading.text === "" ? null : h("div", { class: "kk-reading", "data-tone": reading.tone, "data-testid": "kk-reading" }, reading.text);
+    if (set !== null) {
+      // A set: every roll on a line of its own, the highest and lowest marked, and what they all come to.
+      const all = setOf(set);
+      const lines = set.map((one, i) => {
+        const mark = all.highest !== all.lowest && one.total === all.highest ? "highest" : all.highest !== all.lowest && one.total === all.lowest ? "lowest" : null;
+        const line = sumLine(one);
+        line.removeAttribute("data-testid");
+        const words = game === null ? "" : readPreset(game, one, set.slice(0, i), japanese() ? "ja" : "en").text;
+        return h("li", { "data-mark": mark, "data-testid": "kk-set-line" }, h("span", { class: "kk-set-n" }, String(i + 1)), line, h("b", {}, hasTotal(one.spec) ? String(one.total) : words), mark === null ? null : h("i", {}, mark === "highest" ? t.setHighest : t.setLowest));
+      });
+      refill(result,
+        h("div", { class: "kk-total kk-words", "data-testid": "kk-total" }, h("small", {}, `${t.total} · ${formatNotation(r.spec)}`), set.map((one) => (hasTotal(one.spec) ? String(one.total) : diceOf(one).map((d) => d.label ?? String(d.face)).join(" "))).join(" · ")),
+        h("ol", { class: "kk-set-list", tabindex: 0, "aria-label": fillIn(t.setRolls, { n: set.length }), "data-testid": "kk-set-list" }, ...lines),
+        hasTotal(r.spec) ? h("div", { class: "kk-sum", "data-testid": "kk-set-sum" }, fillIn(t.setSum, { n: set.length, sum: all.sum })) : null,
+        h("div", { class: "kk-actions" }, ...badges, copy),
+      );
+      return;
+    }
+    // Where the game's reading is the result, it takes the total's place.
+    if (game !== null && !game.total && reading !== null && reading.text !== "") {
+      refill(result,
+        h("div", { class: "kk-total kk-words", "data-testid": "kk-total", "data-tone": reading.tone }, h("small", {}, `${japanese() ? game.nameJa : game.name} · ${formatNotation(r.spec)}`), h("span", { "data-testid": "kk-reading" }, reading.text)),
+        r.faces.length > 1 ? sumLine(r) : h("div", { class: "kk-sum" }, "\u00a0"),
+        (waiting()[0] as HTMLElement),
+        h("div", { class: "kk-actions" }, ...badges, copy),
+      );
+      return;
+    }
     // A loaded roll says so beside its total, whatever else it says.
     if (isLoaded(r.spec)) badges.unshift(h("span", { class: "kk-badge", "data-tone": "bad", "data-testid": "kk-loaded-badge" }, t.loadedBadge));
     // A roll of words is its words: there is no total to show, and no luck to measure.
@@ -762,6 +844,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     refill(result,
       h("div", { class: "kk-total", "data-testid": "kk-total" }, h("small", {}, `${t.total} · ${formatNotation(r.spec)}`), String(r.total)),
       r.faces.length > 1 || r.spec.modifier !== 0 ? sumLine(r) : null,
+      says,
       h(
         "div",
         { class: "kk-luck" },
@@ -815,7 +898,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     } else {
       const now = oddsNow();
       const holding = "probabilities" in now ? { odds: now, held: heldCount(), rest: restOf() } : null;
-      body.append(oddsPanel(spec, goal, current, t, locale, (value) => (goal = value), holding));
+      body.append(oddsPanel(spec, goal, current, t, locale, (value) => (goal = value), holding, game, japanese() ? "ja" : "en"));
     }
     panels.replaceChildren(strip, body);
   }
@@ -865,13 +948,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     // With every die held there is nothing to throw.
     if (keeping !== null && keeping.every(Boolean)) return;
     // The generator throws the dice here, before anything moves; the tumble and the sound only show what it threw.
-    const thrown = keeping !== null && shown !== null ? rollHeld(shown, keeping, source) : roll(spec, source);
+    const many = (spec.times ?? 1) > 1 ? rollMany(spec, Math.min(TRAY_TIMES, spec.times ?? 1), source).rolls : null;
+    const thrown = many !== null ? (many.at(-1) as Roll) : keeping !== null && shown !== null ? rollHeld(shown, keeping, source) : roll(spec, source);
     showingShared = false;
     const moving = thrown.faces.map((_, i) => keeping?.[i] !== true);
     const movers = moving.filter(Boolean).length;
     if (animationMs === 0) {
       sound(movers, moving.flatMap((m) => (m ? [0] : [])));
-      return land(thrown);
+      return land(thrown, many);
     }
     // Each die starts a moment after the one before and tumbles for its own time; all are down by animationMs.
     const gap = movers < 2 ? 0 : Math.min(45, (animationMs * 0.22) / (movers - 1));
@@ -910,15 +994,19 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     };
     const step = Math.max(60, Math.round(animationMs / 9));
     for (let at = step; at < animationMs; at += step) later(flicker, at);
-    later(() => land(thrown), animationMs + 60);
+    later(() => land(thrown, many), animationMs + 60);
   }
 
-  function land(thrown: Roll) {
+  function land(thrown: Roll, many: Roll[] | null = null) {
     rolling = false;
     current = thrown;
+    currentSet = many;
+    // A roll with dice held is the next roll of the same turn; any other begins one.
+    turn = thrown.held !== undefined ? turn + 1 : 1;
+    gameRolls = [...gameRolls, ...(many ?? [thrown])].slice(-24);
     // What was held stays held for the next throw; a fresh roll holds nothing.
     held = thrown.held !== undefined ? [...thrown.held] : thrown.faces.map(() => false);
-    history = addToHistory(history, thrown);
+    for (const one of many ?? [thrown]) history = addToHistory(history, one);
     storageWorks = saveHistory(storage, storageKey, history);
     goal = Math.round(expectedTotal(oddsNow()));
     render();
@@ -964,7 +1052,11 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   return {
     roll: throwDice,
     history: () => history,
-    setSpec: (next) => changeSpec(next),
+    setSpec: (next) => {
+      // Dice set from outside are their own roll, not a game's.
+      game = null;
+      changeSpec(next);
+    },
     setLocale: (next) => setLocale(next, false),
     destroy() {
       for (const id of timers) clearTimeout(id);

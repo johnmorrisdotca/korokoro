@@ -54,7 +54,7 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `dieLoaded` | loaded | イカサマ |
 | `loadedBadge` | Loaded dice | イカサマダイス |
 | `result` | Result | 結果 |
-| `moreDice` | Custom dice, loaded dice and sets | カスタムダイス・イカサマダイス・セット |
+| `moreDice` | More: times, custom dice, loaded dice and sets | その他: 回数・カスタムダイス・イカサマダイス・セット |
 | `customTitle` | Make a die | ダイスを作る |
 | `customHint` | Its faces, with commas between: Yes, No, Maybe | 面をカンマで区切って入力: はい, いいえ, たぶん |
 | `customAdd` | Add it to the roll | ロールに追加 |
@@ -83,6 +83,34 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `testSides` | Sides | 面数 |
 | `testBad` | “{part}” is not a face of this die | 「{part}」はこのダイスの面ではありません |
 | `language` | Language | 言語 |
+| `notationTimes` | “{part}”: a roll is thrown 1 to 100 times | 「{part}」: 振る回数は1〜100回です |
+| `times` | Times | 回数 |
+| `timesHold` | Tap to roll all {n} again. Dice are held one roll at a time | タップで {n} 回分をもう一度振ります。ホールドは1回ずつのロールで使えます |
+| `setSum` | Sum of all {n}: {sum} | {n} 回の合計: {sum} |
+| `setHighest` | highest | 最大 |
+| `setLowest` | lowest | 最小 |
+| `setRolls` | {n} rolls | {n} 回 |
+| `anyAtLeast` | Chance that at least one of {n} rolls is {target} or more | {n} 回のうち少なくとも1回が {target} 以上になる確率 |
+| `expectedHighest` | Expected highest of {n} | {n} 回の最大値の期待値 |
+| `games` | Games | ゲーム |
+| `gamesNone` | none chosen | 選択なし |
+| `gamesSearch` | Search games: yahtzee, craps, d20… | ゲームを検索: ヤッツィー、クラップス、d20… |
+| `gamesNothing` | No game by that name. | その名前のゲームはありません。 |
+| `gamesMissing` | Is your game missing? Tell us | 遊びたいゲームがありませんか？教えてください |
+| `gamesStop` | Stop reading rolls as {name} | {name} として読むのをやめる |
+| `gamesNote` | Game names are trademarks of their owners. Korokoro is not affiliated with them; it rolls the dice their rules call for. | ゲーム名は各権利者の商標です。Korokoro は各社と提携しておらず、ルールに沿ってダイスを振るだけです。 |
+| `familyBoard` | Board games | ボードゲーム |
+| `familyDice` | Dice games | ダイスゲーム |
+| `familyTraditional` | Traditional games | 伝統的なゲーム |
+| `familyCards` | Beside a card table | カードゲームのお供 |
+| `familyRoleplaying` | Roleplaying games | ロールプレイングゲーム |
+| `familyHandy` | Handy | 便利なダイス |
+| `outcomes` | How a roll comes out | 出目の内訳 |
+| `turnRoll` | Roll {a} of {n}. Tap the felt to roll again, or a die to hold it | {n} 回中 {a} 回目。フェルトをタップで振り直し、ダイスをタップでホールド |
+| `turnOver` | That was roll {n} of {n}. Tap the felt for a new turn | {n} 回振りました。フェルトをタップすると新しい手番です |
+| `yahtzeeWithin` | A Yahtzee within three rolls, holding the most of a kind | 3回以内にヤッツィー（同じ目を最も多く残した場合） |
+| `crapsPass` | The shooter passes: a natural, or the point before a seven | シューターの勝ち: ナチュラル、または7より先にポイント |
+| `chinchirorinWithin` | A hand within three throws | 3回以内に役ができる |
 | `tapToRoll` | Tap anywhere to roll | どこでもタップして振る |
 | `tapAgain` | Tap to roll again | タップしてもう一度 |
 | `rollLabel` | Roll {notation} | {notation} を振る |

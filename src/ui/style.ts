@@ -175,6 +175,35 @@ button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: 
 .kk-history .kk-mini span[data-held="true"] { border-color: #e0b43b; box-shadow: inset 0 0 0 1px #e0b43b; }
 .kk-history .kk-mini span[data-first="true"] { margin-left: 6px; }
 .kk-sum s { text-decoration-thickness: 1.5px; }
+.kk-reading { font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
+.kk-reading[data-tone="good"], .kk-words[data-tone="good"] { color: var(--kk-good); }
+.kk-reading[data-tone="bad"], .kk-words[data-tone="bad"] { color: var(--kk-bad); }
+/* A set of rolls: a box of its own that scrolls, so that ten rolls take the room of four. */
+.kk-set-list { list-style: none; margin: 0; padding: 4px 8px; width: min(420px, 100%); max-height: 132px; overflow-y: auto; border: 1px solid var(--kk-rule); border-radius: 12px; background: var(--kk-surface); display: grid; gap: 0; text-align: left; font-variant-numeric: tabular-nums; }
+.kk-set-list li { display: grid; grid-template-columns: 1.4rem 1fr auto auto; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--kk-rule); }
+.kk-set-list li:last-child { border-bottom: 0; }
+.kk-set-list .kk-sum { font-size: .85rem; text-align: left; }
+.kk-set-n { color: var(--kk-muted); font-size: .75rem; }
+.kk-set-list i { font-style: normal; font-size: .7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--kk-muted); }
+.kk-set-list li[data-mark="highest"] b { color: var(--kk-good); }
+.kk-set-list li[data-mark="lowest"] b { color: var(--kk-bad); }
+.kk-history-set details > summary { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; align-items: center; cursor: pointer; min-height: 44px; }
+.kk-history-set details > summary strong { grid-column: 1 / -1; text-align: left; font-size: 1.05rem; overflow-wrap: anywhere; }
+.kk-shelves { max-height: 420px; overflow-y: auto; border: 1px solid var(--kk-rule); border-radius: 12px; padding: 4px 10px 10px; display: grid; gap: 4px; }
+.kk-history-set, .kk-history li.kk-history-set { display: block; }
+.kk-history-set .kk-history { max-height: none; padding-left: 12px; }
+.kk-games { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 6px; }
+.kk-game { text-align: left; border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 12px; padding: 8px 12px; min-height: 44px; display: grid; gap: 2px; }
+.kk-game[hidden], .kk-more section[hidden] { display: none; }
+.kk-game code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .75rem; color: var(--kk-muted); overflow-wrap: anywhere; }
+.kk-game span { color: var(--kk-muted); font-size: .8rem; }
+.kk-game:hover, .kk-game[aria-pressed="true"] { border-color: var(--kk-ink); }
+.kk-fine { font-size: .75rem; color: var(--kk-muted); margin: 0; }
+.kk-more a { color: inherit; }
+.kk-more input[type="search"] { flex: 1 1 12rem; }
+.kk-outcomes { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; margin: 0; font-size: .85rem; }
+.kk-outcomes dt { overflow-wrap: anywhere; }
+.kk-outcomes dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; color: var(--kk-muted); white-space: nowrap; }
 .kk-history strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; min-width: 2.5rem; text-align: right; }
 .kk-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .kk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }

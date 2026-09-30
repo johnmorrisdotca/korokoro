@@ -80,6 +80,34 @@ export type RollerStrings = {
   testSides: string;
   testBad: string;
   language: string;
+  notationTimes: string;
+  times: string;
+  timesHold: string;
+  setSum: string;
+  setHighest: string;
+  setLowest: string;
+  setRolls: string;
+  anyAtLeast: string;
+  expectedHighest: string;
+  games: string;
+  gamesNone: string;
+  gamesSearch: string;
+  gamesNothing: string;
+  gamesMissing: string;
+  gamesStop: string;
+  gamesNote: string;
+  familyBoard: string;
+  familyDice: string;
+  familyTraditional: string;
+  familyCards: string;
+  familyRoleplaying: string;
+  familyHandy: string;
+  outcomes: string;
+  turnRoll: string;
+  turnOver: string;
+  yahtzeeWithin: string;
+  crapsPass: string;
+  chinchirorinWithin: string;
   tapToRoll: string;
   tapAgain: string;
   rollLabel: string;
@@ -180,7 +208,7 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     dieLoaded: "loaded",
     loadedBadge: "Loaded dice",
     result: "Result",
-    moreDice: "Custom dice, loaded dice and sets",
+    moreDice: "More: times, custom dice, loaded dice and sets",
     customTitle: "Make a die",
     customHint: "Its faces, with commas between: Yes, No, Maybe",
     customAdd: "Add it to the roll",
@@ -209,6 +237,34 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     testSides: "Sides",
     testBad: "“{part}” is not a face of this die",
     language: "Language",
+    notationTimes: "“{part}”: a roll is thrown 1 to 100 times",
+    times: "Times",
+    timesHold: "Tap to roll all {n} again. Dice are held one roll at a time",
+    setSum: "Sum of all {n}: {sum}",
+    setHighest: "highest",
+    setLowest: "lowest",
+    setRolls: "{n} rolls",
+    anyAtLeast: "Chance that at least one of {n} rolls is {target} or more",
+    expectedHighest: "Expected highest of {n}",
+    games: "Games",
+    gamesNone: "none chosen",
+    gamesSearch: "Search games: yahtzee, craps, d20…",
+    gamesNothing: "No game by that name.",
+    gamesMissing: "Is your game missing? Tell us",
+    gamesStop: "Stop reading rolls as {name}",
+    gamesNote: "Game names are trademarks of their owners. Korokoro is not affiliated with them; it rolls the dice their rules call for.",
+    familyBoard: "Board games",
+    familyDice: "Dice games",
+    familyTraditional: "Traditional games",
+    familyCards: "Beside a card table",
+    familyRoleplaying: "Roleplaying games",
+    familyHandy: "Handy",
+    outcomes: "How a roll comes out",
+    turnRoll: "Roll {a} of {n}. Tap the felt to roll again, or a die to hold it",
+    turnOver: "That was roll {n} of {n}. Tap the felt for a new turn",
+    yahtzeeWithin: "A Yahtzee within three rolls, holding the most of a kind",
+    crapsPass: "The shooter passes: a natural, or the point before a seven",
+    chinchirorinWithin: "A hand within three throws",
     tapToRoll: "Tap anywhere to roll",
     tapAgain: "Tap to roll again",
     rollLabel: "Roll {notation}",
@@ -306,7 +362,7 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     dieLoaded: "イカサマ",
     loadedBadge: "イカサマダイス",
     result: "結果",
-    moreDice: "カスタムダイス・イカサマダイス・セット",
+    moreDice: "その他: 回数・カスタムダイス・イカサマダイス・セット",
     customTitle: "ダイスを作る",
     customHint: "面をカンマで区切って入力: はい, いいえ, たぶん",
     customAdd: "ロールに追加",
@@ -335,6 +391,34 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     testSides: "面数",
     testBad: "「{part}」はこのダイスの面ではありません",
     language: "言語",
+    notationTimes: "「{part}」: 振る回数は1〜100回です",
+    times: "回数",
+    timesHold: "タップで {n} 回分をもう一度振ります。ホールドは1回ずつのロールで使えます",
+    setSum: "{n} 回の合計: {sum}",
+    setHighest: "最大",
+    setLowest: "最小",
+    setRolls: "{n} 回",
+    anyAtLeast: "{n} 回のうち少なくとも1回が {target} 以上になる確率",
+    expectedHighest: "{n} 回の最大値の期待値",
+    games: "ゲーム",
+    gamesNone: "選択なし",
+    gamesSearch: "ゲームを検索: ヤッツィー、クラップス、d20…",
+    gamesNothing: "その名前のゲームはありません。",
+    gamesMissing: "遊びたいゲームがありませんか？教えてください",
+    gamesStop: "{name} として読むのをやめる",
+    gamesNote: "ゲーム名は各権利者の商標です。Korokoro は各社と提携しておらず、ルールに沿ってダイスを振るだけです。",
+    familyBoard: "ボードゲーム",
+    familyDice: "ダイスゲーム",
+    familyTraditional: "伝統的なゲーム",
+    familyCards: "カードゲームのお供",
+    familyRoleplaying: "ロールプレイングゲーム",
+    familyHandy: "便利なダイス",
+    outcomes: "出目の内訳",
+    turnRoll: "{n} 回中 {a} 回目。フェルトをタップで振り直し、ダイスをタップでホールド",
+    turnOver: "{n} 回振りました。フェルトをタップすると新しい手番です",
+    yahtzeeWithin: "3回以内にヤッツィー（同じ目を最も多く残した場合）",
+    crapsPass: "シューターの勝ち: ナチュラル、または7より先にポイント",
+    chinchirorinWithin: "3回以内に役ができる",
     tapToRoll: "どこでもタップして振る",
     tapAgain: "タップしてもう一度",
     rollLabel: "{notation} を振る",

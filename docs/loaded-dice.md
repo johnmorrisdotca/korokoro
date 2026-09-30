@@ -71,7 +71,7 @@ loaded die in history that can be audited.
 
 ## The three house dice
 
-They live in the tray under *Custom dice, loaded dice and sets*, one level
+They live in the tray under *More*, beside custom dice and sets, one level
 down from the honest ones, and in the package as `LOADED_PRESETS`.
 
 - **The Optimist**, `1d6{6:3}`. A die weighted towards its six, which it shows

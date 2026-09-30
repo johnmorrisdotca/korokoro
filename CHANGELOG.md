@@ -6,6 +6,54 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-09-30
+
+### Added
+
+- **Games.** The dice of 44 games, and how each game reads them: Monopoly,
+  Catan, Backgammon and its doubling cube, Snakes and Ladders, Ludo,
+  Parcheesi, Pachisi, Risk; Yahtzee, Farkle, Bunco, Pig, Liar's dice, Poker
+  dice, Ship captain and crew, Shut the box, Mexico, Left Center Right; Craps,
+  Sic bo, Chuck-a-luck, Hazard, Chō-han (丁半) and Chinchirorin (チンチロリン);
+  a d20 check, advantage, disadvantage, ability scores, Fate, Blades in the
+  Dark, Powered by the Apocalypse, d10 and d6 pools, percentile, 3d6
+  roll-under and d66; and a coin, yes-no-maybe, pick a number,
+  rock-paper-scissors, a compass and a colour die. Each is one entry of data.
+  Korokoro rolls and reads the dice; it does not run the game.
+- **One Games control in the tray**, closed until it is opened: a search box
+  and the games on their shelves. Choosing one sets the dice and reads every
+  roll in the game's terms ("A small straight", "8 is the point", "The
+  defender loses 2"). Yahtzee and Ship, captain and crew count their three
+  rolls and hold dice between them; craps, Pig, Hazard and the doubles games
+  read a roll in the light of the ones before it. `?game=yahtzee` opens one by
+  link, and a shared roll carries its game.
+- **Exact odds of each outcome** in the Odds tab and in `presetOdds`, counted
+  over every way the dice can fall, with `yahtzeeWithin`, `crapsPass` and
+  `chinchirorinHandWithin` for the figures that take more than one roll.
+- `PRESETS` (also `presets`), `getPreset`, `findPresets`, `presetSpec`,
+  `rollPreset`, `readPreset`, `presetOdds`, `readDiceAs`, `patternsOf`,
+  `waysToShut` and `READING_WORDS`. A game is found by its id, its name, its
+  Japanese name or any other name it goes by.
+- **Several rolls in one go.** `rollMany(spec, times)` throws the same dice up
+  to 100 times from the one generator and returns ordinary rolls with their
+  sum, highest and lowest; `6#4d6dl1` writes it as notation. In the tray it is
+  **Times**, under *More*, from 1 to 10: one tap, a list of every roll with
+  the highest and lowest marked, one entry in the history, one sound, and one
+  link for the lot. `setOf`, `MAX_TIMES`, `shareQueryMany`, `readSharedMany`.
+- `chanceAnyAtLeast(spec, target, times)` and `expectedHighest(spec, times)`:
+  the chance that at least one of several rolls reaches a target, and the best
+  of them on average.
+- [A gallery of the games](./docs/games.md), made from the data and checked by
+  a test, a *Suggest a game* issue template, and a worked example of adding a
+  game in CONTRIBUTING.
+
+### Changed
+
+- The tray's *Custom dice, loaded dice and sets* is now *More: times, custom
+  dice, loaded dice and sets*.
+- While several rolls are thrown at once, dice are not held: the tray says why.
+
+
 ## [1.5.0] - 2026-09-30
 
 ### Added
@@ -219,7 +267,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.6.0...HEAD
+[1.6.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.6.0
 [1.5.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.5.0
 [1.4.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.4.0
 [1.3.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.3.0

@@ -9,6 +9,7 @@ import {
   MAX_MODIFIER,
   MAX_REROLLS,
   MAX_SIDES,
+  MAX_TIMES,
   MAX_WEIGHT,
   MIN_DICE,
   MIN_SIDES,
@@ -28,6 +29,8 @@ import {
 /**
  * Dice notation, the way a character sheet writes it.
  *
+ *   set      = [times "#"] roll               the roll thrown several times: 6#4d6dl1
+ *   times    = 1 to 100
  *   roll     = dice { "+" dice } [bonus]
  *   dice     = [count] "d" sides { modifier }
  *   count    = 1 to 10 over the whole roll, and 1 when left out
@@ -44,7 +47,9 @@ import {
  *
  * Letters in either case, spaces anywhere between the parts. Up to four
  * kinds of dice are added together, each with its own modifiers, and the
- * bonus comes last. A kind's modifiers may come in any order and each at
+ * bonus comes last. `6#` in front throws the whole roll six times
+ * as a set (`rollMany`); it is a prefix so that it can never be read as
+ * arithmetic. A kind's modifiers may come in any order and each at
  * most once; whatever order they are written in, a die is rerolled first,
  * then explodes, and keeping or dropping is decided last. Exploding dice are
  * not kept or dropped.
@@ -82,6 +87,8 @@ export type NotationProblem =
   | "kinds"
   /** Dice taken away: only the bonus can be subtracted. */
   | "minus"
+  /** A roll repeated no times, or more than a hundred. */
+  | "times"
   /** A custom die whose faces cannot be read, or one given modifiers. */
   | "custom"
   /** A loaded die whose weights cannot be read: a face the die does not have, a weight past 99, fewer than two faces that can come up, a die too large to load, or weights that are all the same. */
@@ -124,6 +131,7 @@ const REASONS: Record<NotationProblem, string> = {
   explode: `dice explode only with ${MAX_EXPLODING_SIDES} sides or fewer, never Fate dice, and not together with keep or drop`,
   kinds: `a roll has at most ${MAX_GROUPS} kinds of dice`,
   minus: "dice are added together; only the bonus can be taken away",
+  times: `a roll is thrown 1 to ${MAX_TIMES} times`,
   custom: `a custom die has 2 to ${MAX_FACES} faces, each up to ${MAX_LABEL} characters with an optional =value (a whole number up to ${MAX_FACE_VALUE} either way) and #colour, and takes no modifiers`,
   weights: `a loaded die has up to ${MAX_LOADED_SIDES} sides, and names faces it has with weights from 0 to ${MAX_WEIGHT} that are not all the same, leaving at least two faces that can come up`,
 };
@@ -241,6 +249,14 @@ export function checkNotation(text: string, options: NotationOptions = {}): Nota
   if (text.length > LONGEST) return refuse("shape", `${text.slice(0, 16)}…`);
   const groups: (Partial<DiceGroup> & { count: number })[] = [];
   let rest = text;
+  // `6#`: the roll after it is thrown six times, as a set.
+  let times = 1;
+  const repeat = /^\s*(\d+)\s*#/.exec(text);
+  if (repeat !== null) {
+    times = Number(repeat[1]);
+    if (times < 1 || times > MAX_TIMES) return refuse("times", repeat[0]);
+    rest = text.slice(repeat[0].length);
+  }
   let dice = 0;
   for (;;) {
     const from = rest;
@@ -266,7 +282,7 @@ export function checkNotation(text: string, options: NotationOptions = {}): Nota
     if (Math.abs(modifier) > MAX_MODIFIER) return refuse("bonus", rest);
   }
   const [first, ...more] = groups;
-  return { ok: true, spec: normalizeSpec({ ...first, modifier, more: more as DiceGroup[] }) };
+  return { ok: true, spec: normalizeSpec({ ...first, modifier, more: more as DiceGroup[], times }) };
 }
 
 /** A spec from notation, or null when the text is not dice this roller can throw. `checkNotation` says why. */
@@ -290,5 +306,6 @@ function formatGroup(group: DiceGroup): string {
  */
 export function formatNotation(spec: RollSpec): string {
   const modifier = spec.modifier === 0 ? "" : spec.modifier > 0 ? `+${spec.modifier}` : `${spec.modifier}`;
-  return `${groupsOf(spec).map(formatGroup).join("+")}${modifier}`;
+  const times = spec.times !== undefined && spec.times > 1 ? `${spec.times}#` : "";
+  return `${times}${groupsOf(spec).map(formatGroup).join("+")}${modifier}`;
 }

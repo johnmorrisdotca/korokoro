@@ -5,11 +5,14 @@ import process from "node:process";
 
 import { describe, expect, it } from "vitest";
 
-import { chancesOf, groupsOf, hasTotal, isFair, roll, rollHeld } from "./dice.ts";
+import { MAX_TIMES, chancesOf, groupsOf, hasTotal, isFair, roll, rollHeld, rollMany } from "./dice.ts";
+import { chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "./games/odds.ts";
+import { PRESETS, getPreset, presetOdds, presetSpec, rollPreset } from "./games/presets.ts";
 import { LOADED_PRESETS, faceChances, loadingOf } from "./loaded.ts";
 import { makeSet, readSet, setQuery } from "./sets.ts";
 import { fairnessTest, readResults } from "./stats.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
+import { chanceAnyAtLeast, expectedHighest } from "./odds.ts";
 import { chanceAtLeast, chanceExactly, distributionHolding, distributionOf, exactCounts, expectedTotal, luckOf, mostLikely, spreadOf } from "./odds.ts";
 import { seededSource } from "./random.ts";
 import { shareQuery } from "./share.ts";
@@ -288,9 +291,107 @@ describe("the list of Japanese strings", () => {
   it("has a Japanese line for every English one, and keeps every place to fill in", () => {
     expect(Object.keys(STRINGS.ja)).toEqual(Object.keys(STRINGS.en));
     for (const key of Object.keys(STRINGS.en)) {
-      const places = (text) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
+      const places = (text) => [...new Set([...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]))].sort();
       expect(places(STRINGS.ja[key]), key).toEqual(places(STRINGS.en[key]));
       expect(STRINGS.ja[key].trim(), key).not.toBe("");
     }
+  });
+});
+
+describe("the README on rolling a set and on games", () => {
+  it("the three lines at the top", () => {
+    expect(readme).toContain('rollPreset("yahtzee").reading.text;        // "A full house", "Chance, for 13", …');
+    const thrown = rollPreset("yahtzee", { source: seededSource("table") });
+    expect(thrown.roll.faces).toEqual([1, 2, 1, 5, 4]);
+    expect(thrown.reading.text).toBe("Chance, for 13");
+    expect(readme).toContain('rollPreset("チンチロリン", { language: "ja" })');
+    expect(rollPreset("チンチロリン", { language: "ja", source: seededSource("table") }).reading.text).toBe("1 のペアで、目は 2");
+    expect(readme).toContain("crapsPass();                                // [244n, 495n]");
+    expect(crapsPass()).toEqual([244n, 495n]);
+  });
+
+  it("a set of rolls", () => {
+    const scores = rollMany(parseNotation("4d6dl1"), 6, seededSource("table"));
+    expect(readme).toContain("scores.rolls.map((r) => r.total);   // [8, 12, 11, 9, 13, 12]");
+    expect(scores.rolls.map((r) => r.total)).toEqual([8, 12, 11, 9, 13, 12]);
+    expect(readme).toContain("scores.sum;                         // 65");
+    expect([scores.sum, scores.highest, scores.lowest]).toEqual([65, 13, 8]);
+    expect(rollMany(parseNotation("6#4d6dl1"), undefined, seededSource("table")).rolls.map((r) => r.total)).toEqual([8, 12, 11, 9, 13, 12]);
+    expect(readme).toContain("chanceAnyAtLeast(parseNotation(\"4d6dl1\")!, 18, 6);  // 0.0934");
+    expect(chanceAnyAtLeast(parseNotation("4d6dl1"), 18, 6)).toBeCloseTo(0.0934, 4);
+    expect(readme).toContain("expectedHighest(parseNotation(\"4d6dl1\")!, 6);       // 15.66");
+    expect(expectedHighest(parseNotation("4d6dl1"), 6)).toBeCloseTo(15.66, 2);
+    expect(readme).toContain(`| 1 to ${MAX_TIMES} (1 to 10 in the tray) | \`MAX_TIMES\` |`);
+    expect(checkNotation("0#2d6").message).toBe("“0#”: a roll is thrown 1 to 100 times");
+  });
+
+  it("the games it names are there, by any of their names", () => {
+    expect(readme).toContain(`${PRESETS.length} games`);
+    expect(getPreset("Yacht")).toBe(getPreset("yahtzee"));
+    expect(getPreset("Settlers of Catan")?.id).toBe("catan");
+    expect(presetOdds(getPreset("craps")).map((o) => `${o.ways}/${o.outOf}`).sort()).toEqual(["24/36", "4/36", "8/36"]);
+  });
+});
+
+describe("the gallery of games", () => {
+  const shelves = [
+    ["board", "Board games"],
+    ["dice", "Dice games"],
+    ["traditional", "Traditional games"],
+    ["cards", "Beside a card table"],
+    ["roleplaying", "Roleplaying games"],
+    ["handy", "Handy dice"],
+  ];
+  const percent = (n) => `${(n * 100).toFixed(n < 0.01 ? 2 : 1)}%`;
+  const further = { yahtzee: ["A Yahtzee within the three rolls, holding the most of a kind each time", yahtzeeWithin(3)], craps: ["The shooter passes: a natural, or the point before a seven", crapsPass()], chinchirorin: ["A hand within three throws", chinchirorinHandWithin(3)] };
+  const lines = [
+    "# Games",
+    "",
+    "Made from `src/games/presets.ts` by `pnpm docs:make`; a test fails if the two differ, so this page is never out of date.",
+    "",
+    `Korokoro knows the dice of ${PRESETS.length} games: which dice are thrown, and how the game reads them. Choose one under **Games** in the tray,`,
+    "open it by a link (`?game=yahtzee`), or call `rollPreset(\"yahtzee\")`. Any of a game's names finds it.",
+    "",
+    "**Korokoro rolls and reads the dice; it does not run the game.** Whose turn it is, the board and the score sheet stay on your table.",
+    "The odds are exact: every way the dice can fall is counted, never sampled.",
+    "",
+    "**Is your game missing? [Tell us](https://github.com/johnmorrisdotca/korokoro/issues/new?template=suggest-a-game.md).** A game is one line of data",
+    "and a test; [CONTRIBUTING](../CONTRIBUTING.md#adding-a-game) shows how.",
+    "",
+    "Game names are trademarks of their owners and are used here only to say which game's dice these are. Korokoro is not affiliated with",
+    "or endorsed by any of them. The rules are described in our own words, with a link to where each can be read.",
+    "",
+    ...shelves.map(([family, title]) => `- [${title}](#${title.toLowerCase().replace(/ /g, "-")}): ${PRESETS.filter((p) => p.family === family).map((p) => p.name).join(", ")}`),
+    "",
+  ];
+  for (const [family, title] of shelves) {
+    lines.push(`## ${title}`, "");
+    for (const preset of PRESETS.filter((p) => p.family === family)) {
+      const spec = presetSpec(preset);
+      lines.push(`### ${preset.name}`, "");
+      lines.push(`\`${preset.id}\` · dice \`${preset.notation}\` · ${preset.nameJa}${preset.aliases.length > 0 ? ` · also found as ${preset.aliases.join(", ")}` : ""}`, "");
+      lines.push(preset.says, "", preset.how, "");
+      if (preset.rolls !== undefined) lines.push(`A turn is up to ${preset.rolls} rolls, and the tray holds the dice you tap between them.`, "");
+      const odds = presetOdds(preset);
+      if (odds !== null) {
+        lines.push("| A roll comes out | Chance | Ways |", "| --- | ---: | ---: |");
+        for (const line of [...odds].sort((a, b) => (b.ways > a.ways ? 1 : b.ways < a.ways ? -1 : 0))) lines.push(`| ${line.text.replace(/\|/g, "\\|")} | ${percent(line.chance)} | ${line.ways} of ${line.outOf} |`);
+        const more = further[preset.id];
+        if (more !== undefined) lines.push(`| ${more[0]} | ${percent(Number(more[1][0]) / Number(more[1][1]))} | ${more[1][0]} of ${more[1][1]} |`);
+        lines.push("");
+      } else if (hasTotal(spec) && preset.total) {
+        const odds = distributionOf(spec);
+        const likely = mostLikely(odds);
+        const top = Math.max(...odds.probabilities);
+        lines.push(`Totals run from ${odds.min} to ${odds.max}, ${expectedTotal(odds).toFixed(2).replace(/\.?0+$/, "")} on average${(spec.times ?? 1) > 1 ? ` for each of the ${spec.times} rolls` : ""}; the likeliest ${likely.length > 3 ? "are all as likely as each other" : `${likely.length > 1 ? "are" : "is"} ${likely.join(" and ")}`}, at ${percent(top)}${likely.length > 1 ? " each" : ""}.`, "");
+      }
+      lines.push(preset.source === undefined ? "No rule to cite: the dice say it all." : `Rules: <${preset.source}>`, "");
+    }
+  }
+  const made = lines.join("\n");
+
+  it("is what the source makes: run `pnpm docs:make` after changing a game", () => {
+    if (process.env.UPDATE_DOCS === "1") writeFileSync("docs/games.md", made);
+    expect(readFileSync("docs/games.md", "utf8")).toBe(made);
   });
 });

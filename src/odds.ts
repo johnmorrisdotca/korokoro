@@ -435,6 +435,20 @@ export function chanceAtMost(spec: Odds, target: number): number {
   return Math.max(0, 1 - chanceAtLeast(spec, target + 1));
 }
 
+/** The chance that at least one of several throws of a roll reaches a target: a set of six ability scores holding at least one 16, say. */
+export function chanceAnyAtLeast(spec: Odds, target: number, times: number): number {
+  return 1 - (1 - chanceAtLeast(spec, target)) ** times;
+}
+
+/** The average of the highest total among several throws of a roll. Exact: the highest is at most t when every throw is. */
+export function expectedHighest(spec: Odds, times: number): number {
+  const d = odds(spec);
+  const { below } = summedOf(d);
+  let mean = 0;
+  for (let i = 0; i < d.probabilities.length; i++) mean += (d.min + i) * ((below[i + 1] as number) ** times - (below[i] as number) ** times);
+  return mean;
+}
+
 /** The average total over many rolls. */
 export function expectedTotal(spec: Odds): number {
   return summedOf(odds(spec)).mean;
