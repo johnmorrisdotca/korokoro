@@ -2,6 +2,7 @@
 type Attrs = Record<string, string | number | boolean | null | undefined | EventListener>;
 type Child = Node | string | null | undefined | false;
 
+/** An HTML element with its attributes and children. An `on…` attribute that is a function is a listener. */
 export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs = {}, ...children: Child[]): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   for (const [name, value] of Object.entries(attrs)) {
@@ -19,6 +20,7 @@ export function h<K extends keyof HTMLElementTagNameMap>(tag: K, attrs: Attrs = 
 
 const SVG = "http://www.w3.org/2000/svg";
 
+/** An SVG element with its attributes and children. */
 export function s(tag: string, attrs: Record<string, string | number> = {}, ...children: (Node | string)[]): SVGElement {
   const el = document.createElementNS(SVG, tag);
   for (const [name, value] of Object.entries(attrs)) el.setAttribute(name, String(value));

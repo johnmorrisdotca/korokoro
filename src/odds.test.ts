@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DIE_SIDES, normalizeSpec } from "./dice.ts";
+import { DIE_SIDES, MAX_DICE, normalizeSpec } from "./dice.ts";
 import { chanceAtLeast, chanceAtMost, chanceExactly, distributionOf, expectedTotal, luckOf, mostLikely, spreadOf } from "./odds.ts";
 
 const spec = (text: Parameters<typeof normalizeSpec>[0]) => normalizeSpec(text);
@@ -15,9 +15,9 @@ describe("odds", () => {
     expect(mostLikely(two)).toEqual([7]);
   });
 
-  it("every distribution sums to one, up to five d100", () => {
+  it("every distribution sums to one, up to ten d100", () => {
     for (const sides of DIE_SIDES) {
-      for (let count = 1; count <= 5; count++) {
+      for (let count = 1; count <= MAX_DICE; count++) {
         const total = distributionOf(spec({ count, sides })).probabilities.reduce((a, b) => a + b, 0);
         expect(total).toBeCloseTo(1, 9);
       }

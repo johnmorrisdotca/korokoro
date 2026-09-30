@@ -26,11 +26,25 @@ pnpm dlx serve site   # or any static server
   change to the odds needs a test against a number you can check by hand.
 - **Never break a seed.** `seededSource` must throw the same dice for the same
   seed forever, because people share them. A test pins it.
+- **Keep the odds exact.** A new rule needs its odds worked out, not sampled,
+  and a test against a count of every outcome. If something cannot be both
+  exact and quick, refuse it in the notation by name.
+- **The show never rolls the dice.** The tumble and the sound present a roll
+  the generator has already made; they must not draw from it.
 - **Words go in `src/ui/strings.ts`**, in English and Japanese.
+- **Every export gets a doc comment**, and the README's tables (notation,
+  options, limits) are kept in step with the code.
+- **Sounds.** The recordings are the `.m4a` files in `sounds/`; `pnpm sounds`
+  writes them into `src/ui/sounds.data.ts`, and a test fails if the two
+  differ. A new recording must be CC0 or your own, and is named in `SOUNDS.md`.
+- **No dependencies.** The package has none at run time and should stay so.
 - One change per pull request, with a line in `CHANGELOG.md` under
   *Unreleased*.
 
 ## Releasing
 
-Maintainers bump the version in `package.json`, move *Unreleased* to the new
-version in `CHANGELOG.md`, tag `vX.Y.Z` and run `pnpm publish`.
+Maintainers bump the version in `package.json` and move *Unreleased* to the new
+version in `CHANGELOG.md`, dated. Pushing the tag `vX.Y.Z` runs the Release
+workflow, which checks that the tag matches `package.json`, builds the package
+and attaches its tarball to a GitHub release. Publishing to npm is the
+*Publish to npm* workflow, run by hand with the tag.

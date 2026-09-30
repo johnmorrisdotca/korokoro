@@ -2,9 +2,10 @@ import { useEffect, useRef, type HTMLAttributes } from "react";
 
 import { mountRoller, type RollerOptions } from "./ui/mount.ts";
 
+/** The tray's options as props, plus any attribute for the `<div>` the tray is mounted in. */
 export type DiceRollerProps = RollerOptions & Omit<HTMLAttributes<HTMLDivElement>, keyof RollerOptions>;
 
-const OPTION_NAMES = ["locale", "strings", "storage", "storageKey", "spec", "query", "shareBase", "theme", "wide", "onRoll", "animationMs"] as const;
+const OPTION_NAMES = ["locale", "strings", "storage", "storageKey", "spec", "query", "shareBase", "theme", "wide", "onRoll", "animationMs", "sound", "playSound"] as const;
 
 /**
  * The tray as a React component: `<DiceRoller wide spec={{ count: 1, sides: 20 }} />`.

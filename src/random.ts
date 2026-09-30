@@ -15,7 +15,7 @@ export type RandomSource = {
 
 type CryptoLike = { getRandomValues<T extends ArrayBufferView>(array: T): T };
 
-/** The platform's cryptographic generator, buffered so a roll of five dice is one call. */
+/** The platform's cryptographic generator, buffered so a roll of ten dice is one call. */
 export function cryptoSource(provider: CryptoLike | undefined = globalThis.crypto): RandomSource {
   if (provider === undefined || typeof provider.getRandomValues !== "function") {
     throw new Error("korokoro: no crypto.getRandomValues on this platform; pass a seeded source instead");

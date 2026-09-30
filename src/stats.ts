@@ -4,7 +4,9 @@ import { distributionOf, expectedTotal, luckOf } from "./odds.ts";
 
 /** Everything worth saying about a history of rolls. Pure: a history in, numbers out. */
 export type Stats = {
+  /** How many rolls the history holds. */
   rolls: number;
+  /** How many dice those rolls threw, rerolled and exploded dice included. */
   diceThrown: number;
   /** Mean of each roll's luck (0 to 1); 0.5 is exactly as lucky as the dice promise. Null with no rolls. */
   luck: number | null;
@@ -18,15 +20,19 @@ export type Stats = {
   /** A d20's natural 20 and natural 1, counted on the dice that were kept. */
   naturalTwenties: number;
   naturalOnes: number;
+  /** Each face of the focus die. Null when no focus was given. */
   faces: FaceStats | null;
+  /** The totals of the focus spec. Null when no focus was given. */
   totals: TotalStats | null;
 };
 
 /** How often each face of one kind of die came up, and whether that looks fair. */
 export type FaceStats = {
+  /** The kind of die counted. */
   sides: Sides;
   /** counts[i] is how often the die's i-th face came up, from its lowest: every die thrown, a rerolled one and an explosion's included. */
   counts: number[];
+  /** How many dice of this kind were thrown. */
   dice: number;
   /** Chance a fair die strays this far or further. Null until there are enough throws to ask. */
   fairness: number | null;
@@ -34,12 +40,19 @@ export type FaceStats = {
 
 /** The totals of one spec: seen against what the odds promise. */
 export type TotalStats = {
+  /** The spec, as notation. */
   notation: string;
+  /** How many rolls of this spec the history holds. */
   rolls: number;
+  /** The mean of their totals; 0 with no rolls. */
   average: number;
+  /** The mean the odds promise. */
   expected: number;
+  /** The highest total rolled; 0 with no rolls. */
   highest: number;
+  /** The lowest total rolled; 0 with no rolls. */
   lowest: number;
+  /** The lowest total the dice can make. */
   min: number;
   /** seen[i] and expected[i] are for a total of min + i. */
   seen: number[];
@@ -61,6 +74,7 @@ export function chiSquareTail(statistic: number, degrees: number): number {
   return Math.min(1, Math.max(0, 0.5 * (1 - erf(z / Math.SQRT2))));
 }
 
+/** How often each face of one kind of die came up in a history, with a chi-square test of whether that looks fair. */
 export function faceStats(history: readonly Roll[], sides: Sides): FaceStats {
   const { low, high } = faceRange(sides);
   const faces = high - low + 1;
@@ -77,6 +91,7 @@ export function faceStats(history: readonly Roll[], sides: Sides): FaceStats {
   return { sides, counts, dice, fairness };
 }
 
+/** The totals of every roll of one spec in a history, beside what the odds expect. */
 export function totalStats(history: readonly Roll[], spec: RollSpec): TotalStats {
   const notation = formatNotation(spec);
   const mine = history.filter((r) => formatNotation(r.spec) === notation);

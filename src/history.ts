@@ -43,6 +43,7 @@ function readRoll(value: unknown): Roll | null {
   };
 }
 
+/** A kept history read back from its text. Rolls that do not add up are dropped; text that is not a history reads as empty. */
 export function parseHistory(text: string | null): Roll[] {
   if (text === null) return [];
   try {
@@ -58,6 +59,7 @@ export function parseHistory(text: string | null): Roll[] {
   }
 }
 
+/** A history as text, to keep in a browser's storage or anywhere else. `parseHistory` reads it back. */
 export function serializeHistory(history: readonly Roll[]): string {
   // Without `dice`: it is worked out from the faces on the way back in.
   return JSON.stringify({ version: 1, rolls: history.map((r) => ({ id: r.id, spec: r.spec, faces: r.faces, kept: r.kept, total: r.total, at: r.at, seed: r.seed })) });

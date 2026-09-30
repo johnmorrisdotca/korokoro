@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { DIE_SIDES, isDieSides, keptFaces, normalizeSpec, rangeOf, roll } from "./dice.ts";
+import { DIE_SIDES, MAX_DICE, isDieSides, keptFaces, normalizeSpec, rangeOf, roll } from "./dice.ts";
 import { formatNotation, parseNotation } from "./notation.ts";
 import { seededSource } from "./random.ts";
 
 describe("normalizeSpec", () => {
-  it("keeps one to five dice of a real kind", () => {
-    expect(normalizeSpec({ count: 9, sides: 1 })).toMatchObject({ count: 5, sides: 6 });
-    expect(normalizeSpec({ count: 9, sides: 2.5 })).toMatchObject({ count: 5, sides: 6 });
+  it("keeps one to ten dice of a real kind", () => {
+    expect(normalizeSpec({ count: 19, sides: 1 })).toMatchObject({ count: 10, sides: 6 });
+    expect(normalizeSpec({ count: 19, sides: 2.5 })).toMatchObject({ count: 10, sides: 6 });
+    expect(normalizeSpec({ count: 9, sides: 6 })).toMatchObject({ count: 9, sides: 6 });
     expect(normalizeSpec({ count: 0 })).toMatchObject({ count: 2 });
     expect(normalizeSpec({ count: -3 })).toMatchObject({ count: 1 });
   });
@@ -78,7 +79,7 @@ describe("notation", () => {
     expect(parseNotation(text)).toEqual(spec);
   });
 
-  it.each(["9d6", "2d1", "2d1001", "d", "3d6+", "hello", "1d20kh1", "0d6"])("refuses %s rather than rolling something else", (text) => {
+  it.each(["11d6", "2d1", "2d1001", "d", "3d6+", "hello", "1d20kh1", "0d6"])("refuses %s rather than rolling something else", (text) => {
     expect(parseNotation(text)).toBeNull();
   });
 
@@ -96,7 +97,7 @@ describe("notation", () => {
 
   it("a spec of every kind of die and count comes back from its own notation", () => {
     for (const sides of DIE_SIDES) {
-      for (let count = 1; count <= 5; count++) {
+      for (let count = 1; count <= MAX_DICE; count++) {
         const spec = normalizeSpec({ count, sides, modifier: count - 3 });
         expect(parseNotation(formatNotation(spec))).toEqual(spec);
       }

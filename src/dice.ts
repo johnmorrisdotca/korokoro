@@ -5,16 +5,21 @@ import { cryptoSource, randomInt, type RandomSource } from "./random.ts";
  * die, and the percentile die. Any other die is reached by notation.
  */
 export const DIE_SIDES = [4, 6, 8, 10, 12, 20, 30, 100] as const;
+/** One of the dice the tray has a button for. */
 export type DieSides = (typeof DIE_SIDES)[number];
 
 /** A die of any size from a coin to a d1000, or a Fate die, whose faces are −1, 0 and +1. */
 export type Sides = number | "F";
+/** The fewest sides a numbered die has: a coin. */
 export const MIN_SIDES = 2;
+/** The most sides a numbered die has. */
 export const MAX_SIDES = 1000;
 
-/** One to five dice at once: as many as a hand holds, and as many as read at a glance. */
+/** The fewest dice in one roll. */
 export const MIN_DICE = 1;
-export const MAX_DICE = 5;
+/** The most dice in one roll: a fireball's 8d6, Farkle's six and a pool of ten all fit. */
+export const MAX_DICE = 10;
+/** The largest bonus, either way: a roll adds or takes away at most this. */
 export const MAX_MODIFIER = 99;
 
 /**
@@ -33,11 +38,19 @@ export const MAX_EXPLODING_SIDES = 100;
  */
 export type Keep = "all" | "highest" | "lowest";
 
+/**
+ * What to roll: how many dice of what kind, the bonus, and the rules. The
+ * three optional fields are left out of a roll that does not use them, so a
+ * plain roll is `{ count, sides, modifier, keep }` and nothing else.
+ */
 export type RollSpec = {
+  /** How many dice: 1 to `MAX_DICE`. */
   count: number;
+  /** The kind of die: 2 to 1000 sides, or "F" for a Fate die. */
   sides: Sides;
   /** Added to the total, as in 1d20+5. */
   modifier: number;
+  /** Which dice count towards the total. */
   keep: Keep;
   /** How many dice `highest` or `lowest` keep. Left out when it is one. */
   keepCount?: number;
@@ -54,8 +67,11 @@ export type RollSpec = {
  */
 export type DieStatus = "kept" | "dropped" | "rerolled";
 
+/** One die of a roll: the face it showed and what became of it. */
 export type DieRoll = {
+  /** The face it showed. A Fate die shows −1, 0 or 1. */
   face: number;
+  /** Whether it counts, was dropped, or was thrown again. */
   status: DieStatus;
   /** It showed its highest face and threw the die after it. */
   exploded: boolean;
@@ -63,6 +79,7 @@ export type DieRoll = {
   die: number;
 };
 
+/** One throw of the dice: what was asked for, every die thrown, and the total. */
 export type Roll = {
   /** Unique within one history. */
   id: string;
@@ -71,6 +88,7 @@ export type Roll = {
   faces: number[];
   /** Which faces count: all of them unless some are dropped or rerolled. */
   kept: boolean[];
+  /** The kept faces added up, plus the bonus. */
   total: number;
   /** Epoch milliseconds. */
   at: number;
@@ -80,6 +98,7 @@ export type Roll = {
   dice?: DieRoll[];
 };
 
+/** The dice a tray shows when nothing else is asked for: 2d6. */
 export const DEFAULT_SPEC: RollSpec = { count: 2, sides: 6, modifier: 0, keep: "all" };
 
 /** One of the dice the tray has a button for. */
@@ -114,8 +133,8 @@ export function mayReroll(sides: Sides, reroll: unknown): reroll is number {
 }
 
 /**
- * A spec brought into range, so a hand-typed or stored one can never roll six
- * dice or a die with no faces. A part that cannot be kept is left out, never
+ * A spec brought into range, so a hand-typed or stored one can never roll
+ * eleven dice or a die with no faces. A part that cannot be kept is left out, never
  * guessed at; `checkNotation` is the strict reader, and says which part.
  */
 export function normalizeSpec(spec: Partial<RollSpec>): RollSpec {
@@ -142,6 +161,7 @@ export function keptFaces(faces: readonly number[], keep: Keep): boolean[] {
   return faces.map((_, i) => i === index);
 }
 
+/** The kept faces added up, plus the bonus. */
 export function totalOf(faces: readonly number[], kept: readonly boolean[], modifier: number): number {
   return faces.reduce((sum, face, i) => (kept[i] ? sum + face : sum), 0) + modifier;
 }

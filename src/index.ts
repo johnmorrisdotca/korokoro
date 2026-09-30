@@ -14,3 +14,4 @@ export * from "./history.ts";
 export * from "./share.ts";
 export { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
 export { STRINGS, type RollerStrings } from "./ui/strings.ts";
+export { createRollSound, type PlaySound, type RollSound, type SoundThrow } from "./ui/sound.ts";

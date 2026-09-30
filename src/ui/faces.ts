@@ -55,6 +55,7 @@ function numberSize(text: string): number {
   return text.length >= 4 ? 19 : text.length === 3 ? 24 : text.length === 2 ? 30 : 36;
 }
 
+/** One die drawn showing a face, as an SVG labelled for a screen reader. */
 export function dieFace(sides: Sides, face: number, label: string): SVGElement {
   const svg = s("svg", { viewBox: "0 0 100 100", class: "kk-die-svg", role: "img", "aria-label": label });
   if (sides === "F") {

@@ -6,6 +6,41 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-09-30
+
+### Added
+
+- Up to ten dice in one roll, where it was five: `8d6`, `10d10kh3`. The tray's
+  count goes from 1 to 10, in two rows of five on a phone, and ten dice sit on
+  the felt in two even rows.
+- The sound of real dice: a shake while they tumble and a knock as each lands,
+  with a mute button on the felt that the device remembers. The recordings are
+  fetched only when a roll first needs them. It starts muted where the device
+  asks for reduced motion.
+- `sound: false` for a silent tray with no button, and `playSound` for a sound
+  of your own. The React component passes both through.
+- `exactCounts`: the odds of plain dice and of one die kept, as whole numbers.
+- The dice now start their tumble one after another and land one after
+  another, all within `animationMs`.
+- `@johnmorrisdotca/korokoro/sounds`, the recordings on their own, and
+  `createRollSound` for using them outside the tray.
+
+### Changed
+
+- Plain dice and advantage are counted in `BigInt`, so ten d1000 (10^30
+  outcomes) is as exact as two d6. Every figure from 1.0.0 to 1.2.0 is
+  unchanged, and so is every seeded roll.
+- `9d6` and the like, refused until now, are rolled; `normalizeSpec` brings a
+  count down to ten where it brought it down to five.
+- The average and the luck of a roll are worked out once for each spec, so a
+  long history of large rolls no longer slows the tray.
+- The README is rewritten for everything from 1.0.0 to here, the demo page says
+  what the tray can do, and every exported function and type has a doc comment.
+
+### Credits
+
+- Dice sounds from Kenney's Casino Audio, CC0, kenney.nl. See `SOUNDS.md`.
+
 ## [1.2.0] - 2026-09-30
 
 ### Added
@@ -81,7 +116,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.3.0
 [1.2.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.2.0
 [1.1.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.1.0
 [1.0.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.0.0

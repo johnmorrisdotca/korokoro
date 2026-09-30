@@ -25,6 +25,8 @@ export type RollerStrings = {
   dieRerolled: string;
   dieExploded: string;
   chartTail: string;
+  soundOn: string;
+  soundOff: string;
   tapToRoll: string;
   tapAgain: string;
   rollLabel: string;
@@ -75,6 +77,7 @@ export type RollerStrings = {
   savedNowhere: string;
 };
 
+/** The built-in words, in English and Japanese. */
 export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
   en: {
     dice: "Dice",
@@ -87,7 +90,7 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     notation: "Dice notation",
     notationHint: "e.g. 3d6+2, 2d20kh1, 4d6dl1, 3d6!, 4dF",
     notationBad: "Not dice notation. Try 3d6+2, 2d20kh1, 4d6dl1, 3d6!, 2d8r<3 or 4dF",
-    notationCount: "“{part}”: roll 1 to 5 dice at a time",
+    notationCount: "“{part}”: roll 1 to 10 dice at a time",
     notationSides: "“{part}”: a die has 2 to 1000 sides, or is dF",
     notationBonus: "“{part}”: a bonus is at most 99 either way",
     notationTwice: "“{part}”: use each modifier once, and keep or drop, not both",
@@ -98,6 +101,8 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     dieRerolled: "rerolled",
     dieExploded: "exploded",
     chartTail: "Totals past {total} are off the chart: together they come up {percent} of the time.",
+    soundOn: "Sound is on. Tap to mute",
+    soundOff: "Sound is off. Tap to turn it on",
     tapToRoll: "Tap anywhere to roll",
     tapAgain: "Tap to roll again",
     rollLabel: "Roll {notation}",
@@ -158,7 +163,7 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     notation: "ダイス表記",
     notationHint: "例: 3d6+2、2d20kh1、4d6dl1、3d6!、4dF",
     notationBad: "ダイス表記ではありません。例: 3d6+2、2d20kh1、4d6dl1、3d6!、2d8r<3、4dF",
-    notationCount: "「{part}」: 一度に振れるのは1〜5個です",
+    notationCount: "「{part}」: 一度に振れるのは1〜10個です",
     notationSides: "「{part}」: 面の数は2〜1000、または dF です",
     notationBonus: "「{part}」: 修正値は±99までです",
     notationTwice: "「{part}」: 同じ指定は一度だけです。採用と除外は同時に使えません",
@@ -169,6 +174,8 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     dieRerolled: "振り直し",
     dieExploded: "爆発",
     chartTail: "{total} より上の合計は省略しています（合わせて {percent}）。",
+    soundOn: "音はオンです。タップで消音",
+    soundOff: "音はオフです。タップでオン",
     tapToRoll: "どこでもタップして振る",
     tapAgain: "タップしてもう一度",
     rollLabel: "{notation} を振る",
@@ -220,6 +227,7 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
   },
 };
 
+/** A template with its `{name}` places filled in. A name with no value is left as it is. */
 export function fillIn(template: string, vars: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (whole, name: string) => (name in vars ? String(vars[name]) : whole));
 }

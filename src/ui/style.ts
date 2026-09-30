@@ -5,6 +5,7 @@
  */
 export const STYLE_ID = "korokoro-style";
 
+/** The tray's stylesheet. */
 export const CSS = `
 .kk-root {
   --kk-surface: #fbf8f1; --kk-ink: #1f2320; --kk-muted: #6b6f68; --kk-rule: #ddd6c6;
@@ -29,6 +30,9 @@ export const CSS = `
 .kk-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .kk-label { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kk-muted); min-width: 3.2rem; }
 .kk-seg { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--kk-surface); border: 1px solid var(--kk-rule); border-radius: 999px; padding: 3px; }
+/* Ten counts are one row where there is room and two rows of five on a phone, never a ragged wrap. */
+.kk-seg[data-testid="kk-count"] { display: inline-grid; grid-template-columns: repeat(10, auto); border-radius: 22px; }
+@media (max-width: 540px) { .kk-seg[data-testid="kk-count"] { grid-template-columns: repeat(5, auto); } }
 .kk-seg button { border: 0; background: transparent; border-radius: 999px; min-width: 40px; min-height: 36px; padding: 0 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: background .15s, color .15s; }
 .kk-seg button[aria-pressed="true"] { background: var(--kk-ink); color: var(--kk-surface); }
 .kk-seg button:hover:not([aria-pressed="true"]) { background: color-mix(in srgb, var(--kk-ink) 8%, transparent); }
@@ -41,15 +45,25 @@ export const CSS = `
 .kk-notation input[aria-invalid="true"] { border-color: var(--kk-bad); }
 .kk-error { color: var(--kk-bad); font-size: 0.8rem; }
 
+.kk-felt { position: relative; min-width: 0; }
+.kk-mute { position: absolute; top: 8px; right: 8px; z-index: 2; width: 44px; height: 44px; border: 0; border-radius: 50%; display: grid; place-items: center; background: transparent; color: var(--kk-felt-ink); opacity: .8; }
+.kk-root .kk-mute { color: var(--kk-felt-ink); }
+.kk-mute:hover { background: rgba(0,0,0,.18); opacity: 1; }
+.kk-mute[aria-pressed="false"] { opacity: .55; }
 .kk-tray { position: relative; border: 0; width: 100%; min-height: 250px; border-radius: calc(var(--kk-radius) + 6px); padding: 26px 16px 18px; display: grid; place-items: center; gap: 12px;
   background: radial-gradient(120% 90% at 50% 20%, var(--kk-felt) 0%, var(--kk-felt-deep) 100%); color: var(--kk-felt-ink);
   box-shadow: inset 0 2px 18px rgba(0,0,0,.35), inset 0 0 0 6px rgba(0,0,0,.12), 0 1px 0 rgba(255,255,255,.4); touch-action: manipulation; user-select: none; overflow: hidden; }
 .kk-tray::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .12; background-image: radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px); background-size: 5px 5px; }
-.kk-dice { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(8px, 2.5vw, 20px); max-width: 560px; }
+.kk-dice { --kk-gap: clamp(8px, 2.5vw, 20px); display: flex; flex-wrap: wrap; justify-content: center; gap: var(--kk-gap); max-width: 560px; }
 .kk-die { width: clamp(64px, 18vw, 96px); aspect-ratio: 1; position: relative; filter: drop-shadow(0 7px 6px rgba(0,0,0,.35)); transition: opacity .25s, transform .25s; }
 .kk-dice[data-count="1"] .kk-die { width: clamp(110px, 34vw, 150px); }
 .kk-dice[data-count="2"] .kk-die { width: clamp(90px, 28vw, 124px); }
 .kk-dice[data-count="4"] .kk-die, .kk-dice[data-count="5"] .kk-die { width: clamp(48px, 14vw, 92px); }
+/* Six to ten dice sit in two even rows: three and three, four and three, up to five and five. */
+.kk-dice[data-count="6"], .kk-dice[data-count="7"], .kk-dice[data-count="8"], .kk-dice[data-count="9"], .kk-dice[data-count="10"] { --kk-w: clamp(46px, 13.5vw, 84px); --kk-row: 5; max-width: calc(var(--kk-row) * var(--kk-w) + (var(--kk-row) - 1) * var(--kk-gap)); }
+.kk-dice[data-count="6"] { --kk-row: 3; }
+.kk-dice[data-count="7"], .kk-dice[data-count="8"] { --kk-row: 4; }
+.kk-dice[data-count="6"] .kk-die, .kk-dice[data-count="7"] .kk-die, .kk-dice[data-count="8"] .kk-die, .kk-dice[data-count="9"] .kk-die, .kk-dice[data-count="10"] .kk-die { width: var(--kk-w); }
 .kk-dice[data-count="many"] .kk-die { width: clamp(44px, 12vw, 64px); }
 .kk-die-svg { width: 100%; height: 100%; overflow: visible; }
 .kk-body { fill: var(--kk-die); stroke: var(--kk-die-edge); stroke-width: 3; }
@@ -67,7 +81,7 @@ export const CSS = `
 .kk-die[data-status="rerolled"]::before { content: "↻"; background: var(--kk-felt-ink); color: var(--kk-felt-deep); }
 .kk-die[data-hit="crit"] .kk-body { stroke: #e0b43b; stroke-width: 6; }
 .kk-die[data-hit="fumble"] .kk-body { stroke: var(--kk-bad); stroke-width: 6; }
-.kk-tumble { animation: kk-tumble var(--kk-t, 700ms) cubic-bezier(.2,.7,.3,1) both; }
+.kk-tumble { animation: kk-tumble var(--kk-t, 600ms) cubic-bezier(.2,.7,.3,1) var(--kk-wait, 0ms) both; }
 .kk-land { animation: kk-land 320ms cubic-bezier(.3,1.6,.5,1) both; }
 @keyframes kk-tumble {
   0% { transform: translate(var(--kk-x0), var(--kk-y0)) rotate(var(--kk-r0)) scale(.7); }
@@ -140,6 +154,7 @@ export const CSS = `
 @media (prefers-reduced-motion: reduce) { .kk-tumble, .kk-land { animation: none; } }
 `;
 
+/** Add the tray's stylesheet to a document, once. */
 export function injectStyle(doc: Document): void {
   if (doc.getElementById(STYLE_ID) !== null) return;
   const style = doc.createElement("style");

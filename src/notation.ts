@@ -4,7 +4,7 @@ import { MAX_DICE, MAX_EXPLODING_SIDES, MAX_MODIFIER, MAX_SIDES, MIN_DICE, MIN_S
  * Dice notation, the way a character sheet writes it.
  *
  *   roll     = [count] "d" sides { modifier } [bonus]
- *   count    = 1 to 5, and 1 when left out
+ *   count    = 1 to 10, and 1 when left out
  *   sides    = 2 to 1000, "%" for 100, or "F" for a Fate die
  *   modifier = "!"                          the dice explode
  *            | "r<" face | "r<=" face       reroll once below (or at) a face
@@ -20,7 +20,7 @@ import { MAX_DICE, MAX_EXPLODING_SIDES, MAX_MODIFIER, MAX_SIDES, MIN_DICE, MIN_S
 export type NotationProblem =
   /** Not dice notation at all. */
   | "shape"
-  /** More or fewer dice than one to five. */
+  /** More or fewer dice than one to ten. */
   | "count"
   /** A die with fewer than two sides or more than a thousand. */
   | "sides"
@@ -35,6 +35,7 @@ export type NotationProblem =
   /** Exploding dice that cannot: Fate dice, dice past a hundred sides, or dice also kept or dropped. */
   | "explode";
 
+/** What `checkNotation` found: the spec, or the part it refused and why. */
 export type NotationCheck =
   | { ok: true; spec: RollSpec }
   | {

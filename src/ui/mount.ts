@@ -4,12 +4,14 @@ import { checkNotation, formatNotation, type NotationProblem } from "../notation
 import { chanceExactly, expectedTotal, luckOf } from "../odds.ts";
 import { cryptoSource, newSeed, seededSource, type RandomSource } from "../random.ts";
 import { readShared, shareQuery } from "../share.ts";
-import { h, refill } from "./dom.ts";
+import { h, refill, s } from "./dom.ts";
 import { dieFace, dieIcon, faceText } from "./faces.ts";
 import { historyPanel, oddsPanel, percent, statsPanel } from "./panels.ts";
+import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
 import { injectStyle } from "./style.ts";
 import { STRINGS, fillIn, type RollerStrings } from "./strings.ts";
 
+/** Everything a tray can be told when it is mounted. All of it is optional. */
 export type RollerOptions = {
   /** For numbers and times, and for which built-in words to use: "ja…" is Japanese, anything else English. */
   locale?: string;
@@ -30,23 +32,45 @@ export type RollerOptions = {
   wide?: boolean;
   /** Called once each roll has landed. */
   onRoll?: (roll: Roll) => void;
-  /** Length of the tumble, in milliseconds. Reduced motion always skips it. */
+  /** Length of the tumble, in milliseconds, from the throw to the last die landing. Reduced motion always skips it. */
   animationMs?: number;
+  /**
+   * Whether the tray has a sound at all. Left out or true, it has a mute
+   * button, and starts with the sound on unless the device asks for reduced
+   * motion or somebody muted it here before. False, it is silent and has no button.
+   */
+  sound?: boolean;
+  /** A sound of your own for each throw, in place of the recorded dice. It is called only while the tray is not muted. */
+  playSound?: PlaySound;
 };
 
+/** What `mountRoller` hands back: the tray, driven from code. */
 export type RollerHandle = {
+  /** Throw the dice showing, as a tap on the felt does. */
   roll(): void;
+  /** Every roll kept so far, oldest first. */
   history(): readonly Roll[];
   /** Change part of the dice, or all of them: a spec with its count, sides, bonus and keep all given, as `parseNotation` returns, replaces the lot. */
   setSpec(spec: Partial<RollSpec>): void;
+  /** Take the tray out of the page and stop its timers and its sound. */
   destroy(): void;
 };
 
 type Tab = "history" | "stats" | "odds";
 
 /** A pleasant set of faces for a tray nobody has rolled yet. */
-const RESTING = [5, 3, 6, 2, 4];
-const RESTING_FATE = [1, 0, -1, 1, 0];
+const RESTING = [5, 3, 6, 2, 4, 1, 6, 3, 5, 2];
+const RESTING_FATE = [1, 0, -1, 1, 0, 1, -1, 0, 1, -1];
+
+/** A speaker, with waves when the sound is on and a cross when it is off. */
+function speaker(on: boolean): SVGElement {
+  return s(
+    "svg",
+    { viewBox: "0 0 24 24", width: 20, height: 20, fill: "none", stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true" },
+    s("path", { d: "M4 9.5h3.5L12 6v12l-4.5-3.5H4z", fill: "currentColor" }),
+    s("path", { d: on ? "M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10" : "M16 9.5l5 5M21 9.5l-5 5" }),
+  );
+}
 
 /** Which of the tray's words refuses each kind of notation. */
 const REFUSALS: Record<NotationProblem, keyof RollerStrings> = {
@@ -83,6 +107,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   const query = options.query ?? win?.location.search ?? "";
   const reduced = win?.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   const animationMs = reduced ? 0 : (options.animationMs ?? 650);
+  const mutedKey = `${storageKey}.muted`;
+  const hasSound = options.sound !== false;
 
   const params = new URLSearchParams(query.replace(/^\?/, ""));
   const shared = readShared(params);
@@ -97,16 +123,28 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   let source: RandomSource = seed === null ? cryptoSource() : seededSource(seed);
   let clearArmed = false;
   let storageWorks = storage !== undefined;
+  // Quiet to begin with where motion is reduced; after that, whatever this device last chose.
+  let muted = reduced;
+  try {
+    const kept = storage?.getItem(mutedKey);
+    if (kept === "1" || kept === "0") muted = kept === "1";
+  } catch {
+    // A storage that refuses to be read leaves the default.
+  }
+  let ownSound: RollSound | null = null;
   const timers = new Set<ReturnType<typeof setTimeout>>();
 
   const root = h("div", { class: "kk-root", "data-wide": String(options.wide === true), "data-testid": "korokoro" });
   for (const [name, value] of Object.entries(options.theme ?? {})) root.style.setProperty(name, value);
   const controls = h("div", { class: "kk-controls" });
   const tray = h("button", { type: "button", class: "kk-tray", "data-testid": "kk-tray" });
+  const mute = h("button", { type: "button", class: "kk-mute", "data-testid": "kk-mute" });
+  // The mute button sits on the felt's corner, beside the tray and not inside it: a button cannot hold a button.
+  const felt = h("div", { class: "kk-felt" }, tray, hasSound ? mute : null);
   const result = h("div", { class: "kk-result", "aria-live": "polite", "data-testid": "kk-result" });
   const panels = h("div", { class: "kk-panels" });
   // The felt first: on a phone it sits under the thumb, and the choices wait below it.
-  root.append(tray, result, controls, panels);
+  root.append(felt, result, controls, panels);
   target.replaceChildren(root);
 
   function later(fn: () => void, ms: number) {
@@ -360,6 +398,25 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     panels.replaceChildren(strip, body);
   }
 
+  function renderMute() {
+    mute.setAttribute("aria-pressed", String(!muted));
+    mute.setAttribute("aria-label", muted ? t.soundOff : t.soundOn);
+    mute.setAttribute("title", muted ? t.soundOff : t.soundOn);
+    mute.replaceChildren(speaker(!muted));
+  }
+
+  /** The sound of a throw: the page's own if it gave one, else the recorded dice, fetched on the first throw that wants them. */
+  function sound(dice: number, landings: number[]) {
+    if (!hasSound || muted) return;
+    try {
+      if (options.playSound !== undefined) return options.playSound({ dice, ms: animationMs, landings });
+      ownSound ??= createRollSound(win ?? undefined);
+      ownSound.play({ dice, ms: animationMs, landings });
+    } catch {
+      // A sound that fails is no reason for the dice not to roll.
+    }
+  }
+
   function render() {
     renderControls();
     renderTray();
@@ -371,7 +428,15 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     if (rolling) return;
     const thrown = roll(spec, source);
     showingShared = false;
-    if (animationMs === 0) return land(thrown);
+    if (animationMs === 0) {
+      sound(thrown.faces.length, thrown.faces.map(() => 0));
+      return land(thrown);
+    }
+    // Each die starts a moment after the one before and tumbles for its own time; all are down by animationMs.
+    const gap = thrown.faces.length < 2 ? 0 : Math.min(45, (animationMs * 0.22) / (thrown.faces.length - 1));
+    const waits = thrown.faces.map((_, i) => Math.round(i * gap));
+    const tumbles = waits.map((wait) => Math.round((animationMs - wait) * (0.86 + Math.random() * 0.14)));
+    sound(thrown.faces.length, waits.map((wait, i) => wait + (tumbles[i] as number)));
     rolling = true;
     renderResult();
     tray.setAttribute("data-rolling", "true");
@@ -388,7 +453,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         el.style.setProperty("--kk-x0", `${Math.round((Math.random() - 0.5) * 160)}px`);
         el.style.setProperty("--kk-y0", `${Math.round(-40 - Math.random() * 60)}px`);
         el.style.setProperty("--kk-r0", `${Math.round((Math.random() - 0.5) * 720)}deg`);
-        el.style.setProperty("--kk-t", `${animationMs - 80 + Math.round(Math.random() * 120)}ms`);
+        el.style.setProperty("--kk-t", `${tumbles[i]}ms`);
+        el.style.setProperty("--kk-wait", `${waits[i]}ms`);
         return el;
       }),
     );
@@ -414,6 +480,16 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   }
 
   tray.addEventListener("click", throwDice);
+  mute.addEventListener("click", () => {
+    muted = !muted;
+    try {
+      storage?.setItem(mutedKey, muted ? "1" : "0");
+    } catch {
+      // Not remembered on a device that keeps nothing; still muted for now.
+    }
+    renderMute();
+  });
+  renderMute();
   const onKey = (event: KeyboardEvent) => {
     if (event.key !== " " || event.defaultPrevented) return;
     const el = event.target as HTMLElement | null;
@@ -432,6 +508,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     destroy() {
       for (const id of timers) clearTimeout(id);
       doc.removeEventListener("keydown", onKey);
+      ownSound?.close();
       target.replaceChildren();
     },
   };

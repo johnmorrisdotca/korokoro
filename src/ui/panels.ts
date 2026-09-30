@@ -9,6 +9,7 @@ import { fillIn, type RollerStrings } from "./strings.ts";
 
 /** The three panels under the tray, each drawn fresh from the state it is handed. */
 
+/** A share as a percentage in the reader's language, with more digits the smaller it is. */
 export function percent(x: number, locale: string): string {
   const digits = x > 0 && x < 0.01 ? 2 : x < 0.1 ? 1 : 0;
   return new Intl.NumberFormat(locale, { style: "percent", maximumFractionDigits: digits }).format(x);
@@ -23,6 +24,7 @@ export function luckColour(luck: number): string {
   return luck < 0.35 ? "var(--kk-bad)" : luck > 0.65 ? "var(--kk-good)" : "#e0b43b";
 }
 
+/** Every roll kept, newest first: when, what was rolled, each die and the total. */
 export function historyPanel(history: readonly Roll[], t: RollerStrings, locale: string): HTMLElement {
   if (history.length === 0) return h("p", { class: "kk-empty", "data-testid": "kk-history-empty" }, t.noRolls);
   const time = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -115,6 +117,7 @@ function axis(from: number, to: number): HTMLElement {
   return h("div", { class: "kk-axis" }, h("span", {}, String(from)), h("span", {}, String(mid)), h("span", {}, String(to)));
 }
 
+/** The history in numbers: luck, streaks, each face's count and the totals against the odds. */
 export function statsPanel(history: readonly Roll[], spec: RollSpec, t: RollerStrings, locale: string): HTMLElement {
   if (history.length === 0) return h("p", { class: "kk-empty" }, t.noRolls);
   const stats = statsOf(history, spec);
@@ -169,6 +172,7 @@ export function statsPanel(history: readonly Roll[], spec: RollSpec, t: RollerSt
   return panel;
 }
 
+/** The odds of the dice showing: the average, the spread, every total's chance and the chance to reach a target. */
 export function oddsPanel(
   spec: RollSpec,
   target: number,
