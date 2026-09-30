@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/korokoro",
   "version": "1.4.0",
-  "description": "Dice roller and dice notation parser with exact odds. Tap dice to build a roll (d4 to d100, up to ten, mixed), hold some and roll the rest, or type notation: 1d20+1d4+3, 4d6dl1, 2d20kh1, 3d6!, 2d6r<3, 4dF. Fair and seeded rolls, exact probabilities, history and stats, a tray for any page and a React component. No dependencies.",
+  "description": "Dice roller and dice notation parser with exact odds for every roll. A ready-made dice tray with real dice sounds, history and stats; any die from d2 to d1000, mixed dice, hold and reroll, Fate dice, keep and drop, exploding dice and rerolls; seeded rolls anyone can verify. Zero dependencies, TypeScript, React.",
   "keywords": [
     "dice",
     "dice-roller",

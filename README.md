@@ -25,8 +25,15 @@ uses this package exactly as published.
 ## What it is
 
 A dice roller and a dice notation parser for tabletop games, RPGs and board
-games, with the exact odds of every roll. Three things in one small package,
-each usable without the others:
+games, with the exact odds of every roll.
+
+- **What is different.** The odds are exact, worked out and never simulated,
+  for every notation it reads. The tray is finished: dice you tap, real dice
+  sounds, history, stats and a link to any roll. And a seeded roll can be
+  checked by anybody, die for die.
+- **What it costs a project.** Nothing: no dependencies, and one import.
+
+Three things in one small package, each usable without the others:
 
 - **A tray** you put on any page: tap dice to add them, tap the felt to roll,
   read the total, the odds, the history and the stats. Plain DOM, no framework.
