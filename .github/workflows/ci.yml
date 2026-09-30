@@ -21,6 +21,8 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm test
       - run: pnpm build
+      - name: The generator, written in Python from the specification alone, matches the conformance suite
+        run: python3 conformance/port_check.py
   tray:
     runs-on: ubuntu-latest
     steps:
@@ -53,3 +55,18 @@ jobs:
         run: node scripts/check-cli.mjs
       - name: The package as npm packs it, installed and used
         run: node scripts/check-package.mjs
+  languages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: The examples in Python, Go, Rust and C#, against the installed command
+        run: node scripts/check-languages.mjs
+        env:
+          KOROKORO_ALL_LANGUAGES: "1"

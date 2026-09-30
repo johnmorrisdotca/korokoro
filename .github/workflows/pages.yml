@@ -1,4 +1,4 @@
-# Publishes the demo to GitHub Pages on every push to main. Nothing here costs
+# Publishes the demo and the documentation site to GitHub Pages on every push to main. Nothing here costs
 # anything on a public repository. (Inside the Itsutsu repository this file is
 # dormant: GitHub only reads workflows at a repository's root.)
 name: Pages
@@ -29,6 +29,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm site
+      - run: pnpm docs:site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

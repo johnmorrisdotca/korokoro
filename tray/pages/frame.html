@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A page that frames the plain-output page</title>
+  </head>
+  <body>
+    <iframe id="dice" src="/api/?roll=2d6&seed=frame&format=json" hidden></iframe>
+    <output id="first"></output>
+    <output id="second"></output>
+    <output id="bad"></output>
+    <script>
+      const heard = [];
+      window.addEventListener("message", (event) => {
+        if (!event.data || !event.data.korokoro) return;
+        heard.push(event.data.korokoro);
+        const { query, code, err, data } = event.data.korokoro;
+        if (heard.length === 1) {
+          document.getElementById("first").textContent = `${query} ${code} ${data.rolls[0].total}`;
+          const frame = document.getElementById("dice").contentWindow;
+          frame.postMessage({ korokoro: { ask: "?roll=1d20%2B5&seed=frame&format=json" } }, "*");
+          frame.postMessage({ korokoro: { ask: "?roll=11d6" } }, "*");
+        } else if (code === 0) document.getElementById("second").textContent = `${query} ${code} ${data.rolls[0].notation}`;
+        else document.getElementById("bad").textContent = `${code} ${err.trim()}`;
+      });
+    </script>
+  </body>
+</html>

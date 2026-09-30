@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Korokoro · dice as plain text</title>
+    <meta name="description" content="Roll dice from an address: ?roll=2d6+3 gives the roll as plain text, JSON or CSV, with exact odds. It runs in your browser." />
+    <meta name="theme-color" content="#2f5d4a" />
+    <link rel="stylesheet" href="../family.css" />
+    <link rel="stylesheet" href="../site.css" />
+    <style>
+      /* This page's own: the answer, as large as it needs to be, and nothing beside it. */
+      #out { white-space: pre-wrap; overflow-wrap: anywhere; min-height: 3.2rem; }
+      #err { color: var(--bad); white-space: pre-wrap; margin: 12px 0 0; }
+      .note { margin: 18px 0 0; color: var(--muted); font-size: .85rem; max-width: 46rem; }
+      .note a { color: inherit; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <pre id="out" data-testid="api-out" aria-live="polite"></pre>
+      <p id="err" data-testid="api-err" role="alert" hidden></p>
+      <p class="note" data-testid="api-note">
+        This page runs in your browser. Nothing is sent anywhere, and there is no server to ask: a program cannot fetch dice from this address, because what comes
+        back is this page, not the answer. A program should use <a href="https://github.com/johnmorrisdotca/korokoro#the-command-line">the command line</a> or
+        <a href="https://github.com/johnmorrisdotca/korokoro#use-it-in-your-project">the package</a>. A page can embed this one in a frame and be sent the answer:
+        see <a href="https://github.com/johnmorrisdotca/korokoro/blob/main/docs/plain-output.md">Dice as plain text</a>.
+      </p>
+    </main>
+    <script type="module">
+      import { runCli } from "../dist/index.js";
+
+      const HELP = `Korokoro, as plain text. Add to this page's address:
+
+  ?roll=2d6+3            the dice to roll; give it more than once to roll several
+  &seed=table            the same seed throws the same dice
+  &times=6               throw each roll this many times (1 to 100)
+  &format=text           text (the default), json or csv
+  &odds=1                show the exact odds and do not roll
+  &game=yahtzee          a game's dice, read the way the game reads them
+  &lang=ja               English (the default) or Japanese
+
+  ?roll=2d20kh1%2B5&seed=table&format=json
+
+A + in dice is written %2B in an address, as a # is %23.
+`;
+
+      /** The answer to a query, by the same function the command line is: arguments in, text out. */
+      function answer(query) {
+        const params = new URLSearchParams(query);
+        const dice = params.getAll("roll").filter((text) => text.trim() !== "");
+        if (dice.length === 0 && !params.has("game") && !params.has("games")) return { code: 0, out: HELP, err: "", help: true };
+        const options = [];
+        for (const [name, flag] of [["seed", "--seed"], ["times", "--times"], ["game", "--game"], ["lang", "--lang"], ["max-dice", "--max-dice"]]) {
+          const value = params.get(name);
+          if (value !== null && value !== "") options.push(flag, value);
+        }
+        const format = (params.get("format") ?? "text").toLowerCase();
+        if (format !== "text" && format !== "json" && format !== "csv") return { code: 2, out: "", err: "korokoro: format is text, json or csv\n" };
+        if (format !== "text") options.push(`--${format}`);
+        if (["1", "true", "yes"].includes((params.get("odds") ?? "").toLowerCase())) options.push("--odds");
+        if (params.has("games")) options.push("--games");
+        // A roll that starts with a minus sign is dice, not an option: the separator says so.
+        return runCli([...options, "--", ...dice], { locale: navigator.language });
+      }
+
+      const result = answer(location.search);
+      const out = document.getElementById("out");
+      const err = document.getElementById("err");
+      out.textContent = result.out;
+      out.dataset.code = String(result.code);
+      err.textContent = result.err;
+      err.hidden = result.err === "";
+      document.documentElement.lang = new URLSearchParams(location.search).get("lang") === "ja" ? "ja" : "en";
+
+      /** What is sent to a page that frames this one: the answer, and the JSON read when that is what was asked for. */
+      function message(query, made) {
+        let data = null;
+        try {
+          data = JSON.parse(made.out);
+        } catch {
+          // Not JSON: text or CSV, which is in `out`.
+        }
+        return { korokoro: { query, code: made.code, out: made.out, err: made.err, data } };
+      }
+      // The answer to this page's own address, to whoever framed or opened it.
+      const owner = window.parent !== window ? window.parent : window.opener;
+      if (owner && result.help !== true) owner.postMessage(message(location.search, result), "*");
+      // And an answer to any query asked of it afterwards: { korokoro: { ask: "?roll=2d6" } }.
+      window.addEventListener("message", (event) => {
+        const ask = event.data?.korokoro?.ask;
+        if (typeof ask !== "string" || event.source === null) return;
+        event.source.postMessage(message(ask, answer(ask)), event.origin === "null" ? "*" : event.origin);
+      });
+    </script>
+  </body>
+</html>

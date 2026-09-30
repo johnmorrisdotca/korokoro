@@ -4,7 +4,7 @@ import { readFileSync, readdirSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { SOUNDS } from "./sounds.data.ts";
+import { SOUNDS } from "./sounds-data.ts";
 
 describe("the recordings", () => {
   const files = readdirSync("sounds").filter((name) => name.endsWith(".m4a")).sort();
@@ -24,7 +24,7 @@ describe("the recordings", () => {
       bytes += file.length;
     }
     expect(bytes).toBeLessThan(30_000);
-    expect(readFileSync("src/ui/sounds.data.ts").length).toBeLessThan(60_000);
+    expect(readFileSync("src/ui/sounds-data.ts").length).toBeLessThan(60_000);
   });
 
   it("are named in SOUNDS.md, with where they came from and their licence", () => {
@@ -37,6 +37,6 @@ describe("the recordings", () => {
   it("are never part of the core: only a roll with its sound on imports them", () => {
     const sources = ["src/index.ts", "src/react.tsx", "src/ui/mount.ts", "src/ui/sound.ts", "src/ui/panels.ts", "src/ui/faces.ts"].map((path) => readFileSync(path, "utf8"));
     for (const source of sources) expect(source).not.toMatch(/from "\.\/(ui\/)?sounds\.data\.ts"/);
-    expect(readFileSync("src/ui/sound.ts", "utf8")).toContain('import("./sounds.data.ts")');
+    expect(readFileSync("src/ui/sound.ts", "utf8")).toContain('import("./sounds-data.ts")');
   });
 });

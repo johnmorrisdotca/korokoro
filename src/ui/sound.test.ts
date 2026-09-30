@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { MAX_KNOCKS, createRollSound, knockTimes, type SoundData } from "./sound.ts";
-import { SOUNDS } from "./sounds.data.ts";
+import { SOUNDS } from "./sounds-data.ts";
 
 /** Enough of the Web Audio API to see what a roll asks of it. */
 function fakeAudio(options: { state?: string; decodeFails?: boolean; resumeFails?: boolean } = {}) {

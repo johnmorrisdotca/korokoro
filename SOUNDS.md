@@ -35,7 +35,7 @@ encoder's padding was taken out of each file.
 
 ## How they are shipped
 
-`pnpm sounds` writes the six files into `src/ui/sounds.data.ts` as base64, and
+`pnpm sounds` writes the six files into `src/ui/sounds-data.ts` as base64, and
 a test fails if that module and the files fall out of step. The tray imports
 the module only when a roll happens with the sound on, so a page that never
 makes a sound never downloads it. It is also exported on its own as

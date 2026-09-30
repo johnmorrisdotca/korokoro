@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Korokoro from a CDN</title>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></script>
+  </head>
+  <body>
+    <korokoro-roller notation="2d20kh1+5" query="?seed=cdn" storage="none"></korokoro-roller>
+    <p id="said"></p>
+    <script type="module">
+      import { chanceAtLeast, parseNotation, roll } from "https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/index.js";
+
+      const attack = parseNotation("2d20kh1+5");
+      document.getElementById("said").textContent = `Rolled ${roll(attack).total}; 15 or more comes up ${Math.round(chanceAtLeast(attack, 15) * 100)}% of the time.`;
+    </script>
+  </body>
+</html>

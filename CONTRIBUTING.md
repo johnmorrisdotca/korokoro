@@ -18,6 +18,8 @@ pnpm check    # lint, types and tests: the same as CI
 pnpm test:tray   # the tray in real browsers: builds the demo, then taps it
 pnpm test:cli    # the command line, run as a child process
 pnpm test:package   # npm pack, install the tarball, import every entry, run the commands
+pnpm test:languages # the examples in Python, Go, Rust and C#, for whichever of them this machine has
+pnpm docs:site      # the documentation site, into ./site/docs
 pnpm site     # builds the demo into ./site
 pnpm dlx serve site   # or any static server
 ```
@@ -29,6 +31,22 @@ pnpm dlx serve site   # or any static server
   under 44px, and the page complained of nothing. A change to the tray comes
   with a test there. The first time, `pnpm exec playwright install chromium
   webkit` fetches the browsers.
+- **The documentation site is made, not written.** `scripts/docs-site.mjs`
+  cuts the README at its headings and takes the pages in `docs/` as they are;
+  the API reference is TypeDoc's, from the doc comments. To change a page,
+  change the README or the document it came from. A new section of the README
+  has to be given a page in that script, or the build says so.
+- **The demo's look is the family's.** `demo/family.css` and
+  `scripts/family-template.mjs` are shared, unchanged, with the sibling
+  packages; a test holds the stylesheet to the hash on its first line. What
+  is Korokoro's own goes in `demo/site.css`. After a change to either,
+  `node tray/look.mjs before` on the old build and
+  `node tray/look.mjs before after` on the new compare 56 pictures of the
+  page, pixel for pixel.
+- **A change to a seeded roll or to the notation changes the conformance
+  suite**, and the test that holds it fails until `pnpm docs:make` rewrites
+  it. That is the moment to ask whether the change was meant: ports check
+  themselves against that file.
 - **Keep the core pure.** Everything outside `src/ui` and `src/react.tsx` is
   plain functions over plain data, with no DOM and no dependency. It is what
   makes the odds testable and the package usable anywhere.
@@ -50,7 +68,7 @@ pnpm dlx serve site   # or any static server
 - **Every export gets a doc comment**, and the README's tables (notation,
   options, limits) are kept in step with the code.
 - **Sounds.** The recordings are the `.m4a` files in `sounds/`; `pnpm sounds`
-  writes them into `src/ui/sounds.data.ts`, and a test fails if the two
+  writes them into `src/ui/sounds-data.ts`, and a test fails if the two
   differ. A new recording must be CC0 or your own, and is named in `SOUNDS.md`.
 - **No dependencies.** The package has none at run time and should stay so.
 - One change per pull request, with a line in `CHANGELOG.md` under

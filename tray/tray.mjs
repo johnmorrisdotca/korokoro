@@ -9,7 +9,7 @@ import { expect, test } from "@playwright/test";
 const site = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
 const pages = join(dirname(fileURLToPath(import.meta.url)), "pages");
 const vue = join(dirname(fileURLToPath(import.meta.url)), "..", "node_modules", "vue", "dist", "vue.esm-browser.prod.js");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".png": "image/png" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".png": "image/png", ".woff2": "font/woff2" };
 
 /** Open the demo with a query, and collect anything the page complains of. */
 export async function open(page, query = "?seed=tray") {
@@ -20,13 +20,25 @@ export async function open(page, query = "?seed=tray") {
   await page.route("http://korokoro.test/**", (route) => {
     const { pathname } = new URL(route.request().url());
     // The demo, and beside it the pages that try the custom element and the Vue component, with Vue's own browser build for the second.
-    const file = pathname === "/vue.js" ? vue : pathname.startsWith("/pages/") ? join(pages, pathname.slice(7)) : join(site, pathname === "/" ? "index.html" : pathname);
+    // The documentation site is built for the address it is published at: /korokoro/docs/ is site/docs.
+    if (pathname.startsWith("/korokoro/")) {
+      const built = join(site, pathname.slice("/korokoro/".length));
+      const found = pathname.endsWith("/") ? join(built, "index.html") : built;
+      return existsSync(found) ? route.fulfill({ body: readFileSync(found), contentType: TYPES[found.slice(found.lastIndexOf("."))] ?? "application/octet-stream" }) : route.fulfill({ status: 404, body: "" });
+    }
+    const file = pathname === "/vue.js" ? vue : pathname.startsWith("/pages/") ? join(pages, pathname.slice(7)) : join(site, pathname.endsWith("/") ? `${pathname}index.html` : pathname);
     if (!existsSync(file)) return route.fulfill({ status: 404, body: "" });
     return route.fulfill({ body: readFileSync(file), contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream" });
   });
   // A query opens the demo; a path opens another page.
+  // The CDN's address for the package is answered from the build, so that a page written for the CDN is tried as it is written.
+  await page.route("https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/**", (route) => {
+    const file = join(site, new URL(route.request().url()).pathname.replace("/npm/@johnmorrisdotca/korokoro@1/", ""));
+    return existsSync(file) ? route.fulfill({ body: readFileSync(file), contentType: "text/javascript", headers: { "access-control-allow-origin": "*" } }) : route.fulfill({ status: 404, body: "" });
+  });
   await page.goto(`http://korokoro.test/${query.startsWith("/") ? query.slice(1) : query}`);
-  await expect(page.locator('[data-testid="kk-tray"]')).toBeVisible();
+  // Every page has a tray but the plain-output page and the page that frames it.
+  if (!/^\/(api\/|pages\/frame|korokoro\/docs\/guide)/.test(query)) await expect(page.locator('[data-testid="kk-tray"]')).toBeVisible();
   return errors;
 }
 
@@ -40,7 +52,7 @@ export async function tap(page, selector, options = {}) {
 
 /** Tap the felt where no die and no button lies: its lower left corner. */
 export async function roll(page) {
-  const felt = page.locator('[data-testid="kk-tray"]');
+  const felt = page.locator('[data-testid="kk-tray"]').first();
   await felt.scrollIntoViewIfNeeded();
   const box = await felt.boundingBox();
   await tap(page, '[data-testid="kk-tray"]', { position: { x: 10, y: box.height - 10 } });

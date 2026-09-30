@@ -1,0 +1,3633 @@
+{
+ "format": 1,
+ "about": "What any implementation of Korokoro has to reproduce. Made from the reference implementation (https://github.com/johnmorrisdotca/korokoro) and checked against it by its tests. docs/spec/random.md and docs/spec/notation.md say how each part is worked out.",
+ "random": [
+  {
+   "seed": "table",
+   "uint32": [
+    2005349058,
+    2732433751,
+    3153689280,
+    3569861572,
+    2912578797,
+    2423997047,
+    1730699484,
+    1284305551
+   ],
+   "below": [
+    {
+     "n": 2,
+     "values": [
+      0,
+      1,
+      0,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0,
+      0,
+      1,
+      1
+     ]
+    },
+    {
+     "n": 3,
+     "values": [
+      0,
+      1,
+      0,
+      1,
+      0,
+      2,
+      0,
+      1,
+      1,
+      0,
+      1,
+      0
+     ]
+    },
+    {
+     "n": 6,
+     "values": [
+      0,
+      1,
+      0,
+      4,
+      3,
+      5,
+      0,
+      1,
+      4,
+      0,
+      1,
+      3
+     ]
+    },
+    {
+     "n": 20,
+     "values": [
+      18,
+      11,
+      0,
+      12,
+      17,
+      7,
+      4,
+      11,
+      2,
+      10,
+      7,
+      11
+     ]
+    },
+    {
+     "n": 100,
+     "values": [
+      58,
+      51,
+      80,
+      72,
+      97,
+      47,
+      84,
+      51,
+      62,
+      90,
+      87,
+      91
+     ]
+    },
+    {
+     "n": 1000,
+     "values": [
+      58,
+      751,
+      280,
+      572,
+      797,
+      47,
+      484,
+      551,
+      962,
+      690,
+      687,
+      491
+     ]
+    }
+   ]
+  },
+  {
+   "seed": "table-7",
+   "uint32": [
+    3837663329,
+    2870545305,
+    1293747295,
+    392522952,
+    399441923,
+    170000372,
+    1022604515,
+    2620544937
+   ],
+   "below": [
+    {
+     "n": 2,
+     "values": [
+      1,
+      1,
+      1,
+      0,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "n": 3,
+     "values": [
+      2,
+      0,
+      1,
+      0,
+      2,
+      2,
+      2,
+      0,
+      1,
+      2,
+      1,
+      0
+     ]
+    },
+    {
+     "n": 6,
+     "values": [
+      5,
+      3,
+      1,
+      0,
+      5,
+      2,
+      5,
+      3,
+      4,
+      2,
+      4,
+      0
+     ]
+    },
+    {
+     "n": 20,
+     "values": [
+      9,
+      5,
+      15,
+      12,
+      3,
+      12,
+      15,
+      17,
+      6,
+      8,
+      18,
+      4
+     ]
+    },
+    {
+     "n": 100,
+     "values": [
+      29,
+      5,
+      95,
+      52,
+      23,
+      72,
+      15,
+      37,
+      6,
+      68,
+      98,
+      64
+     ]
+    },
+    {
+     "n": 1000,
+     "values": [
+      329,
+      305,
+      295,
+      952,
+      923,
+      372,
+      515,
+      937,
+      606,
+      68,
+      698,
+      364
+     ]
+    }
+   ]
+  },
+  {
+   "seed": "",
+   "uint32": [
+    1090200105,
+    3123241162,
+    3433258857,
+    95290961,
+    4072668799,
+    3781765789,
+    3039038715,
+    2535001790
+   ],
+   "below": [
+    {
+     "n": 2,
+     "values": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0
+     ]
+    },
+    {
+     "n": 3,
+     "values": [
+      0,
+      1,
+      0,
+      2,
+      1,
+      1,
+      0,
+      2,
+      2,
+      2,
+      2,
+      1
+     ]
+    },
+    {
+     "n": 6,
+     "values": [
+      3,
+      4,
+      3,
+      5,
+      1,
+      1,
+      3,
+      2,
+      5,
+      5,
+      2,
+      4
+     ]
+    },
+    {
+     "n": 20,
+     "values": [
+      5,
+      2,
+      17,
+      1,
+      19,
+      9,
+      15,
+      10,
+      17,
+      3,
+      18,
+      14
+     ]
+    },
+    {
+     "n": 100,
+     "values": [
+      5,
+      62,
+      57,
+      61,
+      99,
+      89,
+      15,
+      90,
+      97,
+      23,
+      38,
+      14
+     ]
+    },
+    {
+     "n": 1000,
+     "values": [
+      105,
+      162,
+      857,
+      961,
+      799,
+      789,
+      715,
+      790,
+      897,
+      223,
+      738,
+      414
+     ]
+    }
+   ]
+  },
+  {
+   "seed": "a",
+   "uint32": [
+    4110069203,
+    1501912837,
+    178925375,
+    2915424510,
+    1842981042,
+    2090990058,
+    807519550,
+    153145874
+   ],
+   "below": [
+    {
+     "n": 2,
+     "values": [
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      1
+     ]
+    },
+    {
+     "n": 3,
+     "values": [
+      2,
+      1,
+      2,
+      0,
+      0,
+      0,
+      1,
+      2,
+      2,
+      0,
+      1,
+      1
+     ]
+    },
+    {
+     "n": 6,
+     "values": [
+      5,
+      1,
+      5,
+      0,
+      0,
+      0,
+      4,
+      2,
+      2,
+      3,
+      4,
+      1
+     ]
+    },
+    {
+     "n": 20,
+     "values": [
+      3,
+      17,
+      15,
+      10,
+      2,
+      18,
+      10,
+      14,
+      6,
+      17,
+      16,
+      1
+     ]
+    },
+    {
+     "n": 100,
+     "values": [
+      3,
+      37,
+      75,
+      10,
+      42,
+      58,
+      50,
+      74,
+      26,
+      37,
+      96,
+      1
+     ]
+    },
+    {
+     "n": 1000,
+     "values": [
+      203,
+      837,
+      375,
+      510,
+      42,
+      58,
+      550,
+      874,
+      626,
+      537,
+      796,
+      901
+     ]
+    }
+   ]
+  },
+  {
+   "seed": "コロコロ",
+   "uint32": [
+    2990234140,
+    1626646514,
+    816023979,
+    3327821319,
+    2580813417,
+    233114156,
+    168631451,
+    547376321
+   ],
+   "below": [
+    {
+     "n": 2,
+     "values": [
+      0,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      0,
+      0,
+      0,
+      1
+     ]
+    },
+    {
+     "n": 3,
+     "values": [
+      1,
+      2,
+      0,
+      0,
+      0,
+      2,
+      2,
+      2,
+      2,
+      2,
+      1,
+      2
+     ]
+    },
+    {
+     "n": 6,
+     "values": [
+      4,
+      2,
+      3,
+      3,
+      3,
+      2,
+      5,
+      5,
+      2,
+      2,
+      4,
+      5
+     ]
+    },
+    {
+     "n": 20,
+     "values": [
+      0,
+      14,
+      19,
+      19,
+      17,
+      16,
+      11,
+      1,
+      8,
+      2,
+      0,
+      9
+     ]
+    },
+    {
+     "n": 100,
+     "values": [
+      40,
+      14,
+      79,
+      19,
+      17,
+      56,
+      51,
+      21,
+      68,
+      62,
+      0,
+      89
+     ]
+    },
+    {
+     "n": 1000,
+     "values": [
+      140,
+      514,
+      979,
+      319,
+      417,
+      156,
+      451,
+      321,
+      368,
+      562,
+      700,
+      189
+     ]
+    }
+   ]
+  },
+  {
+   "seed": "The quick brown fox",
+   "uint32": [
+    1651539567,
+    3523186616,
+    2457531951,
+    2290112395,
+    1283439233,
+    2801984661,
+    4068985868,
+    3761438067
+   ],
+   "below": [
+    {
+     "n": 2,
+     "values": [
+      1,
+      0,
+      1,
+      1,
+      1,
+      1,
+      0,
+      1,
+      1,
+      1,
+      0,
+      1
+     ]
+    },
+    {
+     "n": 3,
+     "values": [
+      0,
+      2,
+      0,
+      1,
+      2,
+      0,
+      2,
+      0,
+      2,
+      1,
+      1,
+      0
+     ]
+    },
+    {
+     "n": 6,
+     "values": [
+      3,
+      2,
+      3,
+      1,
+      5,
+      3,
+      2,
+      3,
+      5,
+      1,
+      4,
+      3
+     ]
+    },
+    {
+     "n": 20,
+     "values": [
+      7,
+      16,
+      11,
+      15,
+      13,
+      1,
+      8,
+      7,
+      17,
+      13,
+      14,
+      15
+     ]
+    },
+    {
+     "n": 100,
+     "values": [
+      67,
+      16,
+      51,
+      95,
+      33,
+      61,
+      68,
+      67,
+      37,
+      53,
+      74,
+      55
+     ]
+    },
+    {
+     "n": 1000,
+     "values": [
+      567,
+      616,
+      951,
+      395,
+      233,
+      661,
+      868,
+      67,
+      337,
+      553,
+      674,
+      955
+     ]
+    }
+   ]
+  }
+ ],
+ "notation": {
+  "reads": [
+   {
+    "text": "d20",
+    "written": "1d20"
+   },
+   {
+    "text": "2d6",
+    "written": "2d6"
+   },
+   {
+    "text": "3d6+2",
+    "written": "3d6+2"
+   },
+   {
+    "text": "4d8-1",
+    "written": "4d8-1"
+   },
+   {
+    "text": "d%",
+    "written": "1d100"
+   },
+   {
+    "text": "10d10",
+    "written": "10d10"
+   },
+   {
+    "text": "d1000",
+    "written": "1d1000"
+   },
+   {
+    "text": "2d3",
+    "written": "2d3"
+   },
+   {
+    "text": "4dF",
+    "written": "4dF"
+   },
+   {
+    "text": "2D6 + 3",
+    "written": "2d6+3"
+   },
+   {
+    "text": "2d20kh1",
+    "written": "2d20kh1"
+   },
+   {
+    "text": "2d20kh",
+    "written": "2d20kh1"
+   },
+   {
+    "text": "2d20kl1",
+    "written": "2d20kl1"
+   },
+   {
+    "text": "4d6kh3",
+    "written": "4d6kh3"
+   },
+   {
+    "text": "4d6dl1",
+    "written": "4d6kh3"
+   },
+   {
+    "text": "5d10dh2",
+    "written": "5d10kl3"
+   },
+   {
+    "text": "4d6k3",
+    "written": "4d6kh3"
+   },
+   {
+    "text": "4d6d1",
+    "written": "4d6kh3"
+   },
+   {
+    "text": "4d6b3",
+    "written": "4d6kh3"
+   },
+   {
+    "text": "2d20w1",
+    "written": "2d20kl1"
+   },
+   {
+    "text": "2d6r<3",
+    "written": "2d6r<3"
+   },
+   {
+    "text": "2d6r<=2",
+    "written": "2d6r<3"
+   },
+   {
+    "text": "2d6ro<3",
+    "written": "2d6ro<3"
+   },
+   {
+    "text": "2d6r",
+    "written": "2d6r<2"
+   },
+   {
+    "text": "2d6ro",
+    "written": "2d6ro<2"
+   },
+   {
+    "text": "2d6r=3",
+    "written": "2d6r=3"
+   },
+   {
+    "text": "2d6r3",
+    "written": "2d6r=3"
+   },
+   {
+    "text": "2d6r>=5",
+    "written": "2d6r>=5"
+   },
+   {
+    "text": "2d6ro=6",
+    "written": "2d6ro=6"
+   },
+   {
+    "text": "2d6ro>4",
+    "written": "2d6ro>=5"
+   },
+   {
+    "text": "2d6ro<>3",
+    "written": "2d6ro<>3"
+   },
+   {
+    "text": "2d6ro!=3",
+    "written": "2d6ro<>3"
+   },
+   {
+    "text": "3d6!",
+    "written": "3d6!"
+   },
+   {
+    "text": "3d6!ro<2+1",
+    "written": "3d6!ro<2+1"
+   },
+   {
+    "text": "3d6!>=5",
+    "written": "3d6!>=5"
+   },
+   {
+    "text": "3d6!>4",
+    "written": "3d6!>=5"
+   },
+   {
+    "text": "3d6!=1",
+    "written": "3d6!=1"
+   },
+   {
+    "text": "3d6!=6",
+    "written": "3d6!"
+   },
+   {
+    "text": "3d6!!",
+    "written": "3d6!!"
+   },
+   {
+    "text": "3d6!p",
+    "written": "3d6!p"
+   },
+   {
+    "text": "3d6!!p",
+    "written": "3d6!!p"
+   },
+   {
+    "text": "3d6!!>=5",
+    "written": "3d6!!>=5"
+   },
+   {
+    "text": "6d10>=8",
+    "written": "6d10>=8"
+   },
+   {
+    "text": "6d10>7",
+    "written": "6d10>=8"
+   },
+   {
+    "text": "6d10>=8f=1",
+    "written": "6d10>=8f=1"
+   },
+   {
+    "text": "6d10>7f1",
+    "written": "6d10>=8f=1"
+   },
+   {
+    "text": "3d6=6",
+    "written": "3d6=6"
+   },
+   {
+    "text": "4d6<3",
+    "written": "4d6<=2"
+   },
+   {
+    "text": "3d6<>1",
+    "written": "3d6<>1"
+   },
+   {
+    "text": "6d10>=8!",
+    "written": "6d10>=8!"
+   },
+   {
+    "text": "6d10!>=10>=8",
+    "written": "6d10>=8!"
+   },
+   {
+    "text": "4d6min2",
+    "written": "4d6min2"
+   },
+   {
+    "text": "4d6max5",
+    "written": "4d6max5"
+   },
+   {
+    "text": "4d6max5min2",
+    "written": "4d6min2max5"
+   },
+   {
+    "text": "1d20cs>=19cf=1",
+    "written": "1d20cs>=19cf=1"
+   },
+   {
+    "text": "1d20cscf",
+    "written": "1d20cs=20cf=1"
+   },
+   {
+    "text": "4d6sd",
+    "written": "4d6sd"
+   },
+   {
+    "text": "4d6s",
+    "written": "4d6sa"
+   },
+   {
+    "text": "4d6sdkh3",
+    "written": "4d6kh3sd"
+   },
+   {
+    "text": "4d6u",
+    "written": "4d6u"
+   },
+   {
+    "text": "5d10usd",
+    "written": "5d10usd"
+   },
+   {
+    "text": "1d20+1d4",
+    "written": "1d20+1d4"
+   },
+   {
+    "text": "2d6+1d8+3",
+    "written": "2d6+1d8+3"
+   },
+   {
+    "text": "2d20kh1+1d4+5",
+    "written": "2d20kh1+1d4+5"
+   },
+   {
+    "text": "2d6+3d6",
+    "written": "5d6"
+   },
+   {
+    "text": "1d4+1d6+1d8+1d10",
+    "written": "1d4+1d6+1d8+1d10"
+   },
+   {
+    "text": "d[Yes,No,Maybe]",
+    "written": "1d[Yes,No,Maybe]"
+   },
+   {
+    "text": "2d[Hit=1,Miss=0,Miss=0]",
+    "written": "2d[Hit=1,Miss=0,Miss=0]"
+   },
+   {
+    "text": "d[1,1,2,3,5,8]",
+    "written": "1d[1,1,2,3,5,8]"
+   },
+   {
+    "text": "d[Yes#2a7,No]",
+    "written": "1d[Yes#2a7,No]"
+   },
+   {
+    "text": "d6{6:3}",
+    "written": "1d6{6:3}"
+   },
+   {
+    "text": "2d6{1:0,6:2}+1",
+    "written": "2d6{1:0,6:2}+1"
+   },
+   {
+    "text": "6#4d6dl1",
+    "written": "6#4d6kh3"
+   },
+   {
+    "text": "3#2d20kh1+5",
+    "written": "3#2d20kh1+5"
+   },
+   {
+    "text": "2d6+3 # fire damage",
+    "written": "2d6+3 # fire damage"
+   },
+   {
+    "text": "[fire damage] 2d6+3",
+    "written": "2d6+3 # fire damage"
+   },
+   {
+    "text": "6#4d6dl1 # ability scores",
+    "written": "6#4d6kh3 # ability scores"
+   },
+   {
+    "text": "(2d6+3)*2",
+    "written": "(2d6+3)*2"
+   },
+   {
+    "text": "2d6x2",
+    "written": "2d6*2"
+   },
+   {
+    "text": "1d20-1d4",
+    "written": "1d20-1d4"
+   },
+   {
+    "text": "-1d6+10",
+    "written": "-1d6+10"
+   },
+   {
+    "text": "floor(4d6/2)",
+    "written": "floor(4d6/2)"
+   },
+   {
+    "text": "ceil(4d6/2)",
+    "written": "ceil(4d6/2)"
+   },
+   {
+    "text": "round(4d6/2)",
+    "written": "round(4d6/2)"
+   },
+   {
+    "text": "abs(1d6-1d6)",
+    "written": "abs(1d6-1d6)"
+   },
+   {
+    "text": "max(1d6,1d8)",
+    "written": "max(1d6,1d8)"
+   },
+   {
+    "text": "min(1d6,1d8,4)",
+    "written": "min(1d6,1d8,4)"
+   },
+   {
+    "text": "{4d6,3d8}kh1",
+    "written": "max(4d6,3d8)"
+   },
+   {
+    "text": "{4d6,3d8}kl1",
+    "written": "min(4d6,3d8)"
+   },
+   {
+    "text": "(2d6+3)",
+    "written": "2d6+3"
+   },
+   {
+    "text": "3+2d6",
+    "written": "2d6+3"
+   },
+   {
+    "text": "2d6+3+1d4",
+    "written": "2d6+1d4+3"
+   },
+   {
+    "text": "1d20-(1d4+2)",
+    "written": "1d20-(1d4+2)"
+   },
+   {
+    "text": "floor(2d6kh1/2)+1d6ro<2",
+    "written": "floor(2d6kh1/2)+1d6ro<2"
+   },
+   {
+    "text": "3#(1d6+1)*2",
+    "written": "3#(1d6+1)*2"
+   }
+  ],
+  "refuses": [
+   {
+    "text": "",
+    "problem": "shape",
+    "part": ""
+   },
+   {
+    "text": "nonsense",
+    "problem": "shape",
+    "part": "nonsense"
+   },
+   {
+    "text": "11d6",
+    "problem": "count",
+    "part": "11"
+   },
+   {
+    "text": "0d6",
+    "problem": "count",
+    "part": "0"
+   },
+   {
+    "text": "d1",
+    "problem": "sides",
+    "part": "d1"
+   },
+   {
+    "text": "d1001",
+    "problem": "sides",
+    "part": "d1001"
+   },
+   {
+    "text": "2d6+100",
+    "problem": "bonus",
+    "part": "+100"
+   },
+   {
+    "text": "4d6kh4",
+    "problem": "keep",
+    "part": "kh4"
+   },
+   {
+    "text": "4d6dl4",
+    "problem": "keep",
+    "part": "dl4"
+   },
+   {
+    "text": "1d20kh1",
+    "problem": "keep",
+    "part": "kh1"
+   },
+   {
+    "text": "4d6kh3dl1",
+    "problem": "twice",
+    "part": "dl1"
+   },
+   {
+    "text": "3d6!r<2!",
+    "problem": "twice",
+    "part": "!"
+   },
+   {
+    "text": "2d6ro<1",
+    "problem": "reroll",
+    "part": "ro<1"
+   },
+   {
+    "text": "2d6ro<7",
+    "problem": "reroll",
+    "part": "ro<7"
+   },
+   {
+    "text": "2d6r=7",
+    "problem": "reroll",
+    "part": "r=7"
+   },
+   {
+    "text": "1d6r<5",
+    "problem": "reroll",
+    "part": "r<5"
+   },
+   {
+    "text": "2d6r>=3",
+    "problem": "reroll",
+    "part": "r>=3"
+   },
+   {
+    "text": "1d4+1d6+1d8+1d10+1d12",
+    "problem": "kinds",
+    "part": "1d12"
+   },
+   {
+    "text": "6d6+5d8",
+    "problem": "count",
+    "part": "5d8"
+   },
+   {
+    "text": "d[only]",
+    "problem": "custom",
+    "part": "d[only]"
+   },
+   {
+    "text": "2d[Yes,No]kh1",
+    "problem": "custom",
+    "part": "kh1"
+   },
+   {
+    "text": "d6{7:2}",
+    "problem": "weights",
+    "part": "d6{7:2}"
+   },
+   {
+    "text": "d6{6:1}",
+    "problem": "weights",
+    "part": "d6{6:1}"
+   },
+   {
+    "text": "4d6!kh3",
+    "problem": "explode",
+    "part": "!"
+   },
+   {
+    "text": "4dF!",
+    "problem": "explode",
+    "part": "!"
+   },
+   {
+    "text": "2d1000!",
+    "problem": "explode",
+    "part": "!"
+   },
+   {
+    "text": "0#2d6",
+    "problem": "times",
+    "part": "0#"
+   },
+   {
+    "text": "101#2d6",
+    "problem": "times",
+    "part": "101#"
+   },
+   {
+    "text": "6d10>=11",
+    "problem": "successes",
+    "part": ">=11"
+   },
+   {
+    "text": "6d10>=1",
+    "problem": "successes",
+    "part": ">=1"
+   },
+   {
+    "text": "6d10f1",
+    "problem": "successes",
+    "part": "f1"
+   },
+   {
+    "text": "6d10>=8f>=8",
+    "problem": "successes",
+    "part": "f>=8"
+   },
+   {
+    "text": "4d6kh3>=5",
+    "problem": "successes",
+    "part": ">=5"
+   },
+   {
+    "text": "3d6!>=1",
+    "problem": "explode",
+    "part": "!>=1"
+   },
+   {
+    "text": "3d6!=7",
+    "problem": "explode",
+    "part": "!=7"
+   },
+   {
+    "text": "4d6min1",
+    "problem": "clamp",
+    "part": "min1"
+   },
+   {
+    "text": "4d6max6",
+    "problem": "clamp",
+    "part": "max6"
+   },
+   {
+    "text": "4d6min5max4",
+    "problem": "clamp",
+    "part": "max4"
+   },
+   {
+    "text": "1d20cs>=21",
+    "problem": "marks",
+    "part": "cs>=21"
+   },
+   {
+    "text": "2d6 # 3",
+    "problem": "label",
+    "part": "# 3"
+   },
+   {
+    "text": "2d6 # one # two",
+    "problem": "label",
+    "part": "# one # two"
+   },
+   {
+    "text": "4d6/2",
+    "problem": "fraction",
+    "part": "4d6/2"
+   },
+   {
+    "text": "max(1d6/2,3)",
+    "problem": "fraction",
+    "part": "max(1d6/2,3)"
+   },
+   {
+    "text": "6/(1d4-1)",
+    "problem": "zero",
+    "part": "6/(1d4-1)"
+   },
+   {
+    "text": "(2d6",
+    "problem": "math",
+    "part": "("
+   },
+   {
+    "text": "floor(2d6,2)",
+    "problem": "math",
+    "part": "floor("
+   },
+   {
+    "text": "{4d6,3d8}kh2",
+    "problem": "math",
+    "part": "kh2"
+   },
+   {
+    "text": "2d6*10000",
+    "problem": "math",
+    "part": "10000"
+   },
+   {
+    "text": "1d1000*1d1000*1d1000",
+    "problem": "math",
+    "part": "1d1000*1d1000*1d1000"
+   },
+   {
+    "text": "7d6u",
+    "problem": "unique",
+    "part": "u"
+   },
+   {
+    "text": "4d6uo",
+    "problem": "unique",
+    "part": "uo"
+   },
+   {
+    "text": "3d6!u",
+    "problem": "unique",
+    "part": "u"
+   },
+   {
+    "text": "2*3",
+    "problem": "shape",
+    "part": "2*3"
+   },
+   {
+    "text": "2d6*1.5",
+    "problem": "shape",
+    "part": "1.5"
+   }
+  ]
+ },
+ "rolls": [
+  {
+   "notation": "2d6",
+   "seed": "conformance 1",
+   "faces": [
+    6,
+    1
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 7,
+   "dice": [
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "4d6dl1",
+   "seed": "conformance 2",
+   "faces": [
+    6,
+    1,
+    5,
+    3
+   ],
+   "kept": [
+    true,
+    false,
+    true,
+    true
+   ],
+   "total": 14,
+   "dice": [
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "dropped",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    }
+   ]
+  },
+  {
+   "notation": "2d20kh1+5",
+   "seed": "conformance 3",
+   "faces": [
+    18,
+    18
+   ],
+   "kept": [
+    true,
+    false
+   ],
+   "total": 23,
+   "dice": [
+    {
+     "face": 18,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 18,
+     "status": "dropped",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "10d10",
+   "seed": "conformance 4",
+   "faces": [
+    3,
+    2,
+    9,
+    1,
+    2,
+    10,
+    9,
+    7,
+    5,
+    2
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 50,
+   "dice": [
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 9,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 4
+    },
+    {
+     "face": 10,
+     "status": "kept",
+     "exploded": false,
+     "die": 5
+    },
+    {
+     "face": 9,
+     "status": "kept",
+     "exploded": false,
+     "die": 6
+    },
+    {
+     "face": 7,
+     "status": "kept",
+     "exploded": false,
+     "die": 7
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 8
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 9
+    }
+   ]
+  },
+  {
+   "notation": "d1000",
+   "seed": "conformance 5",
+   "faces": [
+    580
+   ],
+   "kept": [
+    true
+   ],
+   "total": 580,
+   "dice": [
+    {
+     "face": 580,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    }
+   ]
+  },
+  {
+   "notation": "4dF",
+   "seed": "conformance 6",
+   "faces": [
+    0,
+    1,
+    0,
+    1
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 2,
+   "dice": [
+    {
+     "face": 0,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 0,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    }
+   ]
+  },
+  {
+   "notation": "3d6!",
+   "seed": "conformance 7",
+   "faces": [
+    5,
+    3,
+    2
+   ],
+   "kept": [
+    true,
+    true,
+    true
+   ],
+   "total": 10,
+   "dice": [
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    }
+   ]
+  },
+  {
+   "notation": "3d6!ro<2+1",
+   "seed": "conformance 8",
+   "faces": [
+    5,
+    1,
+    5,
+    2
+   ],
+   "kept": [
+    true,
+    false,
+    true,
+    true
+   ],
+   "total": 13,
+   "dice": [
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "rerolled",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    }
+   ]
+  },
+  {
+   "notation": "2d6r<3",
+   "seed": "conformance 9",
+   "faces": [
+    1,
+    1,
+    3,
+    1,
+    5
+   ],
+   "kept": [
+    false,
+    false,
+    true,
+    false,
+    true
+   ],
+   "total": 8,
+   "dice": [
+    {
+     "face": 1,
+     "status": "rerolled",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "rerolled",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "rerolled",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "2d6ro<3",
+   "seed": "conformance 10",
+   "faces": [
+    6,
+    1,
+    6
+   ],
+   "kept": [
+    true,
+    false,
+    true
+   ],
+   "total": 12,
+   "dice": [
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "rerolled",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "2d6r>=5",
+   "seed": "conformance 11",
+   "faces": [
+    2,
+    1
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 3,
+   "dice": [
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "2d6ro=6",
+   "seed": "conformance 12",
+   "faces": [
+    5,
+    4
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 9,
+   "dice": [
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "3d6!>=5",
+   "seed": "conformance 13",
+   "faces": [
+    4,
+    4,
+    2
+   ],
+   "kept": [
+    true,
+    true,
+    true
+   ],
+   "total": 10,
+   "dice": [
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    }
+   ]
+  },
+  {
+   "notation": "3d6!!",
+   "seed": "conformance 14",
+   "faces": [
+    5,
+    4,
+    2
+   ],
+   "kept": [
+    true,
+    true,
+    true
+   ],
+   "total": 11,
+   "dice": [
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    }
+   ]
+  },
+  {
+   "notation": "3d6!p",
+   "seed": "conformance 15",
+   "faces": [
+    2,
+    1,
+    3
+   ],
+   "kept": [
+    true,
+    true,
+    true
+   ],
+   "total": 6,
+   "dice": [
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    }
+   ]
+  },
+  {
+   "notation": "3d6!!p",
+   "seed": "conformance 16",
+   "faces": [
+    1,
+    6,
+    5,
+    6,
+    1
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 17,
+   "dice": [
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": true,
+     "die": 1
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 1,
+     "value": 4
+    },
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": true,
+     "die": 2
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 2,
+     "value": 0
+    }
+   ]
+  },
+  {
+   "notation": "6d10>=8f=1",
+   "seed": "conformance 17",
+   "faces": [
+    7,
+    4,
+    9,
+    3,
+    3,
+    2
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 1,
+   "dice": [
+    {
+     "face": 7,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 9,
+     "status": "kept",
+     "exploded": false,
+     "die": 2,
+     "counts": 1
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 4
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 5
+    }
+   ]
+  },
+  {
+   "notation": "5d10>=8!",
+   "seed": "conformance 18",
+   "faces": [
+    7,
+    2,
+    3,
+    7,
+    1
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 0,
+   "dice": [
+    {
+     "face": 7,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 7,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 4
+    }
+   ]
+  },
+  {
+   "notation": "4d6min2max5",
+   "seed": "conformance 19",
+   "faces": [
+    4,
+    5,
+    4,
+    4
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 17,
+   "dice": [
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    }
+   ]
+  },
+  {
+   "notation": "1d20cs>=19cf=1+5",
+   "seed": "conformance 20",
+   "faces": [
+    2
+   ],
+   "kept": [
+    true
+   ],
+   "total": 7,
+   "dice": [
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    }
+   ]
+  },
+  {
+   "notation": "4d6sd",
+   "seed": "conformance 21",
+   "faces": [
+    2,
+    6,
+    3,
+    4
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 15,
+   "dice": [
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    }
+   ]
+  },
+  {
+   "notation": "5d6u",
+   "seed": "conformance 22",
+   "faces": [
+    2,
+    3,
+    4,
+    5,
+    1
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 15,
+   "dice": [
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 4
+    }
+   ]
+  },
+  {
+   "notation": "6d6u",
+   "seed": "conformance 23",
+   "faces": [
+    6,
+    4,
+    2,
+    1,
+    3,
+    5
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 21,
+   "dice": [
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    },
+    {
+     "face": 3,
+     "status": "kept",
+     "exploded": false,
+     "die": 4
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 5
+    }
+   ]
+  },
+  {
+   "notation": "1d20+2d4+3",
+   "seed": "conformance 24",
+   "faces": [
+    1,
+    1,
+    4
+   ],
+   "kept": [
+    true,
+    true,
+    true
+   ],
+   "total": 9,
+   "dice": [
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 0,
+     "group": 0
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 1,
+     "group": 1
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 2,
+     "group": 1
+    }
+   ]
+  },
+  {
+   "notation": "2d20kh1+1d4+5",
+   "seed": "conformance 25",
+   "faces": [
+    3,
+    15,
+    4
+   ],
+   "kept": [
+    false,
+    true,
+    true
+   ],
+   "total": 24,
+   "dice": [
+    {
+     "face": 3,
+     "status": "dropped",
+     "exploded": false,
+     "die": 0,
+     "group": 0
+    },
+    {
+     "face": 15,
+     "status": "kept",
+     "exploded": false,
+     "die": 1,
+     "group": 0
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 2,
+     "group": 1
+    }
+   ]
+  },
+  {
+   "notation": "d[Yes,No,Maybe]",
+   "seed": "conformance 26",
+   "faces": [
+    2
+   ],
+   "kept": [
+    true
+   ],
+   "total": 0,
+   "dice": [
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 0,
+     "label": "No",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "notation": "3d[Hit=1,Miss=0,Miss=0]",
+   "seed": "conformance 27",
+   "faces": [
+    1,
+    1,
+    1
+   ],
+   "kept": [
+    true,
+    true,
+    true
+   ],
+   "total": 3,
+   "dice": [
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 0,
+     "label": "Hit",
+     "value": 1
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 1,
+     "label": "Hit",
+     "value": 1
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 2,
+     "label": "Hit",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "notation": "d6{6:3}",
+   "seed": "conformance 28",
+   "faces": [
+    4
+   ],
+   "kept": [
+    true
+   ],
+   "total": 4,
+   "dice": [
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    }
+   ]
+  },
+  {
+   "notation": "2d6{1:0,6:2}+1",
+   "seed": "conformance 29",
+   "faces": [
+    4,
+    6
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 11,
+   "dice": [
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "(2d6+3)*2",
+   "seed": "conformance 30",
+   "faces": [
+    4,
+    5
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 24,
+   "dice": [
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 5,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "1d20-1d4",
+   "seed": "conformance 31",
+   "faces": [
+    1,
+    1
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 0,
+   "dice": [
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 0,
+     "group": 0
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 1,
+     "group": 1
+    }
+   ]
+  },
+  {
+   "notation": "floor(4d6/2)",
+   "seed": "conformance 32",
+   "faces": [
+    1,
+    1,
+    2,
+    6
+   ],
+   "kept": [
+    true,
+    true,
+    true,
+    true
+   ],
+   "total": 5,
+   "dice": [
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 1,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 2
+    },
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 3
+    }
+   ]
+  },
+  {
+   "notation": "max(1d20,1d20)+5",
+   "seed": "conformance 33",
+   "faces": [
+    6,
+    8
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 13,
+   "dice": [
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 0,
+     "group": 0
+    },
+    {
+     "face": 8,
+     "status": "kept",
+     "exploded": false,
+     "die": 1,
+     "group": 1
+    }
+   ]
+  },
+  {
+   "notation": "round(2d6/3)*3",
+   "seed": "conformance 34",
+   "faces": [
+    2,
+    4
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 6,
+   "dice": [
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 0
+    },
+    {
+     "face": 4,
+     "status": "kept",
+     "exploded": false,
+     "die": 1
+    }
+   ]
+  },
+  {
+   "notation": "abs(1d6-1d6)",
+   "seed": "conformance 35",
+   "faces": [
+    6,
+    2
+   ],
+   "kept": [
+    true,
+    true
+   ],
+   "total": 4,
+   "dice": [
+    {
+     "face": 6,
+     "status": "kept",
+     "exploded": false,
+     "die": 0,
+     "group": 0
+    },
+    {
+     "face": 2,
+     "status": "kept",
+     "exploded": false,
+     "die": 1,
+     "group": 1
+    }
+   ]
+  }
+ ],
+ "set": {
+  "notation": "6#4d6dl1",
+  "seed": "conformance set",
+  "rolls": [
+   {
+    "faces": [
+     5,
+     3,
+     2,
+     5
+    ],
+    "total": 13
+   },
+   {
+    "faces": [
+     1,
+     6,
+     1,
+     2
+    ],
+    "total": 9
+   },
+   {
+    "faces": [
+     4,
+     4,
+     6,
+     5
+    ],
+    "total": 15
+   },
+   {
+    "faces": [
+     4,
+     6,
+     6,
+     6
+    ],
+    "total": 18
+   },
+   {
+    "faces": [
+     2,
+     5,
+     2,
+     4
+    ],
+    "total": 11
+   },
+   {
+    "faces": [
+     2,
+     2,
+     5,
+     2
+    ],
+    "total": 9
+   }
+  ],
+  "sum": 75,
+  "highest": 18,
+  "lowest": 9
+ },
+ "held": {
+  "notation": "5d6",
+  "first": {
+   "seed": "conformance hold",
+   "faces": [
+    6,
+    1,
+    5,
+    4,
+    6
+   ]
+  },
+  "held": [
+   true,
+   false,
+   false,
+   true,
+   false
+  ],
+  "second": {
+   "seed": "conformance hold again",
+   "faces": [
+    6,
+    4,
+    4,
+    4,
+    2
+   ],
+   "total": 20
+  }
+ },
+ "odds": [
+  {
+   "notation": "d20",
+   "min": 1,
+   "max": 20,
+   "outcomes": "20",
+   "counts": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "1"
+   ]
+  },
+  {
+   "notation": "2d6",
+   "min": 2,
+   "max": 12,
+   "outcomes": "36",
+   "counts": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "5",
+    "4",
+    "3",
+    "2",
+    "1"
+   ]
+  },
+  {
+   "notation": "3d6+2",
+   "min": 5,
+   "max": 20,
+   "outcomes": "216",
+   "counts": [
+    "1",
+    "3",
+    "6",
+    "10",
+    "15",
+    "21",
+    "25",
+    "27",
+    "27",
+    "25",
+    "21",
+    "15",
+    "10",
+    "6",
+    "3",
+    "1"
+   ]
+  },
+  {
+   "notation": "2d20kh1",
+   "min": 1,
+   "max": 20,
+   "outcomes": "400",
+   "counts": [
+    "1",
+    "3",
+    "5",
+    "7",
+    "9",
+    "11",
+    "13",
+    "15",
+    "17",
+    "19",
+    "21",
+    "23",
+    "25",
+    "27",
+    "29",
+    "31",
+    "33",
+    "35",
+    "37",
+    "39"
+   ]
+  },
+  {
+   "notation": "2d20kl1+5",
+   "min": 6,
+   "max": 25,
+   "outcomes": "400",
+   "counts": [
+    "39",
+    "37",
+    "35",
+    "33",
+    "31",
+    "29",
+    "27",
+    "25",
+    "23",
+    "21",
+    "19",
+    "17",
+    "15",
+    "13",
+    "11",
+    "9",
+    "7",
+    "5",
+    "3",
+    "1"
+   ]
+  },
+  {
+   "notation": "4dF",
+   "min": -4,
+   "max": 4,
+   "outcomes": "81",
+   "counts": [
+    "1",
+    "4",
+    "10",
+    "16",
+    "19",
+    "16",
+    "10",
+    "4",
+    "1"
+   ]
+  },
+  {
+   "notation": "1d20+1d4",
+   "min": 2,
+   "max": 24,
+   "outcomes": "80",
+   "counts": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "4",
+    "3",
+    "2",
+    "1"
+   ]
+  },
+  {
+   "notation": "3d6u",
+   "min": 6,
+   "max": 15,
+   "outcomes": "20",
+   "counts": [
+    "1",
+    "1",
+    "2",
+    "3",
+    "3",
+    "3",
+    "3",
+    "2",
+    "1",
+    "1"
+   ]
+  },
+  {
+   "notation": "d6{6:3}",
+   "min": 1,
+   "max": 6,
+   "outcomes": "8",
+   "counts": [
+    "1",
+    "1",
+    "1",
+    "1",
+    "1",
+    "3"
+   ]
+  },
+  {
+   "notation": "2d[Hit=1,Miss=0,Miss=0]",
+   "min": 0,
+   "max": 2,
+   "outcomes": "9",
+   "counts": [
+    "4",
+    "4",
+    "1"
+   ]
+  },
+  {
+   "notation": "4d6dl1",
+   "min": 3,
+   "max": 18,
+   "probabilities": [
+    0.000771604938272,
+    0.00308641975309,
+    0.00771604938272,
+    0.0162037037037,
+    0.0293209876543,
+    0.0478395061728,
+    0.0702160493827,
+    0.0941358024691,
+    0.114197530864,
+    0.128858024691,
+    0.132716049383,
+    0.123456790123,
+    0.101080246914,
+    0.0725308641975,
+    0.0416666666667,
+    0.0162037037037
+   ]
+  },
+  {
+   "notation": "2d6r<3",
+   "min": 2,
+   "max": 12,
+   "probabilities": [
+    7.96658886331e-12,
+    1.59331777266e-11,
+    0.00000141125731737,
+    0.00000282249870156,
+    0.062502116872,
+    0.125001411245,
+    0.187499294369,
+    0.249997177493,
+    0.18749788312,
+    0.124998588747,
+    0.0624992943733
+   ]
+  },
+  {
+   "notation": "2d6ro<3",
+   "min": 2,
+   "max": 12,
+   "probabilities": [
+    0.00308641975309,
+    0.00617283950617,
+    0.0277777777778,
+    0.0493827160494,
+    0.0987654320988,
+    0.148148148148,
+    0.172839506173,
+    0.197530864198,
+    0.148148148148,
+    0.0987654320988,
+    0.0493827160494
+   ]
+  },
+  {
+   "notation": "3d6!",
+   "min": 3,
+   "max": 198,
+   "probabilities": [
+    0.00462962962963,
+    0.0138888888889,
+    0.0277777777778,
+    0.0462962962963,
+    0.0694444444444,
+    0.0833333333333,
+    0.0902777777778,
+    0.0902777777778,
+    0.0833333333333,
+    0.0694444444444,
+    0.0625,
+    0.0555555555556,
+    0.0493827160494,
+    0.0439814814815,
+    0.0393518518519,
+    0.0308641975309,
+    0.025462962963,
+    0.0208333333333,
+    0.0171896433471,
+    0.0145318930041,
+    0.0128600823045,
+    0.00985939643347,
+    0.00784465020576,
+    0.00617283950617,
+    0.00489754801097,
+    0.00401877572016,
+    0.00353652263374,
+    0.00267918381344,
+    0.00208976337449,
+    0.00160751028807,
+    0.00124492741198,
+    0.00100201474623,
+    0.000878772290809,
+    0.000660865340649,
+    0.000509044924554,
+    0.000385802469136,
+    0.000293916387238,
+    0.00023338667886,
+    0.000204213344002,
+    0.000152812706396,
+    0.00011669333943,
+    0.0000875200045725,
+    0.0000658880760047,
+    0.0000517975537266,
+    0.0000452484377381,
+    0.0000337378702434,
+    0.0000256010897729,
+    0.0000190519737845,
+    0.0000142145585658,
+    0.0000110888441168,
+    0.00000967483043743,
+    0.00000719410468425,
+    0.00000543278939948,
+    0.00000401877572016,
+    0.00000297733029748,
+    0.00000230845313144,
+    0.00000201214422203,
+    0.00000149302938849,
+    0.0000011232174938,
+    8.26908584396e-7,
+    6.09155990505e-7,
+    4.69959712132e-7,
+    4.09319749276e-7,
+    3.03199814279e-7,
+    2.27399860709e-7,
+    1.66989594682e-7,
+    1.2269638949e-7,
+    9.4520245133e-8,
+    8.24611616106e-8,
+    6.1252487733e-8,
+    4.55948205563e-8,
+    3.31529089855e-8,
+    2.40245868553e-8,
+    1.82098541656e-8,
+    1.57087109165e-8,
+    1.1697523699e-8,
+    8.66467482724e-9,
+    6.25923859022e-9,
+    4.49291251167e-9,
+    3.36569659158e-9,
+    2.87759082996e-9,
+    2.14809071564e-9,
+    1.58554616684e-9,
+    1.13997685503e-9,
+    8.12446191459e-10,
+    6.02954176122e-10,
+    5.11500809021e-10,
+    3.82828048331e-10,
+    2.81803980022e-10,
+    2.01870901412e-10,
+    1.43038658902e-10,
+    1.05307252492e-10,
+    8.8676682183e-11,
+    6.65616668395e-11,
+    4.88873780855e-11,
+    3.49153358895e-11,
+    2.46160010501e-11,
+    1.79893735674e-11,
+    1.50354534414e-11,
+    1.13233604831e-11,
+    8.3005155541e-12,
+    5.91276345224e-12,
+    4.14943724368e-12,
+    3.01053692843e-12,
+    2.49606250648e-12,
+    1.88722674718e-12,
+    1.38095765891e-12,
+    9.81357908532e-13,
+    6.85601214433e-13,
+    4.93687576616e-13,
+    4.05616995081e-13,
+    3.08155864998e-13,
+    2.25099654047e-13,
+    1.59593740142e-13,
+    1.10977138068e-13,
+    7.92498478253e-14,
+    6.44118694145e-14,
+    4.92320021002e-14,
+    3.58983348648e-14,
+    2.53909492313e-14,
+    1.75654921074e-14,
+    1.24219634929e-14,
+    9.96036338787e-15,
+    7.67350650019e-15,
+    5.58418542341e-15,
+    3.93931992114e-15,
+    2.70873091117e-15,
+    1.89241839349e-15,
+    1.49038236811e-15,
+    1.16073393155e-15,
+    8.46491599897e-16,
+    5.95139943084e-16,
+    4.05729269709e-16,
+    2.78259579772e-16,
+    2.12730873273e-16,
+    1.63557963082e-16,
+    1.19344552416e-16,
+    8.38894068709e-17,
+    5.70870051788e-17,
+    3.89373473401e-17,
+    2.94404333547e-17,
+    2.26870722984e-17,
+    1.65668388412e-17,
+    1.1642513071e-17,
+    7.90627859771e-18,
+    5.35813542138e-18,
+    3.998083542e-18,
+    3.08747409401e-18,
+    2.25698264468e-18,
+    1.58575014386e-18,
+    1.07426511594e-18,
+    7.22527560925e-19,
+    5.30537478813e-19,
+    4.1036048085e-19,
+    3.00442494908e-19,
+    2.11042533009e-19,
+    1.42567698803e-19,
+    9.50179922921e-20,
+    6.8393413475e-20,
+    5.29234747128e-20,
+    3.88376883662e-20,
+    2.72759446597e-20,
+    1.83648980627e-20,
+    1.21045485753e-20,
+    8.49489619749e-21,
+    6.55889216526e-21,
+    4.83096333276e-21,
+    3.39253043031e-21,
+    2.27525707526e-21,
+    1.47914326761e-21,
+    1.00418900737e-21,
+    7.68973564203e-22,
+    5.69945112292e-22,
+    4.00318590776e-22,
+    2.67256008343e-22,
+    1.70757364992e-22,
+    1.10822660723e-22,
+    8.29285216297e-23,
+    6.21963912223e-23,
+    4.37259477684e-23,
+    2.90459241163e-23,
+    1.81563202659e-23,
+    1.10571362173e-23,
+    7.74837197046e-24,
+    5.96834057184e-24,
+    4.20925071909e-24,
+    2.78522560019e-24,
+    1.69626521515e-24,
+    9.42369563974e-25,
+    5.23538646652e-25,
+    4.39772463188e-25,
+    3.14123187991e-25,
+    2.09415458661e-25,
+    1.25649275197e-25,
+    6.28246375983e-26,
+    2.09415458661e-26
+   ]
+  },
+  {
+   "notation": "6d10>=8f=1",
+   "min": -6,
+   "max": 6,
+   "probabilities": [
+    0.000001,
+    0.000036,
+    0.000558,
+    0.00486,
+    0.026055,
+    0.088776,
+    0.192996,
+    0.266328,
+    0.234495,
+    0.13122,
+    0.045198,
+    0.008748,
+    0.000729
+   ]
+  },
+  {
+   "notation": "5d10>=8!",
+   "min": 0,
+   "max": 55,
+   "probabilities": [
+    0.16807,
+    0.324135,
+    0.2824605,
+    0.14969745,
+    0.05535999,
+    0.0156944682,
+    0.0036702207,
+    0.00074723931,
+    0.0001373592465,
+    0.00002336426505,
+    0.000003740435307,
+    5.70469767e-7,
+    8.362728765e-8,
+    1.1860128135e-8,
+    1.6340299695e-9,
+    2.1913251732e-10,
+    2.8631596905e-11,
+    3.6490552245e-12,
+    4.5427939155e-13,
+    5.532418341e-14,
+    6.6002315157e-15,
+    7.7227968915e-16,
+    8.8709414445e-17,
+    1.0009720395e-17,
+    1.10982723075e-18,
+    1.20910250907e-19,
+    1.29438159975e-20,
+    1.3621091625e-21,
+    1.40959079145e-22,
+    1.43499301515e-23,
+    1.43734329657e-24,
+    1.4165300331e-25,
+    1.37330255655e-26,
+    1.30927126545e-27,
+    1.22690441205e-28,
+    1.12954619232e-29,
+    1.02147884595e-30,
+    9.0749065635e-32,
+    7.9179595065e-33,
+    6.780350997e-34,
+    5.6927451807e-35,
+    4.6800666405e-36,
+    3.7615003965e-37,
+    2.950491906e-38,
+    2.254747347e-39,
+    1.6762230882e-40,
+    1.211263389e-41,
+    8.499523995e-43,
+    5.757091605e-44,
+    3.733876035e-45,
+    2.292765507e-46,
+    1.31099715e-47,
+    6.80157e-49,
+    3.0618e-50,
+    1.0935e-51,
+    2.43e-53
+   ]
+  },
+  {
+   "notation": "3d6!p",
+   "min": 3,
+   "max": 168,
+   "probabilities": [
+    0.00462962962963,
+    0.0138888888889,
+    0.0277777777778,
+    0.0462962962963,
+    0.0694444444444,
+    0.0856481481481,
+    0.0949074074074,
+    0.0972222222222,
+    0.0925925925926,
+    0.0810185185185,
+    0.0702160493827,
+    0.0601851851852,
+    0.0509259259259,
+    0.0424382716049,
+    0.0347222222222,
+    0.0279921124829,
+    0.0222479423868,
+    0.0174897119342,
+    0.0137174211248,
+    0.0109310699588,
+    0.00854123799726,
+    0.00654792524005,
+    0.00495113168724,
+    0.00375085733882,
+    0.00294710219479,
+    0.00226301726109,
+    0.00169860253772,
+    0.00125385802469,
+    0.000928783721994,
+    0.00072337962963,
+    0.000549331910786,
+    0.000406640565463,
+    0.00029530559366,
+    0.000215326995377,
+    0.000166704770614,
+    0.000125623952141,
+    0.0000920845399583,
+    0.0000660865340649,
+    0.0000476299344612,
+    0.0000367147411472,
+    0.0000275112486029,
+    0.0000200194568282,
+    0.0000142393658233,
+    0.0000101709755881,
+    0.00000781428612254,
+    0.00000583016491365,
+    0.00000421861196139,
+    0.00000297962726577,
+    0.00000211321082679,
+    0.00000161936264444,
+    0.00000120407077761,
+    8.673352263e-7,
+    6.09155990505e-7,
+    4.29533070228e-7,
+    3.28466465468e-7,
+    2.43746618373e-7,
+    1.75143832112e-7,
+    1.22658106685e-7,
+    8.62894420939e-8,
+    6.60378383372e-8,
+    4.87169959727e-8,
+    3.47097430487e-8,
+    2.40160795653e-8,
+    1.66360055225e-8,
+    1.25695209202e-8,
+    9.23785348849e-9,
+    6.54529621522e-9,
+    4.49184910042e-9,
+    3.07751214409e-9,
+    2.30228534622e-9,
+    1.68763364639e-9,
+    1.19102059481e-9,
+    8.12446191459e-10,
+    5.51910436345e-10,
+    4.09413329466e-10,
+    2.99537347178e-10,
+    2.10762200991e-10,
+    1.43087890904e-10,
+    9.65144169173e-11,
+    7.10417790306e-11,
+    5.19003766141e-11,
+    3.64316815542e-11,
+    2.4635693851e-11,
+    1.65124135044e-11,
+    1.20618405146e-11,
+    8.80186144216e-12,
+    6.16630826306e-12,
+    4.15518097726e-12,
+    2.76847958477e-12,
+    2.00620408558e-12,
+    1.46264631425e-12,
+    1.02293159919e-12,
+    6.87059940421e-13,
+    4.5503133793e-13,
+    3.26845791721e-13,
+    2.38114224973e-13,
+    1.66271970056e-13,
+    1.11319026971e-13,
+    7.32553957177e-14,
+    5.20810762959e-14,
+    3.79192781609e-14,
+    2.64394085353e-14,
+    1.76414674193e-14,
+    1.15254548127e-14,
+    8.09137071555e-15,
+    5.88829771347e-15,
+    4.09950120369e-15,
+    2.72498118621e-15,
+    1.76473766102e-15,
+    1.21877062812e-15,
+    8.89227712832e-16,
+    6.17827015383e-16,
+    4.08367301372e-16,
+    2.60848570799e-16,
+    1.75270823664e-16,
+    1.25253743341e-16,
+    8.7055044866e-17,
+    5.75090902448e-17,
+    3.6615879477e-17,
+    2.43754125625e-17,
+    1.73680188276e-17,
+    1.20763227222e-17,
+    7.97271791366e-18,
+    5.05720440209e-18,
+    3.32978218747e-18,
+    2.36299243556e-18,
+    1.64388454531e-18,
+    1.08452412796e-18,
+    6.84911183514e-19,
+    4.45045711969e-19,
+    3.14039756873e-19,
+    2.18614660929e-19,
+    1.44114692679e-19,
+    9.05398521241e-20,
+    5.78901392628e-20,
+    4.05113367118e-20,
+    2.82258531802e-20,
+    1.85910667581e-20,
+    1.16069774456e-20,
+    7.27358524258e-21,
+    5.02546841076e-21,
+    3.50561477798e-21,
+    2.30692069261e-21,
+    1.42938615464e-21,
+    8.73011164066e-22,
+    5.90677242699e-22,
+    4.12757869021e-22,
+    2.71402434425e-22,
+    1.66610938911e-22,
+    9.83833824789e-23,
+    6.41020718961e-23,
+    4.49196158828e-23,
+    2.95275796712e-23,
+    1.79259632614e-23,
+    1.01147666533e-23,
+    6.09398984703e-24,
+    4.29301690255e-24,
+    2.82710869192e-24,
+    1.69626521515e-24,
+    9.00486472242e-25,
+    4.39772463188e-25,
+    3.14123187991e-25,
+    2.09415458661e-25,
+    1.25649275197e-25,
+    6.28246375983e-26,
+    2.09415458661e-26
+   ]
+  },
+  {
+   "notation": "4d6min2",
+   "min": 8,
+   "max": 24,
+   "probabilities": [
+    0.0123456790123,
+    0.0246913580247,
+    0.0432098765432,
+    0.0679012345679,
+    0.099537037037,
+    0.114197530864,
+    0.125,
+    0.126543209877,
+    0.116512345679,
+    0.0925925925926,
+    0.070987654321,
+    0.0493827160494,
+    0.0300925925926,
+    0.0154320987654,
+    0.00771604938272,
+    0.00308641975309,
+    0.000771604938272
+   ]
+  },
+  {
+   "notation": "(2d6+3)*2",
+   "min": 10,
+   "max": 30,
+   "probabilities": [
+    0.0277777777778,
+    0,
+    0.0555555555556,
+    0,
+    0.0833333333333,
+    0,
+    0.111111111111,
+    0,
+    0.138888888889,
+    0,
+    0.166666666667,
+    0,
+    0.138888888889,
+    0,
+    0.111111111111,
+    0,
+    0.0833333333333,
+    0,
+    0.0555555555556,
+    0,
+    0.0277777777778
+   ]
+  },
+  {
+   "notation": "floor(4d6/2)",
+   "min": 2,
+   "max": 12,
+   "probabilities": [
+    0.00385802469136,
+    0.0231481481481,
+    0.0702160493827,
+    0.141975308642,
+    0.204475308642,
+    0.220679012346,
+    0.176697530864,
+    0.104938271605,
+    0.0424382716049,
+    0.0108024691358,
+    0.000771604938272
+   ]
+  },
+  {
+   "notation": "1d20-1d4",
+   "min": -3,
+   "max": 19,
+   "probabilities": [
+    0.0125,
+    0.025,
+    0.0375,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.05,
+    0.0375,
+    0.025,
+    0.0125
+   ]
+  },
+  {
+   "notation": "max(1d6,1d8)",
+   "min": 1,
+   "max": 8,
+   "probabilities": [
+    0.0208333333333,
+    0.0625,
+    0.104166666667,
+    0.145833333333,
+    0.1875,
+    0.229166666667,
+    0.125,
+    0.125
+   ]
+  }
+ ]
+}

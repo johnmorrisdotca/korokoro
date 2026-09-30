@@ -67,6 +67,19 @@ document.addEventListener("korokoro-roll", (event) => (document.getElementById("
 `,
     },
   },
+  // The custom element registered by being imported: a bundler must keep the import, which package.json's sideEffects says it has to.
+  define: {
+    out: "dist",
+    files: {
+      "package.json": { name: "check-define", private: true, type: "module", dependencies: { "@johnmorrisdotca/korokoro": korokoro }, devDependencies: { vite: "^7.0.0" } },
+      "vite.config.js": `export default { base: "./" };\n`,
+      "index.html": page(`<korokoro-roller notation="1d20" query="?seed=define"></korokoro-roller><p id="total"></p><script type="module" src="/src/main.js"></script>`),
+      "src/main.js": `import "@johnmorrisdotca/korokoro/element/define";
+
+document.addEventListener("korokoro-roll", (event) => (document.getElementById("total").textContent = event.detail.total));
+`,
+    },
+  },
   svelte: {
     out: "dist",
     files: {
@@ -153,7 +166,7 @@ function App() {
   const [total, setTotal] = useState(null);
   return (
     <>
-      <DiceRoller spec={{ count: 1, sides: 20 }} query="?seed=react" onRoll={(roll) => setTotal(roll.total)} />
+      <DiceRoller notation="1d20" query="?seed=react" onRoll={(roll) => setTotal(roll.total)} />
       <p id="total">{total}</p>
     </>
   );
@@ -229,8 +242,10 @@ if (process.env.KOROKORO_BROWSER !== undefined) {
       await tab.waitForFunction(() => document.getElementById("total").textContent !== "", null, { timeout: 5000 });
       const total = await tab.locator("#total").textContent();
       const shown = await tab.locator('[data-testid="kk-total"]').evaluate((el) => el.lastChild.textContent);
-      const ok = errors.length === 0 && total === shown && Number(total) >= 1 && Number(total) <= 20 && before === 0;
-      console.log(`${ok ? "rolled " : "FAILED "} ${name.padEnd(8)} in ${engine}: the roll handed back ${total}, the tray shows ${shown}; sound fetched before the roll ${before}, after ${lazy}${errors.length > 0 ? ` ${errors.join("; ")}` : ""}`);
+      // Every project asks for one d20, each in its own way: a spec, a notation prop, an attribute.
+      const dice = await tab.locator('[data-testid="kk-notation"]').inputValue();
+      const ok = errors.length === 0 && total === shown && dice === "1d20" && Number(total) >= 1 && Number(total) <= 20 && before === 0;
+      console.log(`${ok ? "rolled " : "FAILED "} ${name.padEnd(8)} in ${engine}: ${dice}, the roll handed back ${total}, the tray shows ${shown}; sound fetched before the roll ${before}, after ${lazy}${errors.length > 0 ? ` ${errors.join("; ")}` : ""}`);
       if (!ok) process.exitCode = 1;
       await context.close();
     }

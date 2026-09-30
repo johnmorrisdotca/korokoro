@@ -64,7 +64,7 @@ export function knockTimes(landings: readonly number[]): number[] {
  */
 export function createRollSound(
   win: AudioWindow | undefined,
-  load: () => Promise<{ SOUNDS: SoundData }> = () => import("./sounds.data.ts"),
+  load: () => Promise<{ SOUNDS: SoundData }> = () => import("./sounds-data.ts"),
 ): RollSound {
   let ctx: AudioContext | null = null;
   let out: GainNode | null = null;

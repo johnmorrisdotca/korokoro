@@ -11,7 +11,7 @@ Tap dice to build a roll, up to ten in any mix from a d4 to a d100, or type any 
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
 </p>
 
-<p align="center"><a href="https://johnmorrisdotca.github.io/korokoro/"><strong>Roll some dice →</strong></a></p>
+<p align="center"><a href="https://johnmorrisdotca.github.io/korokoro/"><strong>Roll some dice →</strong></a> · <a href="https://johnmorrisdotca.github.io/korokoro/docs/"><strong>Read the documentation →</strong></a></p>
 
 <p align="center">
   <img src="docs/desktop.jpg" alt="Eight d6 on the felt, their total with a luck meter, and the stats panel with face counts and totals against the odds" width="720">
@@ -119,12 +119,13 @@ if (read.ok) {
 import { DiceRoller } from "@johnmorrisdotca/korokoro/react";
 
 export function Table() {
-  return <DiceRoller wide spec={{ count: 2, sides: 20, keep: "highest" }} onRoll={(roll) => save(roll)} />;
+  return <DiceRoller wide notation="2d20kh1+5" onRoll={(roll) => save(roll)} />;
 }
 ```
 
-The component takes the tray's options as props, plus any attribute for its
-`<div>`. The tray mounts in the browser after the first render, so server
+The component takes the tray's options as props, `notation` as a shorter way
+to give the dice (the tray follows it when it changes), and any attribute for
+its `<div>`. The tray mounts in the browser after the first render, so server
 rendering draws an empty box and nothing needs a provider. In Next.js, use it
 from a client component (`"use client"`).
 
@@ -163,6 +164,16 @@ A custom element, for any page and any framework that renders HTML. Call
 `defineRoller()` once; each roll is a `korokoro-roll` event that bubbles, with
 the roll as its `detail`.
 
+Or with no call at all: importing `@johnmorrisdotca/korokoro/element/define`
+registers the element by being imported, so one script tag is the whole of
+it, [from a CDN](./docs/plain-output.md#from-a-cdn-with-nothing-to-install) or
+from your own bundle:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></script>
+<korokoro-roller notation="2d20kh1+5"></korokoro-roller>
+```
+
 | Attribute | What it does |
 | --- | --- |
 | `notation` | The dice showing at first, and again whenever it changes |
@@ -171,6 +182,7 @@ the roll as its `detail`.
 | `sound="off"` | No sound and no mute button |
 | `hold="off"` | Dice are not held |
 | `placeholder="off"` | The opening dice are the user's own roll |
+| `keyboard="off"` | Space rolls only when the focus is inside the tray |
 | `language-chooser` | The tray's own choice of English or 日本語 |
 | `storage="none"`, `storage-key` | Keep no history; or the key it is kept under |
 | `animation-ms`, `share-base`, `query` | As the options of the same names |
@@ -909,7 +921,12 @@ Your shell reads `<`, `>`, `!`, `#`, `[` and `{` before Korokoro does, so
 quote a roll that has them: `koro "6d10>=8f=1"`, `koro "d[Yes,No,Maybe]"`.
 
 **From another program or another language**, the JSON is the way in: run
-`koro --json`, read standard output, and check the exit code. The shape is
+`koro --json`, read standard output, and check the exit code.
+[Use Korokoro from another language](./docs/other-languages.md) has the shape
+of the JSON and a working example in Python, Go, Rust and C#, and says how to
+write a port: there is [a specification](./docs/spec/random.md) and
+[a conformance suite](./conformance/korokoro-conformance.json) to check one
+against. The shape is
 versioned by `format`, which goes up only if a reader of the old shape would
 be wrong about the new one.
 
@@ -926,7 +943,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.10.0", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.11.0", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet
@@ -954,6 +971,16 @@ time,notation,label,total,dice,faces,seed,held,loaded,set
 - **In the tray** it is *Export and import*, under the history: save as CSV,
   JSON or text, and bring a JSON export back in, on this device or another.
   Rolls already there are not added twice.
+
+## Dice from an address
+
+<https://johnmorrisdotca.github.io/korokoro/api/?roll=2d20kh1%2B5&seed=table>
+is a page that shows that roll as plain text and nothing else; `format=json`,
+`format=csv` and `odds=1` do what they say. It runs in your browser: there is
+no server, so it is for a link, a bookmark or a frame in another page, not for
+a program to fetch. [Dice as plain text](./docs/plain-output.md) has the
+address's parts, how a framing page is sent the answer, and how to use the
+package from a CDN with nothing to install.
 
 ## Seeded and shared rolls
 
@@ -1191,6 +1218,7 @@ mountRoller(element: HTMLElement, options?: RollerOptions): RollerHandle
 | `playSound` | the recorded dice | Your own sound for each throw: `({ dice, ms, landings }) => void` |
 | `hold` | `true` | `false` stops dice being held: a tap anywhere on the felt rolls, a die included |
 | `placeholder` | `true` | `false` makes the opening dice the user's own roll, so the first die tapped adds to them |
+| `keyboard` | `true` | `false` leaves the page its Space key: the tray then rolls from the keyboard only when the focus is inside it. For a tray that is one thing among many on a page |
 | `languageChooser` | `false` | `true` adds a small choice of English or 日本語 to the tray, remembered on the device |
 
 ```ts
@@ -1366,11 +1394,12 @@ for fixing one. Any other language is a table of your own passed as `strings`.
 - More notation, as tables ask for it
   ([Notation compared](./docs/notation-compared.md) keeps the list)
 - Standalone executables of the command line, for machines without Node
-- A documentation site, with live examples
+- The documentation in Japanese
 - More games: [suggest one](https://github.com/johnmorrisdotca/korokoro/issues/new?template=suggest-a-game.md)
 - BCDice's notation, which Japanese tables use, as a candidate
-- Ports to other languages are welcome; a conformance suite is planned so
-  that a port can be checked against this one
+- Ports to other languages are welcome: there is
+  [a specification and a conformance suite](./docs/other-languages.md#writing-a-port)
+  to write one against
 - A hosted HTTP API: not planned, because it needs a server. The command line
   and the package will cover programs.
 - Exploding dice that are kept or dropped, once a table's rule is chosen
@@ -1386,8 +1415,9 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md). In short:
 
 ```sh
 pnpm install
-pnpm check   # lint, types and tests
-pnpm site    # build the demo into ./site, then serve it
+pnpm check        # lint, types and tests
+pnpm test:tray    # the demo and the documentation site, built and tapped in real browsers
+pnpm site         # build the demo into ./site, then serve it
 ```
 
 Please follow the [code of conduct](./CODE_OF_CONDUCT.md).

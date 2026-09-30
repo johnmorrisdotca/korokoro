@@ -1,0 +1,19 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts", "src/react.tsx", "src/vue.ts", "src/element.ts"],
+  "tsconfig": "tsconfig.json",
+  "plugin": ["typedoc-plugin-markdown"],
+  "out": "website/reference",
+  "name": "API reference",
+  "readme": "none",
+  "entryFileName": "index",
+  "hideBreadcrumbs": true,
+  "hidePageHeader": true,
+  "useCodeBlocks": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "disableSources": false,
+  "gitRevision": "main",
+  "sort": ["source-order"],
+  "cleanOutputDir": true
+}

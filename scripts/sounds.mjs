@@ -1,4 +1,4 @@
-// Writes src/ui/sounds.data.ts from the recordings in ./sounds, so the tray can
+// Writes src/ui/sounds-data.ts from the recordings in ./sounds, so the tray can
 // load them as one module with nothing for a bundler to configure. Run it after
 // changing a recording: `pnpm sounds`. A test fails if the two fall out of step.
 import { readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -20,5 +20,5 @@ const lines = [
   "export type SoundName = keyof typeof SOUNDS;",
   "",
 ];
-writeFileSync("src/ui/sounds.data.ts", lines.join("\n"));
-console.log(`src/ui/sounds.data.ts: ${files.length} recordings, ${files.reduce((sum, name) => sum + readFileSync(`sounds/${name}`).length, 0)} bytes of audio.`);
+writeFileSync("src/ui/sounds-data.ts", lines.join("\n"));
+console.log(`src/ui/sounds-data.ts: ${files.length} recordings, ${files.reduce((sum, name) => sum + readFileSync(`sounds/${name}`).length, 0)} bytes of audio.`);

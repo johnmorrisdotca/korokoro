@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Dice roller and dice notation parser with exact odds: d4, d6, d8, d10, d12, d20, d100, any die up to d1000, custom and loaded dice, dice pools. 44 game presets, from Yahtzee to craps. A typed API, a command line and a dice tray for React, Vue, Svelte, Angular or as a web component. For D&D, RPGs, board and dice games, and teaching odds. Zero dependencies.",
   "keywords": [
     "dice",
@@ -111,15 +111,20 @@
       "import": "./dist/element.js",
       "default": "./dist/element.js"
     },
+    "./element/define": {
+      "types": "./dist/element-define.d.ts",
+      "import": "./dist/element-define.js",
+      "default": "./dist/element-define.js"
+    },
     "./vue": {
       "types": "./dist/vue.d.ts",
       "import": "./dist/vue.js",
       "default": "./dist/vue.js"
     },
     "./sounds": {
-      "types": "./dist/ui/sounds.data.d.ts",
-      "import": "./dist/ui/sounds.data.js",
-      "default": "./dist/ui/sounds.data.js"
+      "types": "./dist/ui/sounds-data.d.ts",
+      "import": "./dist/ui/sounds-data.js",
+      "default": "./dist/ui/sounds-data.js"
     }
   },
   "bin": {
@@ -132,9 +137,12 @@
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
-    "SOUNDS.md"
+    "SOUNDS.md",
+    "conformance/korokoro-conformance.json"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/element-define.js"
+  ],
   "engines": {
     "node": ">=20"
   },
@@ -143,7 +151,9 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
-    "test:tray": "pnpm site && playwright test",
+    "docs:site": "pnpm build && node scripts/docs-site.mjs && typedoc --logLevel Error && vitepress build website",
+    "test:tray": "pnpm site && pnpm docs:site && playwright test",
+    "test:languages": "pnpm build && node scripts/check-languages.mjs",
     "test:cli": "pnpm build && node scripts/check-cli.mjs",
     "test:package": "pnpm build && node scripts/check-package.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
@@ -170,8 +180,12 @@
     "@types/react": "^19.0.0",
     "eslint": "^9.0.0",
     "react": "^19.0.0",
+    "typedoc": "^0.28.20",
+    "typedoc-plugin-markdown": "^4.13.1",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.0.0",
+    "vite": "^8.3.1",
+    "vitepress": "^1.6.4",
     "vitest": "^5.0.0",
     "vue": "^3.5.43"
   },

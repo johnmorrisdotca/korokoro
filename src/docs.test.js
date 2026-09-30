@@ -1,5 +1,6 @@
 // The documents that are made from the source, or that quote it, checked against it.
 // Plain JavaScript, so that reading files needs no Node types. `pnpm docs:make` rewrites what is made.
+import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 
@@ -440,6 +441,9 @@ describe("the version", () => {
     const { VERSION } = await import("./version.ts");
     expect(VERSION).toBe(JSON.parse(readFileSync("package.json", "utf8")).version);
     expect(readFileSync("CHANGELOG.md", "utf8")).toContain(`## [${VERSION}]`);
+    // And wherever a document shows the version being written out.
+    expect(readFileSync("docs/other-languages.md", "utf8")).toContain(`"generator": "korokoro ${VERSION}"`);
+    expect(readme).toContain(`"generator": "korokoro ${VERSION}"`);
   });
 });
 
@@ -529,5 +533,87 @@ describe("the README on the web component and the Vue component", () => {
       expect(exports, entry).toHaveProperty(entry);
       expect(readme).toContain(`@johnmorrisdotca/korokoro/${entry.slice(2)}`);
     }
+  });
+});
+
+describe("the package's entries", () => {
+  const pkg = JSON.parse(readFileSync("package.json", "utf8"));
+
+  it("lists the one module that does something when imported, so that a bundler keeps it", () => {
+    expect(pkg.sideEffects).toEqual(["./dist/element-define.js"]);
+    expect(pkg.exports["./element/define"].import).toBe("./dist/element-define.js");
+    // No other source module registers the element or touches the page as it loads.
+    expect(readFileSync("src/element.ts", "utf8")).not.toMatch(/^defineRoller\(\)/m);
+    expect(readFileSync("src/element-define.ts", "utf8")).toMatch(/^defineRoller\(\);$/m);
+  });
+
+  it("names dist for every entry, never src: what is published is what is pointed at", () => {
+    for (const entry of Object.values(pkg.exports)) for (const file of Object.values(entry)) expect(file).toMatch(/^\.\/dist\//);
+    expect(pkg.main).toMatch(/^\.\/dist\//);
+    expect(pkg).not.toHaveProperty("publishConfig.exports");
+  });
+});
+
+describe("the family's shared stylesheet", () => {
+  it("is the copy its first line says it is, unedited", () => {
+    const [first, ...rest] = readFileSync("demo/family.css", "utf8").split("\n");
+    const recorded = /sha256 of every line after this one: ([0-9a-f]{64})/.exec(first)?.[1];
+    expect(recorded).toBeDefined();
+    expect(createHash("sha256").update(rest.join("\n")).digest("hex")).toBe(recorded);
+  });
+
+  it("is what the demo loads, before the page's own", () => {
+    const page = readFileSync("demo/index.html", "utf8");
+    expect(page.indexOf('href="family.css"')).toBeGreaterThan(0);
+    expect(page.indexOf('href="site.css"')).toBeGreaterThan(page.indexOf('href="family.css"'));
+    expect(page).not.toContain("<style>");
+  });
+});
+
+describe("the page on other languages", () => {
+  const page = readFileSync("docs/other-languages.md", "utf8");
+
+  it("shows each example exactly as the file CI runs", () => {
+    for (const [fence, file] of [["python", "roll.py"], ["go", "roll.go"], ["rust", "rust/src/main.rs"], ["csharp", "csharp/Program.cs"]]) {
+      expect(page, file).toContain(`\`\`\`${fence}\n${readFileSync(`docs/examples/languages/${file}`, "utf8")}\`\`\``);
+    }
+  });
+
+  it("shows the JSON the command line prints, and the roll the examples expect", () => {
+    const { code, out } = runCli(["2d20kh1+5", "--seed", "table", "--json"], { now: 1790000000000 });
+    expect(code).toBe(0);
+    const [made] = JSON.parse(out).rolls;
+    const shown = JSON.parse(/```json\n([\s\S]*?)```/.exec(page)[1].replace('"…"', JSON.stringify(made.id)));
+    expect(shown.rolls[0]).toEqual(made);
+    expect(shown.format).toBe(1);
+    expect(made.total).toBe(24);
+    expect(runCli(["--stdin", "--json", "--seed", "table"], { stdin: "2d6\n1d20+5\n4d6dl1\n" }).code).toBe(0);
+  });
+});
+
+describe("the page on plain output", () => {
+  const page = readFileSync("docs/plain-output.md", "utf8");
+  const api = readFileSync("demo/api/index.html", "utf8");
+
+  it("shows what the address it names shows", () => {
+    expect(page).toContain("api/?roll=2d20kh1%2B5&seed=table>\n\n```\n2d20kh1+5: 24  [19 (12)]\n```");
+    expect(runCli(["2d20kh1+5", "--seed", "table"]).out).toBe("2d20kh1+5: 24  [19 (12)]\n");
+  });
+
+  it("names every part of the address the page reads, and no other", () => {
+    const from = page.indexOf("## The address");
+    const rows = page.slice(from).split("\n").filter((line) => line.startsWith("| `"));
+    const named = rows.map((row) => /^\| `([a-z-]+)/.exec(row)[1]).sort();
+    const read = [...new Set([...api.matchAll(/params\.(?:get|getAll|has)\("([a-z-]+)"\)|\["([a-z-]+)", "--/g)].map((m) => m[1] ?? m[2]))].filter((name) => name !== "games").sort();
+    expect(named).toEqual(read);
+  });
+
+  it("shows the CDN example as the page the browser suite opens", () => {
+    const tried = readFileSync("tray/pages/cdn.html", "utf8");
+    expect(page).toContain('<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></script>');
+    expect(tried).toContain('<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></script>');
+    expect(tried).toContain('import { chanceAtLeast, parseNotation, roll } from "https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/index.js";');
+    expect(page).toContain('import { chanceAtLeast, parseNotation, roll } from "https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/index.js";');
+    expect(readme).toContain('<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></script>');
   });
 });

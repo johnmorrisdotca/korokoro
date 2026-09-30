@@ -6,6 +6,55 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-09-30
+
+### Added
+
+- **A documentation site**, at <https://johnmorrisdotca.github.io/korokoro/docs/>:
+  a guide, the notation, the games, the command line, an API reference made
+  from the source by TypeDoc, search, light and dark, and the real tray on
+  the pages for live examples. Its pages are made from the README and `docs/`
+  by `scripts/docs-site.mjs`, so nothing is written twice and every example on
+  it is one the tests run. A stub in Japanese says the rest is to come.
+- **Dice as plain text, from an address**: `/api/?roll=2d20kh1%2B5&seed=table`
+  shows that roll as text, JSON or CSV and nothing else, by the same function
+  the command line is. It runs in the browser and says so; a page that frames
+  it is sent the answer and can ask for more.
+- **A conformance suite and a specification**, for ports to other languages:
+  `conformance/korokoro-conformance.json` (seeds and the numbers they give,
+  notation and how it is written back or why it is refused, seeded rolls die
+  for die, exact odds), `docs/spec/random.md` and `docs/spec/notation.md`. The
+  suite is made from this implementation and a test fails when they differ;
+  `conformance/port_check.py` is the generator written in Python from the
+  specification alone, checking itself against the suite.
+- **Use Korokoro from another language**: the shape of the command line's
+  JSON, and a working example in Python, Go, Rust and C#, each a file CI runs.
+- **`@johnmorrisdotca/korokoro/element/define`**: the custom element
+  registered by being imported, so that one script tag is the whole of it.
+  `defineRoller()` stays for a page that wants to choose when. It is the one
+  module with an effect of its own, and `sideEffects` in `package.json` names
+  it so that a bundler keeps it.
+- **`notation` on the React component**, as on the Vue component and the
+  element: `<DiceRoller notation="2d20kh1+5" />`, followed as it changes.
+- **`keyboard: false`** (`keyboard="off"` on the element) leaves a page its
+  Space key, for a tray that is one thing among many on a page.
+- A page can use the package from a CDN with nothing to install; the example
+  is tested as written.
+- `pnpm docs:site`, `pnpm test:languages`, and `node tray/look.mjs`, which
+  compares pictures of the demo before and after a change, pixel for pixel.
+
+### Changed
+
+- The demo's look is the family's: `demo/family.css`, shared unchanged with
+  the sibling packages and held to its hash by a test, and the header, footer
+  and language chooser from `scripts/family-template.mjs`. The footer now
+  names the family. Everything above it is pixel for pixel what it was.
+- The file of recorded sounds is `dist/ui/sounds-data.js` (it was
+  `sounds.data.js`). The old name made VitePress take it for one of its own
+  data files and fail to build a site that used the tray. The `./sounds`
+  entry is unchanged.
+
+
 ## [1.10.0] - 2026-09-30
 
 ### Added
@@ -394,7 +443,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.11.0
 [1.10.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.10.0
 [1.9.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.9.0
 [1.8.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.8.0

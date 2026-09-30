@@ -1,0 +1,8 @@
+/*
+ * Korokoro's own page styles, after family.css, which is the look shared by
+ * the whole family and is never edited here. The dice tray's styles come with
+ * the tray itself (src/ui/style.ts).
+ */
+
+/* The two ways on from this page, the documentation and the plain-output page: links a finger can find. */
+.more .ways a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-weight: 600; }

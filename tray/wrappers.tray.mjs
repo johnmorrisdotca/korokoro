@@ -77,3 +77,12 @@ test("the Vue component rolls from code, through a template ref", async ({ page 
   await expect(page.locator("#heard")).toHaveText("1");
   await sound(page, errors);
 });
+
+test("a script tag alone registers <korokoro-roller>", async ({ page }) => {
+  const errors = await open(page, "/pages/define.html");
+  let s = await sound(page, errors);
+  expect(s.notation).toBe("3d6");
+  await roll(page);
+  s = await sound(page, errors);
+  expect(s.dice).toHaveLength(3);
+});

@@ -9,63 +9,18 @@
     <meta property="og:title" content="Korokoro dice roller" />
     <meta property="og:description" content="Fair dice for the table, with the odds of every throw." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='20' fill='%23fffdf7' stroke='%232f5d4a' stroke-width='8'/%3E%3Ccircle cx='30' cy='30' r='9' fill='%231f2320'/%3E%3Ccircle cx='50' cy='50' r='11' fill='%23b5452c'/%3E%3Ccircle cx='70' cy='70' r='9' fill='%231f2320'/%3E%3C/svg%3E" />
-    <style>
-      :root { color-scheme: light dark; --page: #f4efe4; --ink: #1f2320; --muted: #6b6f68; --rule: #ddd6c6; }
-      @media (prefers-color-scheme: dark) { :root { --page: #141614; --ink: #ece8dc; --muted: #a09d93; --rule: #3a3d38; } }
-      body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-      main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
-      header { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 18px; }
-      h1 { margin: 0; font-size: 1.8rem; letter-spacing: -.01em; }
-      h1 span { font-size: 1rem; color: var(--muted); margin-left: 6px; font-weight: 500; }
-      header p { margin: 2px 0 0; color: var(--muted); }
-      nav { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-      nav a { text-decoration: none; color: inherit; border: 1px solid var(--rule); border-radius: 999px; padding: 0 14px; min-height: 44px; display: inline-flex; align-items: center; font-size: .9rem; font-weight: 600; }
-      nav a:hover { border-color: var(--ink); }
-      footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
-      footer code { font-size: .8rem; }
-      a { color: inherit; }
-      .name { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
-      .lang { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; padding: 2px; }
-      .lang button { font: inherit; font-size: .9rem; font-weight: 600; color: var(--muted); background: transparent; border: 0; border-radius: 999px; min-width: 44px; min-height: 44px; padding: 0 14px; cursor: pointer; }
-      .lang button[aria-pressed="true"] { background: var(--ink); color: var(--page); }
-      /* Room for the longer of the two languages, so that switching moves nothing below. */
-      .intro { min-height: 12.5rem; }
-      @media (min-width: 700px) { .intro { min-height: 6.5rem; } }
-      header { align-items: flex-start; }
-      .unreviewed { margin: 14px 0 0; font-size: .85rem; color: var(--muted); }
-      .unreviewed[hidden] { display: none; }
-      .more { margin-top: 28px; }
-      .more h2 { margin: 0 0 4px; font-size: 1.05rem; }
-      .more p { margin: 0 0 12px; color: var(--muted); font-size: .9rem; }
-      .more ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
-      .more button { width: 100%; text-align: left; font: inherit; color: inherit; background: transparent; border: 1px solid var(--rule); border-radius: 12px; padding: 8px 12px; cursor: pointer; display: grid; gap: 2px; }
-      .more button:hover { border-color: var(--ink); }
-      .more code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
-      .more span { color: var(--muted); font-size: .85rem; }
-    </style>
+    <link rel="stylesheet" href="family.css" />
+    <link rel="stylesheet" href="site.css" />
   </head>
   <body>
     <main>
-      <header>
-        <div class="intro">
-          <h1>Korokoro<span lang="ja">コロコロ</span></h1>
-          <p data-say="pitch"></p>
-          <p class="name"><span data-say="name"></span> <a href="https://github.com/johnmorrisdotca/korokoro#the-name" data-say="nameLink"></a></p>
-        </div>
-        <nav>
-          <div class="lang" role="group" aria-label="Language / 言語">
-            <button type="button" data-lang="en" lang="en">English</button>
-            <button type="button" data-lang="ja" lang="ja">日本語</button>
-          </div>
-          <a href="https://github.com/johnmorrisdotca/korokoro">GitHub</a>
-          <a href="https://www.npmjs.com/package/@johnmorrisdotca/korokoro">npm</a>
-        </nav>
-      </header>
+      <!-- family:header -->
       <div id="roller"></div>
-      <p class="unreviewed" id="unreviewed" lang="ja" hidden>この日本語は、まだ日本語を母語とする方の確認を受けていません。<a href="https://github.com/johnmorrisdotca/korokoro/issues/new?template=fix-a-translation.md">訂正を歓迎します</a>。</p>
+      <!-- family:unreviewed -->
       <section class="more" aria-labelledby="more-title">
         <h2 id="more-title" data-say="moreTitle"></h2>
         <p data-say="moreText"></p>
+        <p class="ways"><a href="docs/" data-say="docs"></a> · <a href="api/" data-say="plain"></a></p>
         <ul>
           <li><button type="button" data-roll="4d6dl1"><code>4d6dl1</code><span data-say="ex1"></span></button></li>
           <li><button type="button" data-roll="6#4d6dl1"><code>6#4d6dl1</code><span data-say="ex10"></span></button></li>
@@ -79,11 +34,11 @@
           <li><button type="button" data-roll="2d20kh1+5"><code>2d20kh1+5</code><span data-say="ex9"></span></button></li>
         </ul>
       </section>
-      <footer>
-        <span data-say="foot"></span>
-        <span><code>pnpm add @johnmorrisdotca/korokoro</code> · MIT © John Morris</span>
-      </footer>
+      <!-- family:footer -->
     </main>
+    <script>
+      /* family:script */
+    </script>
     <script type="module">
       import { mountRoller, parseNotation } from "./dist/index.js";
 
@@ -105,6 +60,8 @@
           ex8: "A die of your own: any faces you like",
           ex9: "Advantage: two d20, keep the highest, add 5",
           ex10: "Six ability scores in one tap",
+          docs: "Read the documentation",
+          plain: "Dice as plain text, from an address",
           foot: "Rolls use your device's cryptographic generator unless you choose a seed. Your history stays on this device. Dice sounds from Kenney's Casino Audio, CC0.",
         },
         ja: {
@@ -123,44 +80,17 @@
           ex8: "自分で作るダイス: 面は自由です",
           ex9: "有利: d20を2個振って大きいほうを採用し、5を足します",
           ex10: "能力値6つを一度に振ります",
+          docs: "ドキュメントを読む（英語）",
+          plain: "アドレスからダイスを振り、テキストで受け取る",
           foot: "シードを選ばないかぎり、この端末の暗号論的乱数で振ります。履歴はこの端末にだけ保存されます。ダイスの音は Kenney の Casino Audio（CC0）です。",
         },
       };
 
-      const KEY = "korokoro.page.lang";
-      const asked = new URLSearchParams(location.search).get("lang");
-      let kept = null;
-      try {
-        kept = localStorage.getItem(KEY);
-      } catch {
-        // A browser that keeps nothing follows its own language.
-      }
-      // The address first, then what this device chose, then the browser's language.
-      const pick = (tag) => (String(tag).toLowerCase().startsWith("ja") ? "ja" : "en");
-      let lang = asked === "ja" || asked === "en" ? asked : kept === "ja" || kept === "en" ? kept : pick(navigator.language);
-
+      // The header, the footer and the language chooser are the family's (scripts/family-template.mjs): the address first, then what this device chose, then the browser's language.
+      let roller;
+      const language = familyLanguage({ id: "korokoro", words: WORDS, onChange: (lang) => roller.setLocale(lang) });
       // A shared link keeps the language it was made in.
-      const roller = mountRoller(document.getElementById("roller"), { wide: true, locale: lang, shareBase: location.origin + location.pathname + (asked === "ja" || asked === "en" ? "?lang=" + asked : "") });
-
-      function say() {
-        document.documentElement.lang = lang;
-        for (const el of document.querySelectorAll("[data-say]")) el.textContent = WORDS[lang][el.dataset.say];
-        for (const button of document.querySelectorAll("[data-lang]")) button.setAttribute("aria-pressed", String(button.dataset.lang === lang));
-        document.getElementById("unreviewed").hidden = lang !== "ja";
-      }
-      for (const button of document.querySelectorAll("[data-lang]")) {
-        button.addEventListener("click", () => {
-          lang = button.dataset.lang;
-          try {
-            localStorage.setItem(KEY, lang);
-          } catch {
-            // Not remembered; still switched.
-          }
-          roller.setLocale(lang);
-          say();
-        });
-      }
-      say();
+      roller = mountRoller(document.getElementById("roller"), { wide: true, locale: language.lang, shareBase: location.origin + location.pathname + (language.asked !== null ? "?lang=" + language.asked : "") });
 
       for (const button of document.querySelectorAll("[data-roll]")) {
         button.addEventListener("click", () => {

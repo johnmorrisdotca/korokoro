@@ -15,7 +15,15 @@ describe("the custom element, where there is no browser", () => {
   });
 
   it("watches the attributes it documents", () => {
-    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "wide", "sound", "hold", "placeholder", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"]);
+    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"]);
+  });
+});
+
+describe("the entry that registers the element by being imported", () => {
+  it("does no harm where there is no browser, and hands out what ./element does", async () => {
+    const define = await import("./element-define.ts");
+    expect(define.defineRoller).toBe(defineRoller);
+    expect(define.KorokoroRoller).toBe(KorokoroRoller);
   });
 });
 
@@ -27,9 +35,9 @@ describe("the Vue component, on a server", () => {
 
   it("takes the tray's options as props, and a Boolean left out stays left out", () => {
     const props = DiceRoller.props as Record<string, { default?: unknown }>;
-    for (const name of ["notation", "spec", "locale", "strings", "storage", "storageKey", "query", "shareBase", "theme", "wide", "animationMs", "sound", "playSound", "hold", "placeholder", "languageChooser"]) expect(props, name).toHaveProperty(name);
+    for (const name of ["notation", "spec", "locale", "strings", "storage", "storageKey", "query", "shareBase", "theme", "wide", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser"]) expect(props, name).toHaveProperty(name);
     // Vue would make a missing Boolean false, and turn the sound off for everybody who did not ask.
-    for (const name of ["wide", "sound", "hold", "placeholder", "languageChooser"]) expect(props[name]).toMatchObject({ type: Boolean, default: undefined });
+    for (const name of ["wide", "sound", "hold", "placeholder", "keyboard", "languageChooser"]) expect(props[name]).toMatchObject({ type: Boolean, default: undefined });
     expect(DiceRoller.emits).toHaveProperty("roll");
   });
 });

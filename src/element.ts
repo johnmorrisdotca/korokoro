@@ -19,6 +19,7 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
  *   sound="off"      no sound and no mute button
  *   hold="off"       dice are not held
  *   placeholder="off"   the opening dice are the user's own roll
+ *   keyboard="off"   Space rolls only when the focus is inside the tray, and the page keeps it otherwise
  *   language-chooser    the tray's own choice of English or 日本語
  *   storage="none"   keep no history
  *   storage-key      the key the history is kept under
@@ -35,7 +36,7 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
 export const ROLLER_TAG = "korokoro-roller";
 
 /** The attributes the element watches. */
-const WATCHED = ["notation", "lang", "wide", "sound", "hold", "placeholder", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"] as const;
+const WATCHED = ["notation", "lang", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"] as const;
 
 // On a server there is no HTMLElement to extend: the class is still defined, so that importing this module never throws, and is simply never used.
 const Base: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
@@ -106,6 +107,7 @@ export class KorokoroRoller extends Base {
     if (this.hasAttribute("sound")) made.sound = !off("sound");
     if (this.hasAttribute("hold")) made.hold = !off("hold");
     if (this.hasAttribute("placeholder")) made.placeholder = !off("placeholder");
+    if (this.hasAttribute("keyboard")) made.keyboard = !off("keyboard");
     if (this.hasAttribute("language-chooser")) made.languageChooser = !off("language-chooser");
     if (this.hasAttribute("storage") && off("storage")) made.storage = null;
     if (text("storage-key") !== null) made.storageKey = text("storage-key") as string;

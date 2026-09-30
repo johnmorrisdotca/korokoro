@@ -93,6 +93,13 @@ export type RollerOptions = {
    * roll that arrives by a shared link is always the user's.
    */
   placeholder?: boolean;
+  /**
+   * Whether Space rolls from anywhere on the page. Left out or true, it does,
+   * unless something that takes typing has the focus. False, the page keeps
+   * its Space (to scroll, say) and the tray rolls from the keyboard only when
+   * the focus is inside it: for a tray that is one thing among many on a page.
+   */
+  keyboard?: boolean;
   /** Whether the tray offers its own small choice of language, English or 日本語, remembered on the device. Off unless asked for, so the tray stays as plain as it was. */
   languageChooser?: boolean;
 };
@@ -719,7 +726,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
               ? t.allHeld
               : fillIn(t.rollRest, { n: thrown.length - holding });
     // Space rolls from a keyboard; the key is shown only where there is room for it beside the shorter hints.
-    refill(hint, words, empty || hold !== null ? null : h("kbd", {}, "Space"));
+    refill(hint, words, empty || hold !== null || options.keyboard === false ? null : h("kbd", {}, "Space"));
     release.hidden = holding === 0;
   }
 
@@ -1120,6 +1127,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     if (event.key !== " " || event.defaultPrevented) return;
     const el = event.target as HTMLElement | null;
     if (el !== null && el !== doc.body && el !== root && !root.contains(el)) return;
+    // A tray that leaves the page its Space rolls only from inside itself.
+    if (options.keyboard === false && (el === null || !root.contains(el))) return;
     if (el?.closest("input, textarea, select, button, summary, [contenteditable]")) return;
     event.preventDefault();
     throwDice();

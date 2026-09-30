@@ -1,0 +1,64 @@
+/*
+ * The documentation site's own styles: VitePress's default theme, given the
+ * family's colours and type. The values are family.css's (family-tokens.css
+ * is made from it); this file only says which of the theme's names each one
+ * answers to. family.css itself is not loaded here: it styles a page's bare
+ * header, nav, main and footer, which on this site are the theme's.
+ */
+:root {
+  --vp-c-bg: var(--page);
+  --vp-c-bg-alt: var(--surface);
+  --vp-c-bg-elv: var(--surface);
+  --vp-c-bg-soft: var(--surface);
+  --vp-c-text-1: var(--ink);
+  --vp-c-text-2: var(--muted);
+  --vp-c-text-3: var(--muted);
+  --vp-c-divider: var(--rule);
+  --vp-c-gutter: var(--rule);
+  --vp-c-border: var(--rule);
+  --vp-c-brand-1: var(--felt);
+  --vp-c-brand-2: var(--felt-deep);
+  --vp-c-brand-3: var(--felt);
+  --vp-c-brand-soft: color-mix(in srgb, var(--felt) 14%, transparent);
+  --vp-c-tip-1: var(--felt);
+  --vp-c-tip-soft: color-mix(in srgb, var(--felt) 12%, transparent);
+  --vp-c-danger-1: var(--bad);
+  --vp-font-family-base: var(--font);
+  --vp-font-family-mono: var(--mono);
+  --vp-code-block-bg: var(--surface);
+  --vp-code-block-color: var(--ink);
+  --vp-code-color: var(--ink);
+  --vp-code-bg: color-mix(in srgb, var(--ink) 7%, transparent);
+  --vp-button-brand-bg: var(--ink);
+  --vp-button-brand-text: var(--page);
+  --vp-button-brand-hover-bg: var(--felt-deep);
+  --vp-button-brand-hover-text: var(--felt-ink);
+  --vp-home-hero-name-color: var(--ink);
+  --vp-sidebar-bg-color: var(--page);
+  --vp-nav-bg-color: var(--page);
+  --vp-local-search-bg: var(--page);
+}
+.dark {
+  --vp-c-brand-1: #7fc4a4;
+  --vp-c-brand-2: #a6d8c0;
+  --vp-c-brand-3: #7fc4a4;
+}
+.vp-doc div[class*="language-"] { border: 1px solid var(--rule); border-radius: 12px; }
+.vp-doc table { display: block; overflow-x: auto; }
+/* A tray on a page: room for it, and a line saying what it is. */
+.live-dice { margin: 20px 0 28px; border: 1px solid var(--rule); border-radius: 16px; padding: 0 16px; background: var(--surface); }
+.live-dice[open] { padding-bottom: 16px; }
+.live-dice > summary { min-height: 44px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; list-style: none; }
+.live-dice > summary::before { content: "▸"; color: var(--felt); }
+.live-dice[open] > summary::before { content: "▾"; }
+.live-dice > summary::-webkit-details-marker { display: none; }
+/* The theme's own styles for a page's tables, lists and paragraphs reach into anything on the page: the tray is its own, and keeps its own. */
+.vp-doc .kk-root table { display: table; margin: 0; }
+.vp-doc .kk-root tr, .vp-doc .kk-root th, .vp-doc .kk-root td { border: 0; background: transparent; }
+.vp-doc .kk-root th, .vp-doc .kk-root td { padding: 4px 8px; }
+.vp-doc .kk-root ol, .vp-doc .kk-root ul { list-style: none; padding: 0; margin: 0; }
+.vp-doc .kk-root li + li { margin-top: 0; }
+.vp-doc .kk-root p { margin: 0; line-height: inherit; }
+.vp-doc .kk-root summary { margin: 0; }
+.vp-doc .kk-root h4 { margin: 0; }
+.vp-doc .kk-root button, .vp-doc .kk-root input { font-family: inherit; }
