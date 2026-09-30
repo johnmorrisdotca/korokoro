@@ -19,7 +19,8 @@ const scratch = mkdtempSync(join(tmpdir(), "korokoro-package-"));
 /** Run a command and hand back what it printed. On Windows, npm and the installed commands are .cmd files, which only a shell runs; node itself is run directly. */
 function run(command, args, cwd, viaShell = false) {
   const shell = viaShell && windows;
-  const ran = spawnSync(shell ? `"${command}"` : command, args, { cwd, encoding: "utf8", shell });
+  // A path is quoted for the shell; a bare name such as npm is left for the shell to find.
+  const ran = spawnSync(shell && /[\\/]/.test(command) ? `"${command}"` : command, args, { cwd, encoding: "utf8", shell });
   if (ran.status !== 0) {
     console.error(`FAIL ${command} ${args.join(" ")}\n${ran.stdout}\n${ran.stderr}`);
     process.exit(1);
