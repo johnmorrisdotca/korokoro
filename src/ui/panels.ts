@@ -1,9 +1,10 @@
 import type { Roll, RollSpec } from "../dice.ts";
-import { rangeOf } from "../dice.ts";
+import { diceOf, faceRange, rangeOf } from "../dice.ts";
 import { formatNotation } from "../notation.ts";
 import { chanceAtLeast, distributionOf, expectedTotal, luckOf, mostLikely, spreadOf } from "../odds.ts";
 import { statsOf } from "../stats.ts";
 import { h } from "./dom.ts";
+import { faceText } from "./faces.ts";
 import { fillIn, type RollerStrings } from "./strings.ts";
 
 /** The three panels under the tray, each drawn fresh from the state it is handed. */
@@ -27,7 +28,13 @@ export function historyPanel(history: readonly Roll[], t: RollerStrings, locale:
   const time = new Intl.DateTimeFormat(locale, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const list = h("ol", { class: "kk-history", "data-testid": "kk-history", reversed: true });
   for (const r of [...history].reverse()) {
-    const mini = h("span", { class: "kk-mini" }, ...r.faces.map((f, i) => h("span", { "data-kept": String(r.kept[i]) }, String(f))));
+    const mini = h(
+      "span",
+      { class: "kk-mini" },
+      ...diceOf(r).map((die) =>
+        h("span", { "data-kept": String(die.status === "kept"), "data-exploded": die.exploded ? "true" : null }, `${faceText(r.spec.sides, die.face)}${die.exploded ? "!" : die.status === "rerolled" ? "↻" : ""}`),
+      ),
+    );
     const luck = luckOf(r.spec, r.total);
     list.append(
       h(
@@ -51,8 +58,45 @@ function card(value: string, label: string, testId?: string): HTMLElement {
   return h("div", { class: "kk-card", "data-testid": testId }, h("b", {}, value), h("span", {}, label));
 }
 
+/**
+ * As many bars as a chart draws: what fits the panel on a phone at two pixels
+ * a bar. A chart of more values draws neighbours together, each bar their sum.
+ */
+const MOST_BARS = 80;
+
+function gathered(values: number[], width: number): number[] {
+  if (width === 1) return values;
+  const out = new Array<number>(Math.ceil(values.length / width)).fill(0);
+  values.forEach((v, i) => (out[Math.floor(i / width)] = (out[Math.floor(i / width)] as number) + v));
+  return out;
+}
+
+/**
+ * Where a chart of exploding dice stops: the first total past which
+ * everything left comes up less than one time in a thousand, or the last
+ * index in `upTo` if that is further. Other charts run to their end.
+ */
+function chartEnd(spec: RollSpec, probabilities: number[], upTo: number): number {
+  const last = probabilities.length - 1;
+  if (spec.explode !== true) return last;
+  let tail = 0;
+  let end = last;
+  while (end > 0 && tail + (probabilities[end] as number) < 0.001) tail += probabilities[end--] as number;
+  return Math.max(end, Math.min(last, upTo));
+}
+
+function tailNote(d: { min: number; probabilities: number[] }, end: number, t: RollerStrings, locale: string): HTMLElement | null {
+  if (end >= d.probabilities.length - 1) return null;
+  const tail = d.probabilities.slice(end + 1).reduce((a, b) => a + b, 0);
+  return h("p", { "data-testid": "kk-tail" }, fillIn(t.chartTail, { total: d.min + end, percent: percent(tail, locale) }));
+}
+
 /** Bars with an optional expected mark over each, scaled to the tallest of either. */
-function bars(values: number[], expected: number[] | null, now: number | null): HTMLElement {
+function bars(all: number[], allExpected: number[] | null, nowAt: number | null): HTMLElement {
+  const width = Math.ceil(all.length / MOST_BARS);
+  const values = gathered(all, width);
+  const expected = allExpected === null ? null : gathered(allExpected, width);
+  const now = nowAt === null ? null : Math.floor(nowAt / width);
   const top = Math.max(1e-9, ...values, ...(expected ?? []));
   return h(
     "div",
@@ -101,21 +145,23 @@ export function statsPanel(history: readonly Roll[], spec: RollSpec, t: RollerSt
         "section",
         { class: "kk-chart" },
         h("h4", {}, fillIn(t.faces, { sides: faces.sides, n: faces.dice })),
-        bars(faces.counts, faces.counts.map(() => faces.dice / faces.sides), null),
-        axis(1, faces.sides),
+        bars(faces.counts, faces.counts.map(() => faces.dice / faces.counts.length), null),
+        axis(faceRange(faces.sides).low, faceRange(faces.sides).high),
         h("p", {}, verdict),
       ),
     );
   }
   const totals = stats.totals;
   if (totals !== null && totals.rolls > 0) {
+    const end = chartEnd(spec, totals.expectedShare, totals.highest - totals.min);
     panel.append(
       h(
         "section",
         { class: "kk-chart" },
         h("h4", {}, fillIn(t.totals, { notation: totals.notation, n: totals.rolls })),
-        bars(totals.seen, totals.expectedShare.map((p) => p * totals.rolls), null),
-        axis(totals.min, totals.min + totals.seen.length - 1),
+        bars(totals.seen.slice(0, end + 1), totals.expectedShare.slice(0, end + 1).map((p) => p * totals.rolls), null),
+        axis(totals.min, totals.min + end),
+        tailNote({ min: totals.min, probabilities: totals.expectedShare }, end, t, locale),
         h("p", {}, `${t.seenVsExpected} ${t.average} ${number(totals.average, locale)} · ${t.expected} ${number(totals.expected, locale)}`),
       ),
     );
@@ -134,6 +180,7 @@ export function oddsPanel(
   const d = distributionOf(spec);
   const { min, max } = rangeOf(spec);
   const now = current !== null && formatNotation(current.spec) === formatNotation(spec) ? current.total - d.min : null;
+  const end = chartEnd(spec, d.probabilities, now ?? 0);
   const input = h("input", {
     type: "number",
     inputmode: "numeric",
@@ -169,8 +216,9 @@ export function oddsPanel(
       "section",
       { class: "kk-chart" },
       h("h4", {}, formatNotation(spec)),
-      bars(d.probabilities, null, now),
-      axis(min, max),
+      bars(d.probabilities.slice(0, end + 1), null, now),
+      axis(min, min + end),
+      tailNote(d, end, t, locale),
     ),
     h(
       "div",

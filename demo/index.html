@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Korokoro · fair dice with the odds of every throw</title>
-    <meta name="description" content="Tap to roll one to five dice, from a d4 to a d100, with a bonus, advantage or disadvantage. Exact odds, roll history and stats. Free and open source." />
+    <meta name="description" content="Tap to roll one to five dice, from a d4 to a d100, or type any dice: 4d6 drop the lowest, exploding dice, rerolls, Fate dice, a d14. Exact odds, roll history and stats. Free and open source." />
     <meta name="theme-color" content="#2f5d4a" />
     <meta property="og:title" content="Korokoro dice roller" />
     <meta property="og:description" content="Fair dice for the table, with the odds of every throw." />
@@ -24,6 +24,14 @@
       footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
       footer code { font-size: .8rem; }
       a { color: inherit; }
+      .more { margin-top: 28px; }
+      .more h2 { margin: 0 0 4px; font-size: 1.05rem; }
+      .more p { margin: 0 0 12px; color: var(--muted); font-size: .9rem; }
+      .more ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 8px; }
+      .more button { width: 100%; text-align: left; font: inherit; color: inherit; background: transparent; border: 1px solid var(--rule); border-radius: 12px; padding: 8px 12px; cursor: pointer; display: grid; gap: 2px; }
+      .more button:hover { border-color: var(--ink); }
+      .more code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 700; }
+      .more span { color: var(--muted); font-size: .85rem; }
     </style>
   </head>
   <body>
@@ -39,14 +47,33 @@
         </nav>
       </header>
       <div id="roller"></div>
+      <section class="more" aria-labelledby="more-title">
+        <h2 id="more-title">More dice, by notation</h2>
+        <p>The buttons are the dice a table owns. Anything else is typed into the notation box beside the bonus, or tapped here.</p>
+        <ul>
+          <li><button type="button" data-roll="4d6dl1"><code>4d6dl1</code><span>Four d6, drop the lowest: an ability score</span></button></li>
+          <li><button type="button" data-roll="3d6!"><code>3d6!</code><span>Exploding dice: a 6 throws another die</span></button></li>
+          <li><button type="button" data-roll="2d6r<3+4"><code>2d6r&lt;3+4</code><span>Reroll a 1 or a 2, once, then add 4</span></button></li>
+          <li><button type="button" data-roll="4dF"><code>4dF</code><span>Four Fate dice: plus, blank or minus</span></button></li>
+          <li><button type="button" data-roll="5d10kl2"><code>5d10kl2</code><span>Five d10, keep the lowest two</span></button></li>
+          <li><button type="button" data-roll="1d14"><code>d14</code><span>A die of any size, from 2 sides to 1000</span></button></li>
+        </ul>
+      </section>
       <footer>
         <span>Rolls use your device's cryptographic generator unless you choose a seed. Your history stays on this device.</span>
         <span><code>pnpm add @johnmorrisdotca/korokoro</code> · MIT © John Morris</span>
       </footer>
     </main>
     <script type="module">
-      import { mountRoller } from "./dist/index.js";
-      mountRoller(document.getElementById("roller"), { wide: true, locale: navigator.language });
+      import { mountRoller, parseNotation } from "./dist/index.js";
+      const roller = mountRoller(document.getElementById("roller"), { wide: true, locale: navigator.language });
+      for (const button of document.querySelectorAll("[data-roll]")) {
+        button.addEventListener("click", () => {
+          roller.setSpec(parseNotation(button.dataset.roll));
+          roller.roll();
+          document.getElementById("roller").scrollIntoView({ block: "start", behavior: "smooth" });
+        });
+      }
     </script>
   </body>
 </html>

@@ -1,9 +1,10 @@
-import { keptFaces, totalOf, type Roll } from "./dice.ts";
+import { readDice, totalOf, type Roll } from "./dice.ts";
 import { formatNotation, parseNotation } from "./notation.ts";
 
 /**
  * A roll as a link. The query carries the dice, the faces and when, so the
- * person opening it sees exactly what was thrown; a seeded roll carries its
+ * person opening it sees exactly what was thrown, every rerolled and exploded
+ * die included; a seeded roll carries its
  * seed too, so the same dice can be thrown again and come out the same.
  */
 export function shareQuery(roll: Roll): string {
@@ -17,10 +18,13 @@ export function readShared(query: string | URLSearchParams): Roll | null {
   const params = typeof query === "string" ? new URLSearchParams(query.replace(/^\?/, "")) : query;
   const spec = parseNotation(params.get("roll") ?? "");
   if (spec === null) return null;
-  const faces = (params.get("faces") ?? "").split(",").map(Number);
-  if (faces.length !== spec.count || !faces.every((f) => Number.isInteger(f) && f >= 1 && f <= spec.sides)) return null;
+  const given = (params.get("faces") ?? "").split(",");
+  if (given.some((f) => f.trim() === "")) return null;
+  const dice = readDice(spec, given.map(Number));
+  if (dice === null) return null;
+  const faces = dice.map((d) => d.face);
+  const kept = dice.map((d) => d.status === "kept");
   const at = Number(params.get("at"));
-  const kept = keptFaces(faces, spec.keep);
   return {
     id: `shared-${Number.isFinite(at) ? at.toString(36) : "0"}`,
     spec,
@@ -29,5 +33,6 @@ export function readShared(query: string | URLSearchParams): Roll | null {
     total: totalOf(faces, kept, spec.modifier),
     at: Number.isFinite(at) ? at : 0,
     seed: params.get("seed"),
+    dice,
   };
 }

@@ -6,7 +6,8 @@ import { seededSource } from "./random.ts";
 
 describe("normalizeSpec", () => {
   it("keeps one to five dice of a real kind", () => {
-    expect(normalizeSpec({ count: 9, sides: 7 as never })).toMatchObject({ count: 5, sides: 6 });
+    expect(normalizeSpec({ count: 9, sides: 1 })).toMatchObject({ count: 5, sides: 6 });
+    expect(normalizeSpec({ count: 9, sides: 2.5 })).toMatchObject({ count: 5, sides: 6 });
     expect(normalizeSpec({ count: 0 })).toMatchObject({ count: 2 });
     expect(normalizeSpec({ count: -3 })).toMatchObject({ count: 1 });
   });
@@ -54,7 +55,7 @@ describe("roll", () => {
     expect([...seen].sort((a, b) => a - b)).toEqual(Array.from({ length: 30 }, (_, i) => i + 1));
   });
 
-  it("the d30 is a kind of die, and the d7 is still not", () => {
+  it("the d30 has a button in the tray, and the d7 does not", () => {
     expect(DIE_SIDES).toContain(30);
     expect(isDieSides(30)).toBe(true);
     expect(isDieSides(7)).toBe(false);
@@ -77,7 +78,7 @@ describe("notation", () => {
     expect(parseNotation(text)).toEqual(spec);
   });
 
-  it.each(["9d6", "2d7", "d", "3d6+", "hello", "1d20kh1", "0d6"])("refuses %s rather than rolling something else", (text) => {
+  it.each(["9d6", "2d1", "2d1001", "d", "3d6+", "hello", "1d20kh1", "0d6"])("refuses %s rather than rolling something else", (text) => {
     expect(parseNotation(text)).toBeNull();
   });
 

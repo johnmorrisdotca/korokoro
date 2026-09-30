@@ -50,6 +50,7 @@ export const CSS = `
 .kk-dice[data-count="1"] .kk-die { width: clamp(110px, 34vw, 150px); }
 .kk-dice[data-count="2"] .kk-die { width: clamp(90px, 28vw, 124px); }
 .kk-dice[data-count="4"] .kk-die, .kk-dice[data-count="5"] .kk-die { width: clamp(48px, 14vw, 92px); }
+.kk-dice[data-count="many"] .kk-die { width: clamp(44px, 12vw, 64px); }
 .kk-die-svg { width: 100%; height: 100%; overflow: visible; }
 .kk-body { fill: var(--kk-die); stroke: var(--kk-die-edge); stroke-width: 3; }
 .kk-shine { fill: none; stroke: rgba(255,255,255,.7); stroke-width: 2; }
@@ -58,8 +59,12 @@ export const CSS = `
 .kk-pip-one { fill: var(--kk-pip-one); }
 .kk-number { fill: var(--kk-die-ink); paint-order: stroke; stroke: var(--kk-die); stroke-width: 7px; stroke-linejoin: round; font-weight: 800; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 .kk-underline { fill: var(--kk-die-ink); }
+.kk-caption { fill: var(--kk-die-ink); opacity: .6; font-weight: 700; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 .kk-die[data-kept="false"] { opacity: .38; transform: scale(.88); }
 .kk-die[data-kept="false"]::after { content: ""; position: absolute; left: 12%; right: 12%; top: 50%; height: 3px; background: var(--kk-felt-ink); border-radius: 3px; transform: rotate(-20deg); }
+.kk-die[data-exploded="true"] .kk-body { stroke: var(--kk-accent); stroke-width: 5; }
+.kk-die[data-exploded="true"]::before, .kk-die[data-status="rerolled"]::before { content: "!"; position: absolute; z-index: 1; top: -7%; right: -7%; width: 36%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: var(--kk-accent); color: var(--kk-accent-ink); font-weight: 800; font-size: clamp(.62rem, 2.4vw, .95rem); line-height: 1; }
+.kk-die[data-status="rerolled"]::before { content: "↻"; background: var(--kk-felt-ink); color: var(--kk-felt-deep); }
 .kk-die[data-hit="crit"] .kk-body { stroke: #e0b43b; stroke-width: 6; }
 .kk-die[data-hit="fumble"] .kk-body { stroke: var(--kk-bad); stroke-width: 6; }
 .kk-tumble { animation: kk-tumble var(--kk-t, 700ms) cubic-bezier(.2,.7,.3,1) both; }
@@ -106,6 +111,7 @@ export const CSS = `
 .kk-history .kk-mini { display: flex; gap: 3px; flex-wrap: wrap; }
 .kk-history .kk-mini span { min-width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--kk-rule); display: inline-grid; place-items: center; font-size: .72rem; font-weight: 700; padding: 0 3px; font-variant-numeric: tabular-nums; }
 .kk-history .kk-mini span[data-kept="false"] { opacity: .4; text-decoration: line-through; }
+.kk-history .kk-mini span[data-exploded="true"] { border-color: var(--kk-accent); color: var(--kk-accent); }
 .kk-history strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; min-width: 2.5rem; text-align: right; }
 .kk-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .kk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }

@@ -14,6 +14,17 @@ export type RollerStrings = {
   notation: string;
   notationHint: string;
   notationBad: string;
+  notationCount: string;
+  notationSides: string;
+  notationBonus: string;
+  notationTwice: string;
+  notationKeep: string;
+  notationReroll: string;
+  notationExplode: string;
+  dieDropped: string;
+  dieRerolled: string;
+  dieExploded: string;
+  chartTail: string;
   tapToRoll: string;
   tapAgain: string;
   rollLabel: string;
@@ -74,8 +85,19 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     keepHighest: "Highest",
     keepLowest: "Lowest",
     notation: "Dice notation",
-    notationHint: "e.g. 3d6+2, 2d20kh1, d100",
-    notationBad: "Not dice this roller throws: 1 to 5 of d4, d6, d8, d10, d12, d20, d30 or d100",
+    notationHint: "e.g. 3d6+2, 2d20kh1, 4d6dl1, 3d6!, 4dF",
+    notationBad: "Not dice notation. Try 3d6+2, 2d20kh1, 4d6dl1, 3d6!, 2d8r<3 or 4dF",
+    notationCount: "“{part}”: roll 1 to 5 dice at a time",
+    notationSides: "“{part}”: a die has 2 to 1000 sides, or is dF",
+    notationBonus: "“{part}”: a bonus is at most 99 either way",
+    notationTwice: "“{part}”: use each modifier once, and keep or drop, not both",
+    notationKeep: "“{part}”: keep or drop at least one die, and fewer than all of them",
+    notationReroll: "“{part}”: a reroll has to include the lowest face and leave the highest",
+    notationExplode: "“{part}”: only dice of 100 sides or fewer explode, and not Fate dice or dice that are kept or dropped",
+    dieDropped: "dropped",
+    dieRerolled: "rerolled",
+    dieExploded: "exploded",
+    chartTail: "Totals past {total} are off the chart: together they come up {percent} of the time.",
     tapToRoll: "Tap anywhere to roll",
     tapAgain: "Tap to roll again",
     rollLabel: "Roll {notation}",
@@ -134,8 +156,19 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     keepHighest: "最大",
     keepLowest: "最小",
     notation: "ダイス表記",
-    notationHint: "例: 3d6+2、2d20kh1、d100",
-    notationBad: "振れるのは d4・d6・d8・d10・d12・d20・d30・d100 を1〜5個です",
+    notationHint: "例: 3d6+2、2d20kh1、4d6dl1、3d6!、4dF",
+    notationBad: "ダイス表記ではありません。例: 3d6+2、2d20kh1、4d6dl1、3d6!、2d8r<3、4dF",
+    notationCount: "「{part}」: 一度に振れるのは1〜5個です",
+    notationSides: "「{part}」: 面の数は2〜1000、または dF です",
+    notationBonus: "「{part}」: 修正値は±99までです",
+    notationTwice: "「{part}」: 同じ指定は一度だけです。採用と除外は同時に使えません",
+    notationKeep: "「{part}」: 採用・除外は1個以上、全部より少なくしてください",
+    notationReroll: "「{part}」: 振り直しは最小の面を含み、最大の面を残してください",
+    notationExplode: "「{part}」: 爆発できるのは100面以下のダイスだけです。dF や採用・除外とは併用できません",
+    dieDropped: "不採用",
+    dieRerolled: "振り直し",
+    dieExploded: "爆発",
+    chartTail: "{total} より上の合計は省略しています（合わせて {percent}）。",
     tapToRoll: "どこでもタップして振る",
     tapAgain: "タップしてもう一度",
     rollLabel: "{notation} を振る",

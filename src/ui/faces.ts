@@ -1,11 +1,13 @@
-import type { DieSides } from "../dice.ts";
+import { isDieSides, type DieSides, type Sides } from "../dice.ts";
 import { s } from "./dom.ts";
 
 /**
  * Each die drawn as its own shape, the way it looks on the table: a d6 with
  * pips, the others as their silhouette with the number in the middle. The d30
  * is a rhombic triacontahedron seen face on: ten sides round the edge, and the
- * number on the diamond face that points at you.
+ * number on the diamond face that points at you. A Fate die is a cube marked
+ * plus, minus or left blank. A die of any other size has no one shape, so it
+ * is a plain eight-sided token that says what it is under its number.
  * Everything is in a 100 by 100 box and coloured by the tray's CSS variables.
  */
 const OUTLINES: Record<DieSides, string> = {
@@ -41,8 +43,35 @@ const PIPS: Record<number, [number, number][]> = {
 /** Where the number sits, so it is inside the widest part of the shape. */
 const NUMBER_Y: Record<DieSides, number> = { 4: 68, 6: 50, 8: 52, 10: 44, 12: 52, 20: 54, 30: 50, 100: 44 };
 
-export function dieFace(sides: DieSides, face: number, label: string): SVGElement {
+const TOKEN = "M31 4 L69 4 L96 31 L96 69 L69 96 L31 96 L4 69 L4 31 Z";
+
+/** What a face reads as: a Fate die shows a sign, every other die its number. */
+export function faceText(sides: Sides, face: number): string {
+  if (sides !== "F") return String(face);
+  return face > 0 ? "+" : face < 0 ? "−" : "0";
+}
+
+function numberSize(text: string): number {
+  return text.length >= 4 ? 19 : text.length === 3 ? 24 : text.length === 2 ? 30 : 36;
+}
+
+export function dieFace(sides: Sides, face: number, label: string): SVGElement {
   const svg = s("svg", { viewBox: "0 0 100 100", class: "kk-die-svg", role: "img", "aria-label": label });
+  if (sides === "F") {
+    svg.append(s("rect", { x: 4, y: 4, width: 92, height: 92, rx: 18, class: "kk-body" }));
+    svg.append(s("rect", { x: 10, y: 10, width: 80, height: 80, rx: 14, class: "kk-shine" }));
+    if (face !== 0) svg.append(s("rect", { x: 26, y: 44, width: 48, height: 12, rx: 4, class: "kk-pip" }));
+    if (face > 0) svg.append(s("rect", { x: 44, y: 26, width: 12, height: 48, rx: 4, class: "kk-pip" }));
+    return svg;
+  }
+  if (!isDieSides(sides)) {
+    const text = String(face);
+    svg.append(s("path", { d: TOKEN, class: "kk-body", "stroke-linejoin": "round" }));
+    svg.append(s("text", { x: 50, y: 45, "font-size": numberSize(text), class: "kk-number", "text-anchor": "middle", "dominant-baseline": "central" }, text));
+    if (text === "6" || text === "9") svg.append(s("rect", { x: 42, y: 63, width: 16, height: 3, rx: 1.5, class: "kk-underline" }));
+    svg.append(s("text", { x: 50, y: 80, "font-size": 13, class: "kk-caption", "text-anchor": "middle", "dominant-baseline": "central" }, `d${sides}`));
+    return svg;
+  }
   if (sides === 6) {
     svg.append(s("rect", { x: 4, y: 4, width: 92, height: 92, rx: 18, class: "kk-body" }));
     svg.append(s("rect", { x: 10, y: 10, width: 80, height: 80, rx: 14, class: "kk-shine" }));
@@ -53,7 +82,7 @@ export function dieFace(sides: DieSides, face: number, label: string): SVGElemen
   const facets = FACETS[sides];
   if (facets !== undefined) svg.append(s("path", { d: facets, class: "kk-facet" }));
   const text = String(face);
-  const size = text.length >= 3 ? 24 : text.length === 2 ? 30 : 36;
+  const size = numberSize(text);
   svg.append(
     s("text", { x: 50, y: NUMBER_Y[sides], "font-size": size, class: "kk-number", "text-anchor": "middle", "dominant-baseline": "central" }, text),
   );

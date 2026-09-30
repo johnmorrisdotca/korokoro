@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.1.0",
-  "description": "Fair dice for the table, with the odds of every throw: tap to roll one to five of d4, d6, d8, d10, d12, d20, d30 or d100, with exact probabilities, roll history and stats. No dependencies.",
+  "version": "1.2.0",
+  "description": "Fair dice for the table, with the odds of every throw: tap to roll one to five of d4, d6, d8, d10, d12, d20, d30 or d100, or type any dice (4d6dl1, 3d6!, 2d6r<3, 4dF, d14), with exact probabilities, roll history and stats. No dependencies.",
   "keywords": [
     "dice",
     "dice-roller",
@@ -13,6 +13,9 @@
     "dnd",
     "d20",
     "d30",
+    "dice-notation",
+    "fate-dice",
+    "exploding-dice",
     "ttrpg",
     "typescript",
     "react"

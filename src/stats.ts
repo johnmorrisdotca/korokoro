@@ -1,4 +1,4 @@
-import type { DieSides, Roll, RollSpec } from "./dice.ts";
+import { faceRange, type Roll, type RollSpec, type Sides } from "./dice.ts";
 import { formatNotation } from "./notation.ts";
 import { distributionOf, expectedTotal, luckOf } from "./odds.ts";
 
@@ -13,7 +13,7 @@ export type Stats = {
   longestCold: number;
   /** The run the history ends on: positive above average, negative below, 0 on the average. */
   currentStreak: number;
-  /** Rolls of two or more dice all showing the same face. */
+  /** Rolls of two or more dice all showing the same face. A roll that rerolled or exploded a die is not counted. */
   matches: number;
   /** A d20's natural 20 and natural 1, counted on the dice that were kept. */
   naturalTwenties: number;
@@ -24,7 +24,8 @@ export type Stats = {
 
 /** How often each face of one kind of die came up, and whether that looks fair. */
 export type FaceStats = {
-  sides: DieSides;
+  sides: Sides;
+  /** counts[i] is how often the die's i-th face came up, from its lowest: every die thrown, a rerolled one and an explosion's included. */
   counts: number[];
   dice: number;
   /** Chance a fair die strays this far or further. Null until there are enough throws to ask. */
@@ -60,17 +61,19 @@ export function chiSquareTail(statistic: number, degrees: number): number {
   return Math.min(1, Math.max(0, 0.5 * (1 - erf(z / Math.SQRT2))));
 }
 
-export function faceStats(history: readonly Roll[], sides: DieSides): FaceStats {
-  const counts = new Array<number>(sides).fill(0);
+export function faceStats(history: readonly Roll[], sides: Sides): FaceStats {
+  const { low, high } = faceRange(sides);
+  const faces = high - low + 1;
+  const counts = new Array<number>(faces).fill(0);
   for (const r of history) {
     if (r.spec.sides !== sides) continue;
-    for (const face of r.faces) counts[face - 1] = (counts[face - 1] as number) + 1;
+    for (const face of r.faces) counts[face - low] = (counts[face - low] as number) + 1;
   }
   const dice = counts.reduce((a, b) => a + b, 0);
-  const each = dice / sides;
+  const each = dice / faces;
   // The test says nothing until every face is expected at least five times.
   const fairness =
-    each >= 5 ? chiSquareTail(counts.reduce((sum, c) => sum + (c - each) ** 2 / each, 0), sides - 1) : null;
+    each >= 5 ? chiSquareTail(counts.reduce((sum, c) => sum + (c - each) ** 2 / each, 0), faces - 1) : null;
   return { sides, counts, dice, fairness };
 }
 
@@ -121,7 +124,7 @@ export function statsOf(history: readonly Roll[], focus?: RollSpec): Stats {
     }
     longestHot = Math.max(longestHot, hot);
     longestCold = Math.max(longestCold, cold);
-    if (r.faces.length > 1 && r.faces.every((f) => f === r.faces[0])) matches += 1;
+    if (r.faces.length > 1 && r.faces.length === r.spec.count && r.faces.every((f) => f === r.faces[0])) matches += 1;
     if (r.spec.sides === 20) {
       r.faces.forEach((f, i) => {
         if (!r.kept[i]) return;

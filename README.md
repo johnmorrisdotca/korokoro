@@ -26,12 +26,16 @@ uses this package exactly as published.
 
 - **Every die a table needs.** One to five of d4, d6, d8, d10, d12, d20, d30 or
   d100, with a bonus, and advantage or disadvantage (keep the highest or lowest).
+- **And any other dice, by notation.** A die of any size from 2 sides to 1000,
+  Fate dice, keep or drop (`4d6dl1`), rerolls (`2d6r<3`) and exploding dice
+  (`3d6!`), each die's fate shown on the felt.
 - **Fair by construction.** Rolls come from `crypto.getRandomValues`, turned
   into faces by rejection sampling, so no face is favoured by a modulo.
 - **Reproducible when asked.** A seeded mode (sfc32) throws the same dice for the
   same seed on every device, so a table can check a roll.
 - **Exact odds.** Each total's chance is counted, not simulated: the chance to
-  meet a target, the average, the spread and how lucky a throw was.
+  meet a target, the average, the spread and how lucky a throw was. That holds
+  for dropped, rerolled and exploding dice too.
 - **History and stats.** Up to 500 rolls kept on the device: luck, hot and cold
   streaks, matching dice, natural 20s and 1s, each face's count with a
   chi-square fairness test, and your totals drawn against the odds.
@@ -100,14 +104,66 @@ chanceAtLeast(attack, 15);                  // 0.7975
 | `d20`, `1d20` | one twenty-sided die |
 | `3d6+2` | three d6, plus 2 |
 | `4d8-1` | four d8, minus 1 |
-| `2d20kh1` | two d20, keep the highest (advantage) |
-| `2d20kl1` | two d20, keep the lowest (disadvantage) |
 | `d30`, `2d30+3` | one thirty-sided die; two of them, plus 3 |
 | `d%`, `1d100` | one percentile die |
+| `d14`, `2d3`, `d1000` | a die of any size, from 2 sides to 1000 |
+| `4dF` | four Fate dice, each −1, 0 or +1 |
+| `2d20kh1`, `2d20kh` | two d20, keep the highest (advantage) |
+| `2d20kl1` | two d20, keep the lowest (disadvantage) |
+| `4d6kh3` | four d6, keep the highest three |
+| `4d6dl1` | four d6, drop the lowest one: the same roll as `4d6kh3` |
+| `5d10dh2` | five d10, drop the highest two: the same roll as `5d10kl3` |
+| `2d6r<3`, `2d6r<=2` | two d6; a 1 or a 2 is thrown again, once |
+| `3d6!` | three exploding d6: a 6 throws another die and adds it |
+| `3d6!r<2+1` | all of it together: reroll, explode, then add 1 |
 
-One to five dice, of d4, d6, d8, d10, d12, d20, d30 or d100, with a bonus from
-−99 to +99. Anything else is refused (`parseNotation` returns `null`) rather
-than quietly rolled as something different.
+```
+roll     = [count] "d" sides { modifier } [bonus]
+count    = 1 to 5, and 1 when left out
+sides    = 2 to 1000, "%" for 100, or "F" for a Fate die
+modifier = "!" | "r<" face | "r<=" face | "kh" [n] | "kl" [n] | "dh" [n] | "dl" [n]
+bonus    = "+" or "-", then 0 to 99
+```
+
+Letters in either case, spaces allowed between the parts.
+
+**How the modifiers combine.** They may be written in any order, each at most
+once, and are always applied in this one:
+
+1. **Reroll.** A die showing the reroll face or lower is thrown again, once.
+   The new face stands whatever it is, so a low face becomes rarer, never
+   impossible. (Roll20 calls this `ro`; its `r` rerolls until the die clears.)
+2. **Explode.** If the face left standing is the die's highest, another die is
+   thrown and added, and it follows the same two rules. A die may throw up to
+   10 more (`MAX_EXPLOSIONS`); the last is read as it lies.
+3. **Keep or drop** picks among the dice left standing. A tie keeps the die
+   thrown first.
+4. **The bonus** is added.
+
+Each die is settled, rerolls and explosions and all, before the next is
+thrown, so a seeded roll replays die for die.
+
+**What is refused**, by `parseNotation` returning `null` and by `checkNotation`
+naming the part, rather than quietly rolled as something different:
+
+| Refused | Why |
+| --- | --- |
+| `6d6`, `0d6` | one to five dice at a time |
+| `d1`, `d1001` | a die has 2 to 1000 sides |
+| `2d6+100` | a bonus is at most 99 either way |
+| `4d6kh4`, `4d6dl4`, `1d20kh1` | keep or drop has to leave at least one die and fewer than all |
+| `4d6kh3dl1`, `3d6!!` | one keep or drop, and each modifier once |
+| `2d6r<1`, `2d6r<7` | a reroll has to include the lowest face and spare the highest |
+| `4d6!kh3` | exploding dice are not kept or dropped: tables disagree on whether an explosion is a new die in the pool or part of the die that threw it |
+| `4dF!`, `2d1000!` | Fate dice do not explode, nor do dice of more than 100 sides |
+
+```ts
+checkNotation("4d6!kh3");
+// { ok: false, problem: "explode", part: "!", message: "“!”: dice explode only with 100 sides or fewer, …" }
+```
+
+`formatNotation` writes each roll one way: the dice, `!`, `r<`, `kh` or `kl`,
+then the bonus. So `4d6dl1` is written back as `4d6kh3`.
 
 ## API
 
@@ -116,22 +172,51 @@ Every function is pure unless it says otherwise, and every type is exported.
 ### Rolling
 
 ```ts
-type DieSides = 4 | 6 | 8 | 10 | 12 | 20 | 30 | 100;
+type DieSides = 4 | 6 | 8 | 10 | 12 | 20 | 30 | 100;  // the dice with a button
+type Sides = number | "F";                           // 2 to 1000, or a Fate die
 type Keep = "all" | "highest" | "lowest";
-type RollSpec = { count: number; sides: DieSides; modifier: number; keep: Keep };
+type RollSpec = {
+  count: number; sides: Sides; modifier: number; keep: Keep;
+  keepCount?: number; // how many `keep` keeps; left out when one
+  explode?: true;     // left out when the dice do not explode
+  reroll?: number;    // reroll once at this face or lower; left out when none
+};
+type DieRoll = {
+  face: number;
+  status: "kept" | "dropped" | "rerolled";
+  exploded: boolean;  // it showed its highest face and threw the next die
+  die: number;        // which of the dice asked for it belongs to, from 0
+};
 type Roll = {
   id: string; spec: RollSpec;
-  faces: number[];    // each die, in the order thrown
+  faces: number[];    // every die thrown, in order: rerolled and exploded dice too
   kept: boolean[];    // which faces count towards the total
   total: number; at: number; seed: string | null;
+  dice?: DieRoll[];   // what happened to each face; on every roll the package makes
 };
 
 roll(spec: Partial<RollSpec>, source?: RandomSource, at?: number): Roll
+diceOf(roll: Roll): DieRoll[]                       // roll.dice, or worked out from the faces
+readDice(spec: RollSpec, faces: number[]): DieRoll[] | null  // null if the dice could not show them
 normalizeSpec(spec: Partial<RollSpec>): RollSpec    // clamps into range
 rangeOf(spec: RollSpec): { min: number; max: number }
 parseNotation(text: string): RollSpec | null
+checkNotation(text: string): { ok: true; spec: RollSpec } | { ok: false; problem: NotationProblem; part: string; message: string }
 formatNotation(spec: RollSpec): string
 ```
+
+The total is always the kept faces plus the bonus. A roll of `2d6!r<2` that
+threw 1, 6, 1, 3, 4 reads:
+
+```ts
+roll.faces  // [1, 6, 1, 3, 4]
+roll.kept   // [false, true, false, true, true]
+roll.dice   // rerolled, kept and exploded, rerolled, kept, kept
+roll.total  // 13
+```
+
+Limits, all exported: `MAX_DICE` 5, `MIN_SIDES` 2, `MAX_SIDES` 1000,
+`MAX_MODIFIER` 99, `MAX_EXPLOSIONS` 10, `MAX_EXPLODING_SIDES` 100.
 
 ### Randomness
 
@@ -158,7 +243,21 @@ luckOf(spec, total): number               // 0 = worst possible, 0.5 = typical, 
 ```
 
 Distributions are exact. Five d100 is ten billion outcomes, counted by
-convolution in a few thousand steps.
+convolution in a few thousand steps. Nothing is simulated or left out:
+
+| Dice | How the odds are found |
+| --- | --- |
+| Plain dice, any size, and Fate dice | Every outcome counted, in whole numbers below 2^53 |
+| Keep one (advantage) | The closed form: the highest is at most *k* when every die is |
+| Keep or drop several | The sum of the highest *n*, dealt out value by value over the pool |
+| Rerolls | Each face's chance after one reroll, then as above |
+| Exploding dice | Each chain's chance up to `MAX_EXPLOSIONS`, then summed over the dice |
+
+Exploding dice have no last total in theory. Here a die stops after 10
+explosions, in the roll and in the odds alike, so the odds are exactly those
+of the dice as thrown and they sum to 1; a d6 reaches that limit once in 60
+million dice. Rerolled and exploding dice are worked out as probabilities
+rather than counts, right to the last digits a number holds.
 
 ### History and stats
 
@@ -198,6 +297,12 @@ type RollerOptions = {
 type RollerHandle = { roll(): void; history(): readonly Roll[]; setSpec(spec): void; destroy(): void };
 ```
 
+`setSpec` changes part of the dice (`{ sides: 20 }`) or, given a whole spec
+such as `parseNotation("4d6dl1")`, all of them. The buttons are the eight
+standard dice; everything else is typed into the notation box, which says
+which part it refuses. On the felt a dropped or rerolled die is struck
+through and an exploded die is ringed and marked `!`.
+
 ## Seeded and shared rolls
 
 Under **Randomness** the tray switches between **Fair**, your device's
@@ -233,9 +338,9 @@ also runs in Node 20 and later, Deno and Bun, where the platform provides
 
 ## Roadmap
 
-- Custom dice: any number of sides, and Fate dice
-- Exploding dice and rerolls (`3d6!`, `4d6r1`)
-- Keep the highest or lowest *n* (`4d6kh3` for ability scores)
+- More than five dice, and dice of different kinds in one roll (`8d6`, `1d20+1d4`)
+- Exploding dice that are kept or dropped, once a table's rule is chosen
+- Rerolling until the die clears (`r`, as Roll20 has it, beside reroll once)
 - Rolls as sounds, and a shake-to-roll on phones
 - Export the history as CSV
 

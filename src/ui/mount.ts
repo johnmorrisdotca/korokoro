@@ -1,11 +1,11 @@
-import { DEFAULT_SPEC, DIE_SIDES, MAX_DICE, MIN_DICE, normalizeSpec, rangeOf, roll, type DieSides, type Keep, type Roll, type RollSpec } from "../dice.ts";
+import { DEFAULT_SPEC, DIE_SIDES, MAX_DICE, MIN_DICE, diceOf, faceRange, normalizeSpec, rangeOf, roll, type DieRoll, type DieSides, type Keep, type Roll, type RollSpec, type Sides } from "../dice.ts";
 import { addToHistory, loadHistory, saveHistory, type StorageLike } from "../history.ts";
-import { formatNotation, parseNotation } from "../notation.ts";
+import { checkNotation, formatNotation, type NotationProblem } from "../notation.ts";
 import { chanceExactly, expectedTotal, luckOf } from "../odds.ts";
 import { cryptoSource, newSeed, seededSource, type RandomSource } from "../random.ts";
 import { readShared, shareQuery } from "../share.ts";
 import { h, refill } from "./dom.ts";
-import { dieFace, dieIcon } from "./faces.ts";
+import { dieFace, dieIcon, faceText } from "./faces.ts";
 import { historyPanel, oddsPanel, percent, statsPanel } from "./panels.ts";
 import { injectStyle } from "./style.ts";
 import { STRINGS, fillIn, type RollerStrings } from "./strings.ts";
@@ -37,6 +37,7 @@ export type RollerOptions = {
 export type RollerHandle = {
   roll(): void;
   history(): readonly Roll[];
+  /** Change part of the dice, or all of them: a spec with its count, sides, bonus and keep all given, as `parseNotation` returns, replaces the lot. */
   setSpec(spec: Partial<RollSpec>): void;
   destroy(): void;
 };
@@ -45,6 +46,19 @@ type Tab = "history" | "stats" | "odds";
 
 /** A pleasant set of faces for a tray nobody has rolled yet. */
 const RESTING = [5, 3, 6, 2, 4];
+const RESTING_FATE = [1, 0, -1, 1, 0];
+
+/** Which of the tray's words refuses each kind of notation. */
+const REFUSALS: Record<NotationProblem, keyof RollerStrings> = {
+  shape: "notationBad",
+  count: "notationCount",
+  sides: "notationSides",
+  bonus: "notationBonus",
+  twice: "notationTwice",
+  keep: "notationKeep",
+  reroll: "notationReroll",
+  explode: "notationExplode",
+};
 
 function defaultStorage(): StorageLike | undefined {
   try {
@@ -103,7 +117,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     timers.add(id);
   }
 
-  function segment<T extends string | number>(label: string, values: readonly T[], chosen: T, name: (v: T) => Node | string, pick: (v: T) => void, testId: string) {
+  function segment<T extends string | number>(label: string, values: readonly T[], chosen: T | null, name: (v: T) => Node | string, pick: (v: T) => void, testId: string) {
     return h(
       "div",
       { class: "kk-row" },
@@ -120,9 +134,15 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     );
   }
 
+  /**
+   * A change to one part keeps the rest. A whole spec (the dice, the bonus and
+   * what is kept, all given) replaces everything, so typing `4d6dl1` after
+   * `3d6!` does not leave the dice exploding.
+   */
   function changeSpec(next: Partial<RollSpec>) {
     const before = formatNotation(spec);
-    spec = normalizeSpec({ ...spec, ...next });
+    const whole = next.count !== undefined && next.sides !== undefined && next.modifier !== undefined && next.keep !== undefined;
+    spec = normalizeSpec(whole ? next : { ...spec, ...next });
     if (formatNotation(spec) !== before) goal = Math.round(expectedTotal(spec));
     showingShared = false;
     render();
@@ -147,13 +167,13 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     });
     const error = h("span", { class: "kk-error", role: "alert" });
     const apply = () => {
-      const parsed = parseNotation(input.value);
-      if (parsed === null) {
+      const read = checkNotation(input.value);
+      if (!read.ok) {
         input.setAttribute("aria-invalid", "true");
-        error.textContent = t.notationBad;
+        error.textContent = fillIn(t[REFUSALS[read.problem]], { part: read.part });
         return;
       }
-      changeSpec(parsed);
+      changeSpec(read.spec);
     };
     input.addEventListener("keydown", (event) => {
       if (event.key === "Enter") apply();
@@ -168,7 +188,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
 
     refill(controls,
       segment(t.dice, counts, spec.count, (n) => String(n), (n) => changeSpec({ count: n }), "kk-count"),
-      segment(t.die, DIE_SIDES, spec.sides, (n: DieSides) => h("span", { style: "display:inline-flex;align-items:center;gap:4px" }, dieIcon(n), `d${n}`), (n) => changeSpec({ sides: n }), "kk-sides"),
+      // The buttons are the dice a table owns; any other die is typed as notation, and then no button is lit.
+      segment<Sides>(t.die, DIE_SIDES, spec.sides, (n) => h("span", { style: "display:inline-flex;align-items:center;gap:4px" }, dieIcon(n as DieSides), `d${n}`), (n) => changeSpec({ sides: n }), "kk-sides"),
       h(
         "div",
         { class: "kk-row" },
@@ -178,7 +199,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         error,
       ),
       spec.count > 1
-        ? segment<Keep>(t.keep, ["all", "highest", "lowest"], spec.keep, (k) => (k === "all" ? t.keepAll : k === "highest" ? t.keepHighest : t.keepLowest), (k) => changeSpec({ keep: k }), "kk-keep")
+        ? segment<Keep>(t.keep, ["all", "highest", "lowest"], (spec.keepCount ?? 1) > 1 ? null : spec.keep, (k) => (k === "all" ? t.keepAll : k === "highest" ? t.keepHighest : t.keepLowest), (k) => changeSpec({ keep: k, keepCount: 1 }), "kk-keep")
         : null,
       h(
         "details",
@@ -197,9 +218,31 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     render();
   }
 
-  function dieElement(sides: DieSides, face: number, kept: boolean, index: number): HTMLElement {
-    const hit = sides === 20 && kept ? (face === 20 ? "crit" : face === 1 ? "fumble" : null) : null;
-    return h("span", { class: "kk-die", "data-kept": String(kept), "data-hit": hit, "data-testid": "kk-die", "data-face": String(face), "data-index": String(index) }, dieFace(sides, face, `d${sides}: ${face}`));
+  /** What a die is and what became of it, in words: "d6: 6, exploded". */
+  function dieLabel(sides: Sides, die: DieRoll): string {
+    const said = [die.status === "dropped" ? t.dieDropped : die.status === "rerolled" ? t.dieRerolled : null, die.exploded ? t.dieExploded : null].filter((w) => w !== null);
+    return `d${sides}: ${faceText(sides, die.face)}${said.length > 0 ? `, ${said.join(", ")}` : ""}`;
+  }
+
+  function dieElement(sides: Sides, die: DieRoll, index: number): HTMLElement {
+    const kept = die.status === "kept";
+    const hit = sides === 20 && kept ? (die.face === 20 ? "crit" : die.face === 1 ? "fumble" : null) : null;
+    const label = dieLabel(sides, die);
+    return h(
+      "span",
+      { class: "kk-die", "data-kept": String(kept), "data-status": die.status, "data-exploded": die.exploded ? "true" : null, "data-hit": hit, "data-testid": "kk-die", "data-face": String(die.face), "data-index": String(index), title: kept && !die.exploded ? null : label },
+      dieFace(sides, die.face, label),
+    );
+  }
+
+  function randomFace(sides: Sides): number {
+    const { low, high } = faceRange(sides);
+    return low + Math.floor(Math.random() * (high - low + 1));
+  }
+
+  function restingDice(): DieRoll[] {
+    const faces = spec.sides === "F" ? RESTING_FATE : RESTING.map((f) => Math.min(f, spec.sides as number));
+    return faces.slice(0, spec.count).map((face, die) => ({ face, status: "kept", exploded: false, die }));
   }
 
   function renderTray() {
@@ -207,9 +250,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     tray.setAttribute("data-rolling", String(rolling));
     const shown = current !== null && (showingShared || formatNotation(current.spec) === formatNotation(spec)) ? current : null;
     const sides = shown?.spec.sides ?? spec.sides;
-    const faces = shown?.faces ?? RESTING.slice(0, spec.count).map((f) => Math.min(f, sides));
-    const kept = shown?.kept ?? faces.map(() => true);
-    const dice = h("div", { class: "kk-dice", "data-count": String(faces.length) }, ...faces.map((f, i) => dieElement(sides, f, kept[i] ?? true, i)));
+    const thrown = shown === null ? restingDice() : diceOf(shown);
+    const dice = h("div", { class: "kk-dice", "data-count": thrown.length > MAX_DICE ? "many" : String(thrown.length) }, ...thrown.map((die, i) => dieElement(sides, die, i)));
     tray.replaceChildren(
       dice,
       h("span", { class: "kk-hint" }, current === null ? t.tapToRoll : t.tapAgain, h("kbd", {}, "Space")),
@@ -231,16 +273,23 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       return;
     }
     const r = current;
-    const parts = r.faces.map((f, i) => (r.kept[i] ? String(f) : `(${f})`));
+    const thrown = diceOf(r);
+    // Every die thrown: a dropped one in brackets, a rerolled one in brackets with ↻, an exploded one with !.
+    const parts = thrown.map((die) => {
+      const face = faceText(r.spec.sides, die.face);
+      return die.status === "kept" ? `${face}${die.exploded ? "!" : ""}` : `(${face}${die.status === "rerolled" ? "↻" : ""})`;
+    });
+    const counted = thrown.filter((die) => die.status === "kept");
     const mod = r.spec.modifier === 0 ? "" : r.spec.modifier > 0 ? ` + ${r.spec.modifier}` : ` − ${-r.spec.modifier}`;
     const luck = luckOf(r.spec, r.total);
     const exact = chanceExactly(r.spec, r.total);
     const badges: HTMLElement[] = [];
     if (showingShared) badges.push(h("span", { class: "kk-badge" }, t.shared));
-    const keptFace = r.faces[r.kept.indexOf(true)];
-    if (r.spec.sides === 20 && (r.spec.keep !== "all" || r.spec.count === 1) && keptFace === 20) badges.push(h("span", { class: "kk-badge", "data-tone": "good" }, t.critical));
-    if (r.spec.sides === 20 && (r.spec.keep !== "all" || r.spec.count === 1) && keptFace === 1) badges.push(h("span", { class: "kk-badge", "data-tone": "bad" }, t.fumble));
-    if (r.faces.length > 1 && r.faces.every((f) => f === r.faces[0])) badges.push(h("span", { class: "kk-badge", "data-tone": "good" }, t.allMatch));
+    // A natural is one d20 read on its own: the one kept, or the only one thrown.
+    const natural = r.spec.sides === 20 && counted.length === 1 ? counted[0]?.face : null;
+    if (natural === 20) badges.push(h("span", { class: "kk-badge", "data-tone": "good" }, t.critical));
+    if (natural === 1) badges.push(h("span", { class: "kk-badge", "data-tone": "bad" }, t.fumble));
+    if (r.faces.length > 1 && r.faces.length === r.spec.count && r.faces.every((f) => f === r.faces[0])) badges.push(h("span", { class: "kk-badge", "data-tone": "good" }, t.allMatch));
 
     const copy = h("button", { type: "button", class: "kk-link", "data-testid": "kk-copy" }, t.copyLink);
     copy.addEventListener("click", () => {
@@ -256,7 +305,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     });
     refill(result,
       h("div", { class: "kk-total", "data-testid": "kk-total" }, h("small", {}, `${t.total} · ${formatNotation(r.spec)}`), String(r.total)),
-      r.faces.length > 1 || r.spec.modifier !== 0 ? h("div", { class: "kk-sum" }, `${parts.join(" + ")}${mod}`) : null,
+      r.faces.length > 1 || r.spec.modifier !== 0 ? h("div", { class: "kk-sum", "data-testid": "kk-sum" }, `${parts.join(r.spec.sides === "F" ? " " : " + ")}${mod}`) : null,
       badges.length > 0 ? h("div", { class: "kk-actions" }, ...badges) : null,
       h(
         "div",
@@ -329,11 +378,12 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const dice = renderTray();
     const shapes: HTMLElement[] = [];
     const flicker = () => {
-      for (const el of shapes) el.replaceChildren(dieFace(spec.sides, 1 + Math.floor(Math.random() * spec.sides), t.rolling));
+      for (const el of shapes) el.replaceChildren(dieFace(spec.sides, randomFace(spec.sides), t.rolling));
     };
+    dice.setAttribute("data-count", thrown.faces.length > MAX_DICE ? "many" : String(thrown.faces.length));
     dice.replaceChildren(
       ...thrown.faces.map((_, i) => {
-        const el = dieElement(spec.sides, 1 + Math.floor(Math.random() * spec.sides), true, i);
+        const el = dieElement(spec.sides, { face: randomFace(spec.sides), status: "kept", exploded: false, die: i }, i);
         el.classList.add("kk-tumble");
         el.style.setProperty("--kk-x0", `${Math.round((Math.random() - 0.5) * 160)}px`);
         el.style.setProperty("--kk-y0", `${Math.round(-40 - Math.random() * 60)}px`);

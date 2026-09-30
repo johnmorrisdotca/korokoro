@@ -1,4 +1,4 @@
-import { isDieSides, keptFaces, normalizeSpec, totalOf, type Roll } from "./dice.ts";
+import { isSides, normalizeSpec, readDice, totalOf, type Roll } from "./dice.ts";
 
 /** A history keeps the latest rolls and forgets the oldest past this many. */
 export const HISTORY_LIMIT = 500;
@@ -21,22 +21,25 @@ function readRoll(value: unknown): Roll | null {
   if (typeof value !== "object" || value === null) return null;
   const r = value as Record<string, unknown>;
   const spec = r.spec as Record<string, unknown> | undefined;
-  if (spec === undefined || !isDieSides(spec.sides)) return null;
+  if (spec === undefined || !isSides(spec.sides)) return null;
   const fair = normalizeSpec(spec);
-  if (!Array.isArray(r.faces) || r.faces.length !== fair.count) return null;
-  const faces = r.faces as unknown[];
-  if (!faces.every((f) => Number.isInteger(f) && (f as number) >= 1 && (f as number) <= fair.sides)) return null;
+  if (!Array.isArray(r.faces)) return null;
+  // The dice are worked out again from the faces, never trusted as stored.
+  const dice = readDice(fair, r.faces as unknown[]);
+  if (dice === null) return null;
   const at = Number(r.at);
   if (!Number.isFinite(at)) return null;
-  const kept = keptFaces(faces as number[], fair.keep);
+  const faces = dice.map((d) => d.face);
+  const kept = dice.map((d) => d.status === "kept");
   return {
     id: typeof r.id === "string" ? r.id : `${at.toString(36)}-s`,
     spec: fair,
-    faces: faces as number[],
+    faces,
     kept,
-    total: totalOf(faces as number[], kept, fair.modifier),
+    total: totalOf(faces, kept, fair.modifier),
     at,
     seed: typeof r.seed === "string" ? r.seed : null,
+    dice,
   };
 }
 
@@ -56,7 +59,8 @@ export function parseHistory(text: string | null): Roll[] {
 }
 
 export function serializeHistory(history: readonly Roll[]): string {
-  return JSON.stringify({ version: 1, rolls: history });
+  // Without `dice`: it is worked out from the faces on the way back in.
+  return JSON.stringify({ version: 1, rolls: history.map((r) => ({ id: r.id, spec: r.spec, faces: r.faces, kept: r.kept, total: r.total, at: r.at, seed: r.seed })) });
 }
 
 /** Read a kept history. A storage that throws (a private window, blocked cookies) reads as empty. */

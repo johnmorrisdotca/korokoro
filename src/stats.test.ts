@@ -83,7 +83,7 @@ describe("history", () => {
     const good = roll({ count: 3, sides: 8, modifier: 1 }, seededSource("h"), 5);
     const text = serializeHistory([good]);
     expect(parseHistory(text)).toEqual([good]);
-    const bad = JSON.stringify({ rolls: [{ ...good, faces: [9, 9, 9] }, { spec: { sides: 7 } }, null] });
+    const bad = JSON.stringify({ rolls: [{ ...good, faces: [9, 9, 9] }, { spec: { sides: 1 } }, { spec: { sides: 7 } }, null] });
     expect(parseHistory(bad)).toEqual([]);
     expect(parseHistory("not json")).toEqual([]);
   });
