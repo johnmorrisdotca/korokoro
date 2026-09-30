@@ -1,4 +1,4 @@
-import { MAX_EXPLOSIONS, MAX_REROLLS, canHold, chancesOf, dieName, faceRange, groupsOf, keptCount, rangeOf, valueOfFace, type DiceGroup, type RollSpec } from "./dice.ts";
+import { MAX_EXPLOSIONS, MAX_REROLLS, canHold, chancesOf, dieName, dieOutcomes, faceRange, groupsOf, keptCount, playsByNewRules, rangeOf, rulesText, valueOfFace, type DiceGroup, type RollSpec } from "./dice.ts";
 
 /**
  * Exact odds for a spec, worked out rather than simulated: every total the
@@ -219,7 +219,7 @@ function multiply(a: bigint[], b: bigint[]): bigint[] {
  * at their least.
  */
 function waysOf(group: DiceGroup): { ways: bigint[]; outcomes: bigint } | null {
-  if (group.reroll !== undefined || group.rerollUntil !== undefined || group.explode === true) return null;
+  if (group.reroll !== undefined || group.rerollUntil !== undefined || group.explode === true || playsByNewRules(group)) return null;
   const kept = keptCount(group);
   if (group.keep !== "all" && kept !== 1) return null;
   if (plain(group)) {
@@ -264,7 +264,7 @@ function trimmed<T extends number | bigint>(min: number, values: T[]): { min: nu
 
 /** The least total a spec could make if every face of every die could come up: where its odds are counted from. */
 function anchorOf(spec: RollSpec): number {
-  return groupsOf(spec).reduce((sum, group) => sum + keptCount(group) * leastOf(group), spec.modifier);
+  return groupsOf(spec).reduce((sum, group) => sum + keptCount(group) * (playsByNewRules(group) ? dieOutcomes(group).least : leastOf(group)), spec.modifier);
 }
 
 /**
@@ -294,6 +294,17 @@ function probabilitiesOf(group: DiceGroup): number[] {
   const kept = keptCount(group);
   const counted = waysOf(group);
   if (counted !== null) return counted.ways.map((w) => share(w, counted.outcomes));
+  if (playsByNewRules(group)) {
+    // Each die worked through its own rules, then the dice put together: added, or the best of them kept.
+    const die = dieOutcomes(group).chances;
+    if (group.keep === "all") {
+      let sum = die;
+      for (let d = 1; d < group.count; d++) sum = convolve(sum, die);
+      return sum;
+    }
+    if (group.keep === "highest") return sumOfHighest(die, group.count, kept);
+    return sumOfHighest([...die].reverse(), group.count, kept).reverse();
+  }
   let face: number[];
   if (group.faces !== undefined) {
     // A custom die's chances by what each face is worth.
@@ -319,7 +330,7 @@ function probabilitiesOf(group: DiceGroup): number[] {
 const cache = new Map<string, Distribution>();
 
 function keyOf(group: DiceGroup): string {
-  return `${group.count}${dieName(group)}${group.keep}${group.keepCount ?? 1}${group.explode === true ? "!" : ""}r${group.reroll ?? ""}u${group.rerollUntil ?? ""}`;
+  return `${group.count}${dieName(group)}${rulesText(group)}`;
 }
 
 /**

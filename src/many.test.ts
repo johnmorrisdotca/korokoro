@@ -21,7 +21,7 @@ describe("a roll thrown several times as a set", () => {
     expect(checkNotation("0#2d6")).toMatchObject({ ok: false, problem: "times", part: "0#" });
     expect(checkNotation(`${MAX_TIMES + 1}#2d6`)).toMatchObject({ ok: false, problem: "times" });
     expect(checkNotation("6#")).toMatchObject({ ok: false, problem: "shape" });
-    expect(checkNotation("2d6#3")).toMatchObject({ ok: false, problem: "shape" });
+    expect(checkNotation("2d6#3")).toMatchObject({ ok: false, problem: "label" });
     expect(normalizeSpec({ count: 2, sides: 6, times: 999 }).times).toBe(MAX_TIMES);
     expect(normalizeSpec({ count: 2, sides: 6, times: 0 })).not.toHaveProperty("times");
   });

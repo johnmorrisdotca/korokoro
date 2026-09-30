@@ -22,10 +22,10 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `notationBonus` | “{part}”: a bonus is at most 99 either way | 「{part}」: 修正値は±99までです |
 | `notationTwice` | “{part}”: use each modifier once, and keep or drop, not both | 「{part}」: 同じ指定は一度だけです。採用と除外は同時に使えません |
 | `notationKeep` | “{part}”: keep or drop at least one die, and fewer than all of them | 「{part}」: 採用・除外は1個以上、全部より少なくしてください |
-| `notationReroll` | “{part}”: a reroll has to include the lowest face and leave the highest, and r (until clear) at most half the faces; ro rerolls once | 「{part}」: 振り直しは最小の面を含み、最大の面を残してください。r（出るまで振り直し）は面の半分まで、ro は一度だけです |
+| `notationReroll` | “{part}”: a reroll has to reroll some face and spare another, and r (until clear) at most half the faces; ro rerolls once | 「{part}」: 振り直す面と残す面がそれぞれ必要です。r（出るまで振り直し）は面の半分まで、ro は一度だけです |
 | `notationKinds` | “{part}”: a roll has at most 4 kinds of dice | 「{part}」: 一度に振れるダイスは4種類までです |
 | `notationMinus` | “{part}”: dice are added together; only the bonus can be taken away | 「{part}」: ダイスは足し算だけです。引けるのは修正値だけです |
-| `notationExplode` | “{part}”: only dice of 100 sides or fewer explode, and not Fate dice or dice that are kept or dropped | 「{part}」: 爆発できるのは100面以下のダイスだけです。dF や採用・除外とは併用できません |
+| `notationExplode` | “{part}”: only dice of 100 sides or fewer explode, on some faces but not all, and not Fate dice or dice that are kept or dropped | 「{part}」: 爆発できるのは100面以下のダイスだけで、すべての面では爆発できません。dF や採用・除外とは併用できません |
 | `dieDropped` | dropped | 不採用 |
 | `dieRerolled` | rerolled | 振り直し |
 | `dieExploded` | exploded | 爆発 |
@@ -84,6 +84,15 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `testBad` | “{part}” is not a face of this die | 「{part}」はこのダイスの面ではありません |
 | `language` | Language | 言語 |
 | `notationTimes` | “{part}”: a roll is thrown 1 to 100 times | 「{part}」: 振る回数は1〜100回です |
+| `notationSuccesses` | “{part}”: successes are counted over all the dice, by a comparison some dice meet and some do not; f needs a success to take from, and counting does not go with keep or drop | 「{part}」: 成功数はその種類のダイスすべてで数えます。一部のダイスだけが満たす条件にしてください。f は成功の条件が必要で、採用・除外とは併用できません |
+| `notationClamp` | “{part}”: min goes above the die's lowest face and max below its highest, with min no greater than max | 「{part}」: min は最小の面より上、max は最大の面より下にし、min は max 以下にしてください |
+| `notationMarks` | “{part}”: cs and cf take a comparison some dice meet and some do not | 「{part}」: cs と cf には、一部のダイスだけが満たす条件を指定してください |
+| `notationLabel` | “{part}”: a label is up to 40 characters, without # [ ] { or } | 「{part}」: ラベルは40文字までで、# [ ] { } は使えません |
+| `successes` | Successes | 成功数 |
+| `dieSuccess` | a success | 成功 |
+| `dieFailure` | takes a success away | 成功を1つ減らす |
+| `dieCritical` | critical success | クリティカル |
+| `dieFumble` | critical failure | ファンブル |
 | `times` | Times | 回数 |
 | `timesHold` | Tap to roll all {n} again. Dice are held one roll at a time | タップで {n} 回分をもう一度振ります。ホールドは1回ずつのロールで使えます |
 | `setSum` | Sum of all {n}: {sum} | {n} 回の合計: {sum} |

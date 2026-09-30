@@ -57,13 +57,36 @@ describe("the README's notation", () => {
     expect(parseNotation("5d10dh2")).toEqual(parseNotation("5d10kl3"));
     expect(parseNotation("2d6+3d6")).toEqual(parseNotation("5d6"));
     expect(formatNotation(parseNotation("4d6dl1"))).toBe("4d6kh3");
-    expect(readme).toContain("`4d6dl1` is\nwritten back as `4d6kh3`");
+    expect(readme).toContain("So `4d6dl1` is written back as `4d6kh3`");
   });
 
   it("the refusal it quotes is the refusal given", () => {
     const refused = checkNotation("4d6!kh3");
     expect(refused).toMatchObject({ ok: false, problem: "explode", part: "!" });
     expect(readme).toContain(refused.message);
+  });
+});
+
+describe("the README on counting successes", () => {
+  it("the pool from table-7", () => {
+    const pool = roll(parseNotation("6d10>=8f=1"), seededSource("table-7"));
+    expect(readme).toContain("pool.faces;                          // [10, 6, 6, 3, 4, 3]");
+    expect(pool.faces).toEqual([10, 6, 6, 3, 4, 3]);
+    expect(pool.total).toBe(1);
+    expect(pool.dice[0].counts).toBe(1);
+    expect(readme).toContain("chanceAtLeast(pool.spec, 3);         // 0.1859");
+    expect(chanceAtLeast(pool.spec, 3)).toBeCloseTo(0.1859, 4);
+    expect(readme).toContain("expectedTotal(pool.spec);            // 1.2");
+    expect(expectedTotal(pool.spec)).toBeCloseTo(1.2, 10);
+    const deep = roll(parseNotation("3d6!p"), seededSource("table-7"));
+    expect(readme).toContain("`[6, 4, 2, 1]`, where the 4 is an extra die worth 3, and a total of 12");
+    expect([deep.faces, deep.dice[1].value, deep.total]).toEqual([[6, 4, 2, 1], 3, 12]);
+  });
+
+  it("what it says is written back, is", () => {
+    expect(readme).toContain("`6d10>7` as\n`6d10>=8`, and `6d10!>=10>=8` as `6d10>=8!`");
+    expect(formatNotation(parseNotation("6d10>7"))).toBe("6d10>=8");
+    expect(formatNotation(parseNotation("6d10!>=10>=8"))).toBe("6d10>=8!");
   });
 });
 
@@ -393,5 +416,18 @@ describe("the gallery of games", () => {
   it("is what the source makes: run `pnpm docs:make` after changing a game", () => {
     if (process.env.UPDATE_DOCS === "1") writeFileSync("docs/games.md", made);
     expect(readFileSync("docs/games.md", "utf8")).toBe(made);
+  });
+});
+
+describe("the page comparing notations", () => {
+  const page = readFileSync("docs/notation-compared.md", "utf8");
+  const rows = page.split("\n").filter((line) => line.startsWith("| ") && (line.includes("**yes**") || line.includes("**not yet**")));
+
+  it("rolls everything it says it rolls, and refuses everything it says is still to come", () => {
+    expect(rows.length).toBeGreaterThan(25);
+    for (const row of rows) {
+      const cells = row.split(/(?<!\\)\|/);
+      for (const text of codes(cells[2])) expect(checkNotation(text).ok, text).toBe(cells[3].includes("**yes**"));
+    }
   });
 });

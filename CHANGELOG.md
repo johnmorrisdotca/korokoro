@@ -6,6 +6,47 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-09-30
+
+### Added
+
+- **Counting successes.** `6d10>=8` is how many of six d10 show 8 or more, and
+  `f=1` takes one away for each 1. Any comparison: `=`, `<`, `>`, `<=`, `>=`,
+  `<>`. The headline reads *Successes*, each die says whether it is one, and
+  the odds are exact.
+- **Explosions on the faces you say**, and two more kinds of them: `3d6!>=5`,
+  compounding `3d6!!`, penetrating `3d6!p`, and `3d6!!p`.
+- **Rerolls at any comparison**: `2d6r=3`, `2d6r>=5`, `2d6ro=6`; `r` and `ro`
+  alone reroll the lowest face.
+- **A least and a most for each die**: `4d6min2`, `4d6max5`.
+- **Critical marks**: `1d20cs>=19cf=1`. Marks only; the total is the same.
+- **Sorted dice**: `4d6sd`, `4d6sa`. The roll keeps the order thrown.
+- **A label for the roll**: `2d6+3 # fire damage`, or `[fire damage] 2d6+3`.
+  Text, and only ever shown as text.
+- Short forms other rollers write: `4d6k3`, `4d6d1`, `4d6b3`, `2d20w1`.
+- `Compare`, `meets`, `isSuccessRoll`, `countsSuccesses`, `dieOutcomes`,
+  `rulesText`, `playsByNewRules`, `rollLabel`, `MAX_ROLL_LABEL`; on a die,
+  `counts` and `critical`, and `value` wherever a die is worth something other
+  than its face.
+- [Notation compared](./docs/notation-compared.md): what is read, what is
+  still to come, and where the order of modifiers differs from RPG Dice
+  Roller's. A test holds the page to the package.
+- A table of the order modifiers are applied in, in the README.
+- **The tray's tests are in the repository**: `pnpm test:tray` opens the built
+  demo in Chromium and WebKit with Playwright (a development dependency only)
+  and taps it, at a phone's width by touch and at a desktop's by mouse. CI
+  runs them.
+- A game can say that dice are not held in it (`hold: false` on a preset), and
+  the tray then holds none: craps, Monopoly and the rest no longer offer it.
+
+### Changed
+
+- `3d6!!` and `2d6r2` were refused and are now read, as compounding dice and
+  as a reroll of 2s. Nothing that was read before is read differently, and
+  every seeded roll replays as it did.
+- A refusal of a reroll or an explosion is worded for the wider rules.
+
+
 ## [1.6.0] - 2026-09-30
 
 ### Added
@@ -267,7 +308,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.7.0
 [1.6.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.6.0
 [1.5.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.5.0
 [1.4.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.4.0

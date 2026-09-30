@@ -13,6 +13,7 @@ import {
   groupsOf,
   hasTotal,
   isLoaded,
+  isSuccessRoll,
   normalizeSpec,
   rangeOf,
   roll,
@@ -140,6 +141,10 @@ const REFUSALS: Record<NotationProblem, keyof RollerStrings> = {
   custom: "notationCustom",
   weights: "notationWeights",
   times: "notationTimes",
+  successes: "notationSuccesses",
+  clamp: "notationClamp",
+  marks: "notationMarks",
+  label: "notationLabel",
 };
 
 function defaultStorage(): StorageLike | undefined {
@@ -596,7 +601,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
 
   /** What a die is and what became of it, in words: "d6: 6, exploded". */
   function dieLabel(group: DiceGroup, die: DieRoll, isHeld: boolean): string {
-    const words = [group.weights !== undefined ? t.dieLoaded : null, die.status === "dropped" ? t.dieDropped : die.status === "rerolled" ? t.dieRerolled : null, die.exploded ? t.dieExploded : null, isHeld ? t.held : null].filter((w) => w !== null);
+    const words = [
+      group.weights !== undefined ? t.dieLoaded : null,
+      die.status === "dropped" ? t.dieDropped : die.status === "rerolled" ? t.dieRerolled : null,
+      die.exploded ? t.dieExploded : null,
+      die.counts === 1 ? t.dieSuccess : die.counts === -1 ? t.dieFailure : null,
+      die.critical === "success" ? t.dieCritical : die.critical === "failure" ? t.dieFumble : null,
+      isHeld ? t.held : null,
+    ].filter((w) => w !== null);
     // A custom die is named by what it shows; its list of faces would be a mouthful.
     return `${group.faces !== undefined ? "" : `${dieName(group)}: `}${faceText(group, die.face)}${words.length > 0 ? `, ${words.join(", ")}` : ""}`;
   }
@@ -606,7 +618,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const sides = group.sides;
     const kept = die.status === "kept";
     const isHeld = held[index] === true;
-    const hit = sides === 20 && group.faces === undefined && kept ? (die.face === 20 ? "crit" : die.face === 1 ? "fumble" : null) : null;
+    // A kind with marks of its own (cs, cf) is marked by them; otherwise a d20 shows its natural 20 and 1.
+    const marked = group.critical !== undefined || group.fumble !== undefined;
+    const hit = marked ? (die.critical === "success" ? "crit" : die.critical === "failure" ? "fumble" : null) : sides === 20 && group.faces === undefined && kept ? (die.face === 20 ? "crit" : die.face === 1 ? "fumble" : null) : null;
     const label = dieLabel(group, die, isHeld);
     const attrs = {
       class: "kk-die",
@@ -614,6 +628,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       "data-status": die.status,
       "data-exploded": die.exploded ? "true" : null,
       "data-hit": hit,
+      "data-counts": die.counts === undefined ? null : String(die.counts),
       "data-first": first ? "true" : null,
       "data-testid": "kk-die",
       "data-face": String(die.face),
@@ -621,7 +636,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       "data-sides": String(sides),
       "data-loaded": group.weights !== undefined ? "true" : null,
       "data-custom": group.faces !== undefined ? "true" : null,
-      title: kept && !die.exploded && group.weights === undefined ? null : label,
+      title: kept && !die.exploded && group.weights === undefined && die.counts === undefined && die.critical === undefined ? null : label,
     };
     if (hold === null) return h("span", attrs, dieFace(group, die.face, label));
     const button = h("button", { ...attrs, type: "button", "aria-pressed": String(isHeld), "data-tag": t.held }, dieFace(group, die.face, label));
@@ -658,7 +673,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   /** Whether the dice on the felt can be held: plain dice that have been thrown. */
   /** A game's turn of several rolls is over: the dice showing are its last. */
   const turnOver = () => game?.rolls !== undefined && turn >= game.rolls;
-  const holdable = () => mayHold && !rolling && !showingShared && showing() !== null && canHold(spec) && (spec.times ?? 1) === 1 && !turnOver();
+  const holdable = () => mayHold && !rolling && !showingShared && showing() !== null && canHold(spec) && (spec.times ?? 1) === 1 && !turnOver() && game?.hold !== false;
   const heldCount = () => held.filter(Boolean).length;
 
   function toggleHold(index: number) {
@@ -687,7 +702,18 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     tray.disabled = empty || (holding > 0 && holding === thrown.length);
     felt.setAttribute("data-rolling", String(rolling));
     diceBox.setAttribute("data-count", thrown.length > MAX_DICE ? "many" : String(thrown.length));
-    diceBox.replaceChildren(...thrown.map((die, i) => dieElement(groupOf(from, die), die, i, i > 0 && die.group !== thrown[i - 1]?.group, hold)));
+    // Dice asked to be sorted are shown so, kind by kind; the roll keeps the order they were thrown in.
+    const shownOrder = thrown.map((die, i) => ({ die, i }));
+    if (shown !== null && groupsOf(from).some((g) => g.sort !== undefined)) {
+      shownOrder.sort((a, b) => {
+        const kind = (a.die.group ?? 0) - (b.die.group ?? 0);
+        const sort = groupOf(from, a.die).sort;
+        if (kind !== 0 || sort === undefined) return kind !== 0 ? kind : a.i - b.i;
+        const by = (a.die.value ?? a.die.face) - (b.die.value ?? b.die.face);
+        return by !== 0 ? (sort === "ascending" ? by : -by) : a.i - b.i;
+      });
+    }
+    diceBox.replaceChildren(...shownOrder.map(({ die, i }, at) => dieElement(groupOf(from, die), die, i, at > 0 && die.group !== shownOrder[at - 1]?.die.group, hold)));
     const words = empty
       ? t.addToRoll
       : current === null
@@ -718,14 +744,16 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     all.forEach((group, index) => {
       const mine = thrown.filter((die) => (die.group ?? 0) === index);
       // Signs and words sit side by side; numbers are added.
-      const joiner = group.sides === "F" ? " " : group.faces !== undefined && group.faces.every((f) => f.value === undefined) ? " · " : " + ";
+      const joiner = group.sides === "F" ? " " : group.success !== undefined || (group.faces !== undefined && group.faces.every((f) => f.value === undefined)) ? " · " : " + ";
       if (index > 0) line.append(" + ");
       const bracket = all.length > 1 && mine.length > 1;
       if (bracket) line.append("(");
       mine.forEach((die, i) => {
         if (i > 0) line.append(joiner);
-        const face = faceText(group, die.face);
-        if (die.status === "kept") line.append(`${face}${die.exploded ? "!" : ""}`);
+        // A die worth something other than its face says both: 6→5 for a penetrating die, 1→2 for a raised one.
+        const face = `${faceText(group, die.face)}${group.faces === undefined && die.value !== undefined ? `→${die.value}` : ""}`;
+        if (die.status === "kept" && die.counts !== undefined) line.append(h(die.counts === 1 ? "b" : "i", { title: die.counts === 1 ? t.dieSuccess : t.dieFailure }, `${face}${die.exploded ? "!" : ""}${die.counts === 1 ? "✓" : "✗"}`));
+        else if (die.status === "kept") line.append(`${face}${die.exploded ? "!" : ""}`);
         else line.append(h("s", { title: die.status === "rerolled" ? t.dieRerolled : t.dieDropped }, `${face}${die.status === "rerolled" ? "↻" : ""}`));
       });
       if (bracket) line.append(")");
@@ -842,7 +870,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       return;
     }
     refill(result,
-      h("div", { class: "kk-total", "data-testid": "kk-total" }, h("small", {}, `${t.total} · ${formatNotation(r.spec)}`), String(r.total)),
+      h("div", { class: "kk-total", "data-testid": "kk-total" }, h("small", {}, `${isSuccessRoll(r.spec) ? t.successes : t.total} · ${formatNotation(r.spec)}`), String(r.total)),
       r.faces.length > 1 || r.spec.modifier !== 0 ? sumLine(r) : null,
       says,
       h(

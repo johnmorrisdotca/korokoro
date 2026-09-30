@@ -1,4 +1,4 @@
-import { diceOf, groupsOf, valueOfFace, type DiceGroup, type Roll, type RollSpec } from "../dice.ts";
+import { diceOf, groupsOf, playsByNewRules, valueOfFace, type DiceGroup, type Roll, type RollSpec } from "../dice.ts";
 
 /**
  * How a roll is read in a game. A reading is one of a small, fixed set of
@@ -372,7 +372,7 @@ export function readDiceAs(reading: ReadingId, roll: Roll, before: readonly Roll
  */
 export function patternsOf(spec: RollSpec): { dice: Dice; ways: bigint }[] | null {
   const groups = groupsOf(spec);
-  if (groups.some((g) => g.explode === true || g.reroll !== undefined || g.rerollUntil !== undefined || g.weights !== undefined || g.keep !== "all")) return null;
+  if (groups.some((g) => g.explode === true || g.reroll !== undefined || g.rerollUntil !== undefined || g.weights !== undefined || g.keep !== "all" || playsByNewRules(g))) return null;
   const factorial = (n: number): bigint => (n <= 1 ? 1n : BigInt(n) * factorial(n - 1));
   // One kind: every multiset of its faces, with the number of orders it has.
   const kind = (group: DiceGroup): { faces: number[]; ways: bigint }[] => {

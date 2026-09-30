@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Dice roller and dice notation parser with exact odds: d4, d6, d8, d10, d12, d20, d100, any die up to d1000, custom and loaded dice. 44 game presets, from Yahtzee and Farkle to craps and backgammon. A typed API and a dice tray for React, Vue, Svelte, Angular or plain HTML. For D&D, tabletop RPGs, board and dice games and teaching odds. Zero dependencies.",
   "keywords": [
     "dice",
@@ -65,7 +65,9 @@
     "backgammon",
     "risk",
     "cho-han",
-    "chinchirorin"
+    "chinchirorin",
+    "success-counting",
+    "penetrating-dice"
   ],
   "homepage": "https://johnmorrisdotca.github.io/korokoro/",
   "bugs": {
@@ -118,6 +120,7 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
+    "test:tray": "pnpm site && playwright test",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "site": "pnpm build && node scripts/site.mjs",
     "sounds": "node scripts/sounds.mjs",
@@ -134,6 +137,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
+    "@playwright/test": "^1.63.0",
     "@types/react": "^19.0.0",
     "eslint": "^9.0.0",
     "react": "^19.0.0",

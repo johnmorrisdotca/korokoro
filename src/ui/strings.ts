@@ -81,6 +81,18 @@ export type RollerStrings = {
   testBad: string;
   language: string;
   notationTimes: string;
+  /** Refusals for the rules added in 1.7.0. `{part}` is the text refused. */
+  notationSuccesses: string;
+  notationClamp: string;
+  notationMarks: string;
+  notationLabel: string;
+  /** The headline's label on a roll that counts successes, where other rolls say Total. */
+  successes: string;
+  /** What became of a die, for a screen reader and a hover: a success, a die that takes one away, a marked die. */
+  dieSuccess: string;
+  dieFailure: string;
+  dieCritical: string;
+  dieFumble: string;
   times: string;
   timesHold: string;
   setSum: string;
@@ -176,10 +188,10 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     notationBonus: "“{part}”: a bonus is at most 99 either way",
     notationTwice: "“{part}”: use each modifier once, and keep or drop, not both",
     notationKeep: "“{part}”: keep or drop at least one die, and fewer than all of them",
-    notationReroll: "“{part}”: a reroll has to include the lowest face and leave the highest, and r (until clear) at most half the faces; ro rerolls once",
+    notationReroll: "“{part}”: a reroll has to reroll some face and spare another, and r (until clear) at most half the faces; ro rerolls once",
     notationKinds: "“{part}”: a roll has at most 4 kinds of dice",
     notationMinus: "“{part}”: dice are added together; only the bonus can be taken away",
-    notationExplode: "“{part}”: only dice of 100 sides or fewer explode, and not Fate dice or dice that are kept or dropped",
+    notationExplode: "“{part}”: only dice of 100 sides or fewer explode, on some faces but not all, and not Fate dice or dice that are kept or dropped",
     dieDropped: "dropped",
     dieRerolled: "rerolled",
     dieExploded: "exploded",
@@ -238,6 +250,15 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     testBad: "“{part}” is not a face of this die",
     language: "Language",
     notationTimes: "“{part}”: a roll is thrown 1 to 100 times",
+    notationSuccesses: "“{part}”: successes are counted over all the dice, by a comparison some dice meet and some do not; f needs a success to take from, and counting does not go with keep or drop",
+    notationClamp: "“{part}”: min goes above the die's lowest face and max below its highest, with min no greater than max",
+    notationMarks: "“{part}”: cs and cf take a comparison some dice meet and some do not",
+    notationLabel: "“{part}”: a label is up to 40 characters, without # [ ] { or }",
+    successes: "Successes",
+    dieSuccess: "a success",
+    dieFailure: "takes a success away",
+    dieCritical: "critical success",
+    dieFumble: "critical failure",
     times: "Times",
     timesHold: "Tap to roll all {n} again. Dice are held one roll at a time",
     setSum: "Sum of all {n}: {sum}",
@@ -330,10 +351,10 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     notationBonus: "「{part}」: 修正値は±99までです",
     notationTwice: "「{part}」: 同じ指定は一度だけです。採用と除外は同時に使えません",
     notationKeep: "「{part}」: 採用・除外は1個以上、全部より少なくしてください",
-    notationReroll: "「{part}」: 振り直しは最小の面を含み、最大の面を残してください。r（出るまで振り直し）は面の半分まで、ro は一度だけです",
+    notationReroll: "「{part}」: 振り直す面と残す面がそれぞれ必要です。r（出るまで振り直し）は面の半分まで、ro は一度だけです",
     notationKinds: "「{part}」: 一度に振れるダイスは4種類までです",
     notationMinus: "「{part}」: ダイスは足し算だけです。引けるのは修正値だけです",
-    notationExplode: "「{part}」: 爆発できるのは100面以下のダイスだけです。dF や採用・除外とは併用できません",
+    notationExplode: "「{part}」: 爆発できるのは100面以下のダイスだけで、すべての面では爆発できません。dF や採用・除外とは併用できません",
     dieDropped: "不採用",
     dieRerolled: "振り直し",
     dieExploded: "爆発",
@@ -392,6 +413,15 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     testBad: "「{part}」はこのダイスの面ではありません",
     language: "言語",
     notationTimes: "「{part}」: 振る回数は1〜100回です",
+    notationSuccesses: "「{part}」: 成功数はその種類のダイスすべてで数えます。一部のダイスだけが満たす条件にしてください。f は成功の条件が必要で、採用・除外とは併用できません",
+    notationClamp: "「{part}」: min は最小の面より上、max は最大の面より下にし、min は max 以下にしてください",
+    notationMarks: "「{part}」: cs と cf には、一部のダイスだけが満たす条件を指定してください",
+    notationLabel: "「{part}」: ラベルは40文字までで、# [ ] { } は使えません",
+    successes: "成功数",
+    dieSuccess: "成功",
+    dieFailure: "成功を1つ減らす",
+    dieCritical: "クリティカル",
+    dieFumble: "ファンブル",
     times: "回数",
     timesHold: "タップで {n} 回分をもう一度振ります。ホールドは1回ずつのロールで使えます",
     setSum: "{n} 回の合計: {sum}",

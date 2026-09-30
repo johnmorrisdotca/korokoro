@@ -123,6 +123,15 @@ button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: 
 .kk-die[data-status="rerolled"]::before { content: "↻"; background: var(--kk-felt-ink); color: var(--kk-felt-deep); }
 .kk-die[data-hit="crit"] .kk-body { stroke: #e0b43b; stroke-width: 6; }
 .kk-die[data-hit="fumble"] .kk-body { stroke: var(--kk-bad); stroke-width: 6; }
+/* A die that is a success wears a tick; one that takes a success away, a cross. */
+.kk-die[data-counts]::after { position: absolute; z-index: 1; bottom: -7%; right: -7%; width: 36%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: clamp(.62rem, 2.4vw, .95rem); line-height: 1; }
+.kk-die[data-counts="1"]::after { content: "✓"; background: #e0b43b; color: #1f2320; }
+.kk-die[data-counts="-1"]::after { content: "✗"; background: var(--kk-bad); color: #fff; }
+.kk-die[data-counts="1"] .kk-body { stroke: #e0b43b; stroke-width: 5; }
+.kk-sum b { color: var(--kk-ink); }
+.kk-sum i { font-style: normal; color: var(--kk-bad); }
+.kk-history .kk-mini span[data-counts="1"] { border-color: #b98a12; box-shadow: inset 0 0 0 1px #b98a12; }
+.kk-history .kk-mini span[data-counts="-1"] { border-color: var(--kk-bad); color: var(--kk-bad); }
 .kk-tumble { animation: kk-tumble var(--kk-t, 600ms) cubic-bezier(.2,.7,.3,1) var(--kk-wait, 0ms) both; }
 .kk-land { animation: kk-land 320ms cubic-bezier(.3,1.6,.5,1) both; }
 @keyframes kk-tumble {

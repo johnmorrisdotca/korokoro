@@ -15,10 +15,18 @@ git clone https://github.com/johnmorrisdotca/korokoro
 cd korokoro
 pnpm install
 pnpm check    # lint, types and tests: the same as CI
+pnpm test:tray   # the tray in real browsers: builds the demo, then taps it
 pnpm site     # builds the demo into ./site
 pnpm dlx serve site   # or any static server
 ```
 
+- **The tray is tested by tapping it.** `tray/*.tray.mjs` are Playwright
+  tests that open the built demo in Chromium and WebKit, at a phone's width by
+  touch and at a desktop's by mouse, and do what a person does. After every
+  flow they check that nothing is wider than the screen, nothing to tap is
+  under 44px, and the page complained of nothing. A change to the tray comes
+  with a test there. The first time, `pnpm exec playwright install chromium
+  webkit` fetches the browsers.
 - **Keep the core pure.** Everything outside `src/ui` and `src/react.tsx` is
   plain functions over plain data, with no DOM and no dependency. It is what
   makes the odds testable and the package usable anywhere.
@@ -124,6 +132,8 @@ a link, and that is enough.
 
 Maintainers bump the version in `package.json` and move *Unreleased* to the new
 version in `CHANGELOG.md`, dated. Pushing the tag `vX.Y.Z` runs the Release
-workflow, which checks that the tag matches `package.json`, builds the package
-and attaches its tarball to a GitHub release. Publishing to npm is the
-*Publish to npm* workflow, run by hand with the tag.
+workflow, which checks that the tag matches `package.json`, runs the checks,
+builds and packs the package, attaches the tarball to a GitHub release, and
+publishes it to npm with provenance, through npm's trusted publishing (no
+token is kept). A version already on npm is not published again. The workflow
+can also be run by hand.

@@ -74,6 +74,26 @@ export type CustomFace = {
 export type Keep = "all" | "highest" | "lowest";
 
 /**
+ * A number a die is compared with: at a face (`=`), at or below it (`<=`), at
+ * or above it (`>=`), or anything but it (`<>`). Notation's `<3` is kept as
+ * `<=2`, and `>7` as `>=8`.
+ */
+export type Compare = { op: "=" | "<=" | ">=" | "<>"; n: number };
+
+/** Whether a number meets a comparison. */
+export function meets(compare: Compare, value: number): boolean {
+  return compare.op === "=" ? value === compare.n : compare.op === "<=" ? value <= compare.n : compare.op === ">=" ? value >= compare.n : value !== compare.n;
+}
+
+/** A comparison as notation writes it: `>=8`, `=1`, `<>3`. */
+export function compareText(compare: Compare): string {
+  return `${compare.op}${compare.n}`;
+}
+
+/** How exploding dice are added up: each as a die of its own, all into the die that threw them (`!!`), or with one taken off each extra die (`!p`), or both (`!!p`). */
+export type ExplodeKind = "compound" | "penetrating" | "compound-penetrating";
+
+/**
  * Some dice of one kind, with their own rules: the `2d20kh1` of
  * `2d20kh1+1d4`. The optional fields are left out of a group that does not
  * use them.
@@ -93,6 +113,28 @@ export type DiceGroup = {
   reroll?: number;
   /** A die showing this face or lower is thrown again until it shows more, up to `MAX_REROLLS` times: `r<` in notation. Left out when nothing is rerolled until clear. */
   rerollUntil?: number;
+  /** A die meeting this is thrown again, once: `ro>=5`, `ro=3`. For the comparisons `reroll` cannot say; left out otherwise. */
+  rerollWhen?: Compare;
+  /** A die meeting this is thrown again until it does not, up to `MAX_REROLLS` times: `r=3`, `r>=5`. For the comparisons `rerollUntil` cannot say; left out otherwise. */
+  rerollUntilWhen?: Compare;
+  /** With `explode`: the faces that explode, when they are not just the highest. `!>=5` in notation. Left out when only the highest face explodes. */
+  explodeWhen?: Compare;
+  /** With `explode`: how the extra dice are added up. Left out for ordinary explosions. */
+  explodeKind?: ExplodeKind;
+  /** The least a die counts for: a face below it counts as it. `min2` in notation. */
+  floor?: number;
+  /** The most a die counts for: a face above it counts as it. `max5` in notation. */
+  ceiling?: number;
+  /** The dice are counted, not added: each die meeting this is one success, and the total is how many. `>=8` in notation. */
+  success?: Compare;
+  /** With `success`: each die meeting this takes one success away. `f=1` in notation. */
+  failure?: Compare;
+  /** Dice meeting this are marked as critical successes. Only a mark: the total is the same. `cs>=19` in notation. */
+  critical?: Compare;
+  /** Dice meeting this are marked as critical failures. Only a mark. `cf<=2` in notation. */
+  fumble?: Compare;
+  /** The order the dice are shown in: `sa` ascending, `sd` descending. The order thrown is kept in the roll. */
+  sort?: "ascending" | "descending";
   /**
    * A custom die: its faces, in order, and `sides` is how many there are. A
    * face written twice comes up twice as often. A roll records a custom face
@@ -121,7 +163,12 @@ export type RollSpec = DiceGroup & {
   more?: DiceGroup[];
   /** How many times `rollMany` throws the roll, as a set: 6 for `6#4d6dl1`. Left out when it is once. `roll` throws it once whatever this says. */
   times?: number;
+  /** What the roll is for, in a few words: "fire damage". Text, only ever shown as text. `2d6 # fire damage` in notation. Left out when there is none. */
+  label?: string;
 };
+
+/** The longest a roll's label may be, in characters. */
+export const MAX_ROLL_LABEL = 40;
 
 /**
  * One die as it was thrown. `kept` counts towards the total, `dropped` was
@@ -144,8 +191,12 @@ export type DieRoll = {
   group?: number;
   /** What the face says, on a custom die. Left out of a numbered die. */
   label?: string;
-  /** What the face is worth in the total, on a custom die: 0 for a face that is only words. Left out of a numbered die, which is worth its face. */
+  /** What the die is worth in the total when that is not its face: a custom face's value (0 for a face that is only words), a face raised or lowered by `min` or `max`, an extra die of a penetrating explosion with its one taken off. Left out of a die worth its face. */
   value?: number;
+  /** In a roll that counts successes: 1 on a die that is a success, −1 on one that takes a success away. Left out of every other die. A compounding die's count is on the last die of its chain. */
+  counts?: 1 | -1;
+  /** A die marked by `cs` or `cf`. Left out of every other die. */
+  critical?: "success" | "failure";
 };
 
 /** One throw of the dice: what was asked for, every die thrown, and the total. */
@@ -266,15 +317,17 @@ export function keptCount(group: DiceGroup): number {
   return group.keep === "all" ? group.count : (group.keepCount ?? 1);
 }
 
+/** The rules a kind of dice may carry beyond its count, sides and keep, in the order they are copied. */
+const RULES = ["keepCount", "explode", "reroll", "rerollUntil", "rerollWhen", "rerollUntilWhen", "explodeWhen", "explodeKind", "floor", "ceiling", "success", "failure", "critical", "fumble", "sort", "faces", "weights"] as const;
+
+function copyRules(from: Partial<DiceGroup>, to: Partial<DiceGroup>): void {
+  for (const rule of RULES) if (from[rule] !== undefined) (to as Record<string, unknown>)[rule] = from[rule];
+}
+
 /** The kinds of dice in a roll, in order: the spec's own first, then the rest. */
 export function groupsOf(spec: RollSpec): DiceGroup[] {
   const first: DiceGroup = { count: spec.count, sides: spec.sides, keep: spec.keep };
-  if (spec.keepCount !== undefined) first.keepCount = spec.keepCount;
-  if (spec.explode !== undefined) first.explode = spec.explode;
-  if (spec.reroll !== undefined) first.reroll = spec.reroll;
-  if (spec.rerollUntil !== undefined) first.rerollUntil = spec.rerollUntil;
-  if (spec.faces !== undefined) first.faces = spec.faces;
-  if (spec.weights !== undefined) first.weights = spec.weights;
+  copyRules(spec, first);
   return [first, ...(spec.more ?? [])];
 }
 
@@ -306,9 +359,118 @@ export function mayRerollUntil(sides: Sides, reroll: unknown): reroll is number 
   return mayReroll(sides, reroll) && (reroll - low + 1) * 2 <= high - low + 1;
 }
 
-/** Whether some dice of a roll can be held while the rest are thrown again: plain dice only, none rerolled, exploding, kept or dropped. */
+/** Whether some dice of a roll can be held while the rest are thrown again: plain dice only, none rerolled, exploding, kept or dropped, counted, raised, lowered or sorted. */
 export function canHold(spec: RollSpec): boolean {
-  return groupsOf(spec).every((g) => g.keep === "all" && g.explode !== true && g.reroll === undefined && g.rerollUntil === undefined);
+  return groupsOf(spec).every((g) => g.keep === "all" && g.explode !== true && g.reroll === undefined && g.rerollUntil === undefined && !playsByNewRules(g) && g.sort === undefined);
+}
+
+/**
+ * Whether a kind of dice is played by a rule added in 1.7.0, one that changes
+ * what it can total: a reroll or an explosion at a comparison, compounding or
+ * penetrating dice, `min` or `max`, or counted successes. Marks (`cs`, `cf`)
+ * and a sort change nothing about the total and are not among them.
+ */
+export function playsByNewRules(g: DiceGroup): boolean {
+  return g.rerollWhen !== undefined || g.rerollUntilWhen !== undefined || g.explodeWhen !== undefined || g.explodeKind !== undefined || g.floor !== undefined || g.ceiling !== undefined || g.success !== undefined;
+}
+
+/** Whether a kind of dice is counted for successes, not added up. */
+export function countsSuccesses(group: DiceGroup): boolean {
+  return group.success !== undefined;
+}
+
+/** Whether the first thing a roll says is a number of successes: every kind of dice in it is counted. */
+export function isSuccessRoll(spec: RollSpec): boolean {
+  return groupsOf(spec).every(countsSuccesses);
+}
+
+/** The faces of a numbered die that meet a comparison. */
+function facesMeeting(sides: Sides, compare: Compare): number[] {
+  const { low, high } = faceRange(sides);
+  const found: number[] = [];
+  for (let face = low; face <= high; face++) if (meets(compare, face)) found.push(face);
+  return found;
+}
+
+/** A comparison given by hand, checked: a whole number and one of the four ways of comparing. */
+function soundCompare(given: unknown): Compare | undefined {
+  if (typeof given !== "object" || given === null) return undefined;
+  const { op, n } = given as Record<string, unknown>;
+  if ((op !== "=" && op !== "<=" && op !== ">=" && op !== "<>") || typeof n !== "number" || !Number.isInteger(n) || Math.abs(n) > 99_999) return undefined;
+  return { op, n };
+}
+
+/**
+ * The rules added in 1.7.0, checked for one kind of numbered dice and written
+ * onto it. Each is kept only if it leaves something to roll: a reroll must
+ * spare a face, an explosion must not take every face, a success must be
+ * possible. A rule that cannot be kept is left out, never guessed at.
+ * `problemWith` says which, for the strict reader.
+ */
+function newRules(group: Partial<DiceGroup>, fair: DiceGroup): void {
+  const { sides } = fair;
+  if (sides === "F") return;
+  const all = sides;
+  // Rerolls: a run of faces from the lowest is the older, plainer rule, and is kept as that.
+  const asRun = (compare: Compare): number | undefined => {
+    const found = facesMeeting(sides, compare);
+    return found.length > 0 && found.every((face, i) => face === i + 1) ? found.length : undefined;
+  };
+  const until = soundCompare(group.rerollUntilWhen);
+  const once = soundCompare(group.rerollWhen);
+  if (fair.rerollUntil === undefined && fair.reroll === undefined) {
+    if (until !== undefined) {
+      const found = facesMeeting(sides, until).length;
+      const run = asRun(until);
+      if (found > 0 && found * 2 <= all) {
+        if (run !== undefined) fair.rerollUntil = run;
+        else fair.rerollUntilWhen = until;
+      }
+    } else if (once !== undefined) {
+      const found = facesMeeting(sides, once).length;
+      const run = asRun(once);
+      if (found > 0 && found < all) {
+        if (run !== undefined) fair.reroll = run;
+        else fair.rerollWhen = once;
+      }
+    }
+  }
+  if (fair.explode === true) {
+    const when = soundCompare(group.explodeWhen);
+    if (when !== undefined) {
+      const found = facesMeeting(sides, when);
+      if (found.length > 0 && found.length < all && !(found.length === 1 && found[0] === all)) fair.explodeWhen = when;
+    }
+    if (group.explodeKind === "compound" || group.explodeKind === "penetrating" || group.explodeKind === "compound-penetrating") fair.explodeKind = group.explodeKind;
+  }
+  const whole = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n);
+  if (whole(group.floor) && group.floor > 1 && group.floor <= all) fair.floor = group.floor;
+  if (whole(group.ceiling) && group.ceiling >= 1 && group.ceiling < all && (fair.floor === undefined || fair.floor <= group.ceiling)) fair.ceiling = group.ceiling;
+  // Counting: over every die of the kind, so not together with keep or drop.
+  const success = soundCompare(group.success);
+  if (success !== undefined && fair.keep === "all" && mayCount(fair, success)) {
+    fair.success = success;
+    const failure = soundCompare(group.failure);
+    if (failure !== undefined && mayCount(fair, failure) && !worthsOf(fair).some((v) => meets(success, v) && meets(failure, v))) fair.failure = failure;
+  }
+  const critical = soundCompare(group.critical);
+  if (critical !== undefined && mayCount(fair, critical)) fair.critical = critical;
+  const fumble = soundCompare(group.fumble);
+  if (fumble !== undefined && mayCount(fair, fumble)) fair.fumble = fumble;
+  if (group.sort === "ascending" || group.sort === "descending") fair.sort = group.sort;
+}
+
+/** Every amount one die of a kind can be worth once its rules are applied: what a success or a mark is compared with. */
+function worthsOf(group: DiceGroup): number[] {
+  const { least, chances } = dieOutcomes({ ...group, success: undefined, failure: undefined });
+  return chances.flatMap((p, i) => (p > 0 ? [least + i] : []));
+}
+
+/** Whether a comparison can be met by some die of the kind, and is not met by every one. */
+function mayCount(group: DiceGroup, compare: Compare): boolean {
+  const worths = worthsOf(group);
+  const met = worths.filter((v) => meets(compare, v)).length;
+  return met > 0 && met < worths.length;
 }
 
 /** Characters a custom face's words may not hold: the ones notation is written with. */
@@ -355,6 +517,15 @@ export function loadedWeights(sides: Sides, weights: unknown): number[] | undefi
   return least.every((w) => w === 1) ? undefined : least;
 }
 
+/** A roll's label, checked: a few words with no control characters and nothing notation is written with, or undefined. */
+export function rollLabel(label: unknown): string | undefined {
+  if (typeof label !== "string") return undefined;
+  const words = label.trim().replace(/\s+/g, " ");
+  // Only digits is no label: `2d6 # 3` is somebody reaching for a repeat, which is written `3#2d6`.
+  if (words === "" || [...words].length > MAX_ROLL_LABEL || isControl(words) || /[#[\]{}]/.test(words) || /^\d+$/.test(words)) return undefined;
+  return words;
+}
+
 /** One kind of dice brought into range, its count already settled. */
 function normalizeGroup(group: Partial<DiceGroup>, count: number): DiceGroup {
   // A custom die is its faces and nothing else: it takes no modifiers.
@@ -374,12 +545,35 @@ function normalizeGroup(group: Partial<DiceGroup>, count: number): DiceGroup {
   else if (mayReroll(sides, group.reroll)) fair.reroll = group.reroll;
   const weights = loadedWeights(sides, group.weights);
   if (weights !== undefined) fair.weights = weights;
+  newRules(group, fair);
   return fair;
+}
+
+/** The modifiers of one kind of dice as notation writes them, in the one order they are written: `>=8f=1!`, `r<3kh3`. Two kinds with the same die and the same text here are the same dice under the same rules. */
+export function rulesText(group: DiceGroup): string {
+  const count = group.success === undefined ? "" : `${compareText(group.success)}${group.failure === undefined ? "" : `f${compareText(group.failure)}`}`;
+  const kind = group.explodeKind === undefined ? "!" : group.explodeKind === "compound" ? "!!" : group.explodeKind === "penetrating" ? "!p" : "!!p";
+  const explode = group.explode === true ? `${kind}${group.explodeWhen === undefined ? "" : compareText(group.explodeWhen)}` : "";
+  const reroll =
+    group.rerollUntil !== undefined
+      ? `r<${group.rerollUntil + 1}`
+      : group.reroll !== undefined
+        ? `ro<${group.reroll + 1}`
+        : group.rerollUntilWhen !== undefined
+          ? `r${compareText(group.rerollUntilWhen)}`
+          : group.rerollWhen !== undefined
+            ? `ro${compareText(group.rerollWhen)}`
+            : "";
+  const keep = group.keep === "all" ? "" : `${group.keep === "highest" ? "kh" : "kl"}${group.keepCount ?? 1}`;
+  const clamp = `${group.floor === undefined ? "" : `min${group.floor}`}${group.ceiling === undefined ? "" : `max${group.ceiling}`}`;
+  const marks = `${group.critical === undefined ? "" : `cs${compareText(group.critical)}`}${group.fumble === undefined ? "" : `cf${compareText(group.fumble)}`}`;
+  const sort = group.sort === undefined ? "" : group.sort === "ascending" ? "sa" : "sd";
+  return `${count}${explode}${reroll}${keep}${clamp}${marks}${sort}`;
 }
 
 /** Whether two kinds are the same dice under the same rules, all of them added: then they are one kind with more dice. */
 function sameDice(a: DiceGroup, b: DiceGroup): boolean {
-  return dieName(a) === dieName(b) && a.keep === "all" && b.keep === "all" && a.explode === b.explode && a.reroll === b.reroll && a.rerollUntil === b.rerollUntil;
+  return dieName(a) === dieName(b) && a.keep === "all" && b.keep === "all" && rulesText(a) === rulesText(b);
 }
 
 /**
@@ -407,15 +601,12 @@ export function normalizeSpec(spec: Partial<RollSpec>): RollSpec {
   }
   const [first, ...more] = groups as [DiceGroup, ...DiceGroup[]];
   const fair: RollSpec = { count: first.count, sides: first.sides, modifier, keep: first.keep };
-  if (first.keepCount !== undefined) fair.keepCount = first.keepCount;
-  if (first.explode !== undefined) fair.explode = first.explode;
-  if (first.reroll !== undefined) fair.reroll = first.reroll;
-  if (first.rerollUntil !== undefined) fair.rerollUntil = first.rerollUntil;
-  if (first.faces !== undefined) fair.faces = first.faces;
-  if (first.weights !== undefined) fair.weights = first.weights;
+  copyRules(first, fair);
   if (more.length > 0) fair.more = more;
   const times = Math.min(MAX_TIMES, Math.trunc(Number(spec.times) || 1));
   if (times > 1) fair.times = times;
+  const label = rollLabel(spec.label);
+  if (label !== undefined) fair.label = label;
   return fair;
 }
 
@@ -432,6 +623,78 @@ export function totalOf(faces: readonly number[], kept: readonly boolean[], modi
   return faces.reduce((sum, face, i) => (kept[i] ? sum + face : sum), 0) + modifier;
 }
 
+/** One kind's rules as questions asked of a face: is it thrown again, does it explode, what is it worth. */
+function rulesOf(group: DiceGroup): { once: (face: number) => boolean; until: (face: number) => boolean; explodes: (face: number) => boolean; worth: (face: number, extra: boolean) => number } {
+  const { high } = facesOf(group);
+  const penetrating = group.explodeKind === "penetrating" || group.explodeKind === "compound-penetrating";
+  return {
+    once: (face) => (group.reroll !== undefined && face <= group.reroll) || (group.rerollWhen !== undefined && meets(group.rerollWhen, face)),
+    until: (face) => (group.rerollUntil !== undefined && face <= group.rerollUntil) || (group.rerollUntilWhen !== undefined && meets(group.rerollUntilWhen, face)),
+    explodes: (face) => group.explode === true && (group.explodeWhen === undefined ? face === high : meets(group.explodeWhen, face)),
+    worth: (face, extra) => Math.min(group.ceiling ?? Infinity, Math.max(group.floor ?? -Infinity, valueOfFace(group, face))) - (extra && penetrating ? 1 : 0),
+  };
+}
+
+/**
+ * One die of a kind worked through its own rules, before any keeping or
+ * dropping: the chance of each amount it adds to the total, from `least` up.
+ * For dice that are added, that is what the die is worth, explosions and all;
+ * for dice that are counted, it is the successes it makes less the ones it
+ * takes away. Exact as the rules are played: rerolls stop after
+ * `MAX_REROLLS` and explosions after `MAX_EXPLOSIONS`, here as in a roll.
+ */
+export function dieOutcomes(group: DiceGroup): { least: number; chances: number[] } {
+  const { low } = facesOf(group);
+  const rules = rulesOf(group);
+  const thrownOnce = chancesOf(group);
+  // The chance each face is the one left standing after the rerolls.
+  let standing = thrownOnce;
+  const masked = (mask: (face: number) => boolean) => thrownOnce.reduce((sum, p, i) => (mask(low + i) ? sum + p : sum), 0);
+  const againOnce = masked(rules.once);
+  if (againOnce > 0) standing = thrownOnce.map((p, i) => (rules.once(low + i) ? 0 : p) + againOnce * p);
+  const again = masked(rules.until);
+  if (again > 0) {
+    // After a reroll-once, the face standing is rerolled until clear in turn; the two are never both asked for, so this is one or the other.
+    const stuck = again ** MAX_REROLLS;
+    const throws = (1 - again * stuck) / (1 - again);
+    standing = thrownOnce.map((p, i) => (rules.until(low + i) ? stuck * p : throws * p));
+  }
+  const counted = group.success !== undefined;
+  const whole = group.explodeKind === "compound" || group.explodeKind === "compound-penetrating";
+  const score = (worth: number): number => (group.success !== undefined && meets(group.success, worth) ? 1 : group.failure !== undefined && meets(group.failure, worth) ? -1 : 0);
+  // What one die adds by itself: its worth, or, counted die by die, its score.
+  const adds = (face: number, extra: boolean): number => (counted && !whole ? score(rules.worth(face, extra)) : rules.worth(face, extra));
+  type Spread = Map<number, number>;
+  const put = (into: Spread, amount: number, chance: number) => into.set(amount, (into.get(amount) ?? 0) + chance);
+  // chain(left, extra): what a die adds with `left` explosions still allowed.
+  let after: Spread = new Map();
+  const steps = group.explode === true ? MAX_EXPLOSIONS : 0;
+  for (let left = 0; left <= steps; left++) {
+    const extra = left < steps;
+    const now: Spread = new Map();
+    for (let i = 0; i < standing.length; i++) {
+      const chance = standing[i] as number;
+      if (chance === 0) continue;
+      const face = low + i;
+      const here = adds(face, extra);
+      if (left > 0 && rules.explodes(face)) for (const [amount, further] of after) put(now, here + amount, chance * further);
+      else put(now, here, chance);
+    }
+    after = now;
+  }
+  let spread = after;
+  if (counted && whole) {
+    // A compounding die is one die: its whole chain is compared once.
+    spread = new Map();
+    for (const [amount, chance] of after) put(spread, score(amount), chance);
+  }
+  const amounts = [...spread.keys()];
+  const least = Math.min(...amounts);
+  const chances = new Array<number>(Math.max(...amounts) - least + 1).fill(0);
+  for (const [amount, chance] of spread) chances[amount - least] = chance;
+  return { least, chances };
+}
+
 /**
  * The one set of rules for a throw, whether the faces come from a generator
  * or from a roll that was kept or shared. The kinds of dice are thrown in
@@ -446,38 +709,39 @@ function play(spec: RollSpec, draw: (group: DiceGroup) => number | null): DieRol
   const dice: DieRoll[] = [];
   let die = 0;
   for (const [index, group] of groups.entries()) {
-    const { high } = facesOf(group);
+    const rules = rulesOf(group);
     const mine: DieRoll[] = [];
-    const thrown = (face: number, status: DieStatus, exploded: boolean): DieRoll => {
+    const thrown = (face: number, status: DieStatus, exploded: boolean, extra: boolean): DieRoll => {
       const one: DieRoll = { face, status, exploded, die };
       if (groups.length > 1) one.group = index;
       const custom = group.faces?.[face - 1];
       if (custom !== undefined) {
         one.label = custom.label;
         one.value = custom.value ?? 0;
+      } else if (status === "kept") {
+        const worth = rules.worth(face, extra);
+        if (worth !== face) one.value = worth;
       }
       mine.push(one);
       return one;
     };
     for (let n = 0; n < group.count; n++, die++) {
       let explosions = group.explode === true ? MAX_EXPLOSIONS : 0;
-      for (;;) {
+      for (let extra = false; ; extra = true) {
         let face = draw(group);
         if (face === null) return null;
-        if (group.reroll !== undefined && face <= group.reroll) {
-          thrown(face, "rerolled", false);
+        if (rules.once(face)) {
+          thrown(face, "rerolled", false, extra);
           face = draw(group);
           if (face === null) return null;
         }
-        if (group.rerollUntil !== undefined) {
-          for (let again = 0; again < MAX_REROLLS && face <= group.rerollUntil; again++) {
-            thrown(face, "rerolled", false);
-            face = draw(group);
-            if (face === null) return null;
-          }
+        for (let again = 0; again < MAX_REROLLS && rules.until(face); again++) {
+          thrown(face, "rerolled", false, extra);
+          face = draw(group);
+          if (face === null) return null;
         }
-        const exploded = explosions > 0 && face === high;
-        thrown(face, "kept", exploded);
+        const exploded = explosions > 0 && rules.explodes(face);
+        thrown(face, "kept", exploded, extra);
         if (!exploded) break;
         explosions -= 1;
       }
@@ -488,6 +752,21 @@ function play(spec: RollSpec, draw: (group: DiceGroup) => number | null): DieRol
       const best = [...standing].sort((a, b) => (group.keep === "highest" ? b.face - a.face : a.face - b.face));
       const keeping = new Set(best.slice(0, keptCount(group)));
       for (const d of standing) if (!keeping.has(d)) d.status = "dropped";
+    }
+    if (group.success !== undefined || group.critical !== undefined || group.fumble !== undefined) {
+      // What is compared: each die for what it is worth, or a compounding die's whole chain, read on its last die.
+      const whole = group.explodeKind === "compound" || group.explodeKind === "compound-penetrating";
+      const standing = mine.filter((d) => d.status === "kept");
+      const chain = new Map<number, number>();
+      for (const d of standing) chain.set(d.die, (chain.get(d.die) ?? 0) + (d.value ?? d.face));
+      for (const d of standing) {
+        if (whole && d.exploded) continue;
+        const worth = whole ? (chain.get(d.die) as number) : (d.value ?? d.face);
+        if (group.success !== undefined && meets(group.success, worth)) d.counts = 1;
+        else if (group.failure !== undefined && meets(group.failure, worth)) d.counts = -1;
+        if (group.critical !== undefined && meets(group.critical, worth)) d.critical = "success";
+        else if (group.fumble !== undefined && meets(group.fumble, worth)) d.critical = "failure";
+      }
     }
     dice.push(...mine);
   }
@@ -557,7 +836,12 @@ function draws(source: RandomSource): (group: DiceGroup) => number {
 
 /** The kept dice added up by what each is worth, plus the bonus. */
 function totalOfDice(spec: RollSpec, dice: readonly DieRoll[]): number {
-  return dice.reduce((sum, die) => (die.status === "kept" ? sum + valueOfFace(groupOf(spec, die), die.face) : sum), spec.modifier);
+  return dice.reduce((sum, die) => {
+    if (die.status !== "kept") return sum;
+    const group = groupOf(spec, die);
+    if (group.success !== undefined) return sum + (die.counts ?? 0);
+    return sum + (die.value ?? valueOfFace(group, die.face));
+  }, spec.modifier);
 }
 
 function made(fair: RollSpec, dice: DieRoll[], source: RandomSource, at: number): Roll {
@@ -646,6 +930,14 @@ export function rangeOf(spec: RollSpec): { min: number; max: number } {
   let min = spec.modifier;
   let max = spec.modifier;
   for (const group of groupsOf(spec)) {
+    if (playsByNewRules(group)) {
+      // What one die can add, from its rules played out; each kept die can reach either end.
+      const { least, chances } = dieOutcomes(group);
+      const dice = keptCount(group);
+      min += dice * least;
+      max += dice * (least + chances.length - 1);
+      continue;
+    }
     const { low, high } = facesOf(group);
     // What the die can be worth: every face that can come up, a loaded die's weightless faces left out.
     const worth: number[] = [];

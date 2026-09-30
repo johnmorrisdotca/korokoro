@@ -39,7 +39,7 @@ export function historyPanel(history: readonly Roll[], t: RollerStrings, locale:
       ...diceOf(r).map((die, i, all) =>
         h(
           "span",
-          { "data-kept": String(die.status === "kept"), "data-exploded": die.exploded ? "true" : null, "data-held": r.held?.[i] === true ? "true" : null, "data-first": i > 0 && die.group !== all[i - 1]?.group ? "true" : null, "data-loaded": groupOf(r.spec, die).weights !== undefined ? "true" : null },
+          { "data-kept": String(die.status === "kept"), "data-exploded": die.exploded ? "true" : null, "data-counts": die.counts === undefined ? null : String(die.counts), "data-held": r.held?.[i] === true ? "true" : null, "data-first": i > 0 && die.group !== all[i - 1]?.group ? "true" : null, "data-loaded": groupOf(r.spec, die).weights !== undefined ? "true" : null },
           `${faceText(groupOf(r.spec, die), die.face)}${die.exploded ? "!" : die.status === "rerolled" ? "↻" : ""}`,
         ),
       ),

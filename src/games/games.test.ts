@@ -31,6 +31,14 @@ const odds = (id: string, notation?: string) => {
   return new Map(table.map((line) => [line.outcome, [Number(line.ways), Number(line.outOf)]]));
 };
 
+describe("holding dice in a game", () => {
+  it("is for the games that hold dice between rolls, and for no other", () => {
+    expect(PRESETS.filter((p) => p.hold !== false).map((p) => p.id)).toEqual(["yahtzee", "farkle", "poker-dice", "ship-captain-crew"]);
+    // A game with a turn of several rolls holds dice between them.
+    for (const preset of PRESETS) if (preset.rolls !== undefined) expect(preset.hold, preset.id).toBeUndefined();
+  });
+});
+
 describe("every preset", () => {
   it("there are plenty, on every shelf, each with a name of its own", () => {
     expect(PRESETS.length).toBeGreaterThanOrEqual(40);

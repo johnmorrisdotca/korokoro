@@ -8,6 +8,7 @@ import {
   MAX_LOADED_SIDES,
   MAX_MODIFIER,
   MAX_REROLLS,
+  MAX_ROLL_LABEL,
   MAX_SIDES,
   MAX_TIMES,
   MAX_WEIGHT,
@@ -18,10 +19,13 @@ import {
   faceRange,
   groupsOf,
   loadedWeights,
+  meets,
   normalizeSpec,
+  rollLabel,
+  rulesText,
+  type Compare,
   type CustomFace,
   type DiceGroup,
-  type Keep,
   type RollSpec,
   type Sides,
 } from "./dice.ts";
@@ -29,7 +33,7 @@ import {
 /**
  * Dice notation, the way a character sheet writes it.
  *
- *   set      = [times "#"] roll               the roll thrown several times: 6#4d6dl1
+ *   set      = [times "#"] roll [ "#" label ]   the roll thrown several times: 6#4d6dl1
  *   times    = 1 to 100
  *   roll     = dice { "+" dice } [bonus]
  *   dice     = [count] "d" sides { modifier }
@@ -38,12 +42,21 @@ import {
  *            | number "{" face ":" weight { "," face ":" weight } "}"    a loaded die
  *            | "[" face { "," face } "]"                                a custom die
  *   face     = words [ "=" value ] [ "#" colour ]    in a custom die; a number alone is worth itself
- *   modifier = "!"                          the dice explode
- *            | "r<" face | "r<=" face       reroll until clear of a face
- *            | "ro<" face | "ro<=" face     reroll once below (or at) a face
- *            | "kh" [n] | "kl" [n]          keep the highest or lowest n (1 when left out)
- *            | "dh" [n] | "dl" [n]          drop the highest or lowest n
+ *   modifier = "!" | "!!" | "!p" | "!!p"    the dice explode: each a die of its own, compounding, penetrating, or both
+ *              [ compare ]                  … on these faces and not only the highest: !>=5
+ *            | "r" [point]                  reroll until clear: r<3, r=1, r1, r>=5; "r" alone is the lowest face
+ *            | "ro" [point]                 reroll once: ro<3, ro=1
+ *            | "kh" [n] | "kl" [n]          keep the highest or lowest n (1 when left out); "k" and "b" are kh, "w" is kl
+ *            | "dh" [n] | "dl" [n]          drop the highest or lowest n; "d" alone is dl
+ *            | "min" n | "max" n            a die counts for at least, or at most, n
+ *            | compare                      count successes: the total is how many dice meet it
+ *            | "f" point                    with a count: each die meeting it takes a success away
+ *            | "cs" [point] | "cf" [point]  mark dice as critical successes or failures; alone, the highest and the lowest face
+ *            | "sa" | "sd" | "s"            show the dice sorted, ascending (or "s") or descending
+ *   compare  = ( "=" | "<" | ">" | "<=" | ">=" | "<>" ) number
+ *   point    = compare | "!=" number | number      a bare number is "="
  *   bonus    = "+" or "-", then 0 to 99
+ *   label    = up to 40 characters, saying what the roll is for; "[label]" in front of the roll is read too
  *
  * Letters in either case, spaces anywhere between the parts. Up to four
  * kinds of dice are added together, each with its own modifiers, and the
@@ -91,6 +104,14 @@ export type NotationProblem =
   | "times"
   /** A custom die whose faces cannot be read, or one given modifiers. */
   | "custom"
+  /** Successes that cannot be counted: a comparison no die can meet or every die meets, a failure without a success or overlapping it, or counting together with keep or drop. */
+  | "successes"
+  /** A `min` or `max` that changes nothing or leaves nothing: outside the die's faces, or the least above the most. */
+  | "clamp"
+  /** A `cs` or `cf` that no die can meet, or every die meets. */
+  | "marks"
+  /** A label that is too long, or holds characters notation is written with. */
+  | "label"
   /** A loaded die whose weights cannot be read: a face the die does not have, a weight past 99, fewer than two faces that can come up, a die too large to load, or weights that are all the same. */
   | "weights";
 
@@ -113,7 +134,18 @@ export type NotationOptions = {
 };
 
 const HEAD = /^\s*(\d*)\s*d\s*(\d+|%|f|\[[^\]]*\])(\s*\{[^}]*\})?/i;
-const MODIFIER = /^\s*(?:(!)|(ro?)\s*(<=|<)\s*(\d+)|([kd])\s*([hl])\s*(\d*))/i;
+/** A comparison: an operator and a number. */
+const COMPARE = "(<=|>=|<>|!=|=|<|>)\\s*(\\d+)";
+/** Any one modifier, to tell where a kind's modifiers end. */
+const MODIFIER = new RegExp(`^\\s*(?:!|ro?\\s*[<>=!\\d]|ro?(?![\\w[%])|[kd]\\s*[hl]|[kdbw]\\s*\\d|[kdbw](?![\\w[%])|min\\s*\\d|max\\s*\\d|[<>=]|f\\s*[<>=!\\d]|c[sf]|s[ad]|s(?![\\w[%]))`, "i");
+const EXPLODE = new RegExp(`^\\s*(!!?)(p?)(?:\\s*(<=|>=|<>|=|<|>)\\s*(\\d+))?`, "i");
+const REROLL = new RegExp(`^\\s*(ro?)\\s*(?:${COMPARE}|(\\d+)|(?![\\w[%]))`, "i");
+const KEEP = /^\s*(?:([kd])\s*([hl])\s*(\d*)|([kdbw])\s*(\d*))/i;
+const CLAMP = /^\s*(min|max)\s*(\d+)/i;
+const SUCCESS = /^\s*(<=|>=|<>|=|<|>)\s*(\d+)/;
+const FAILURE = new RegExp(`^\\s*f\\s*(?:${COMPARE}|(\\d+))`, "i");
+const MARK = new RegExp(`^\\s*c([sf])\\s*(?:${COMPARE}|(\\d+))?`, "i");
+const SORT = /^\s*s(?:([ad])|(?![\w[%]))/i;
 const BONUS = /^\s*([+-])\s*(\d+)\s*$/;
 /** Another kind of dice coming: a sign, then dice and not a bare number. */
 const MORE = /^\s*([+-])\s*(?=\d*\s*d\s*(?:\d|%|f|\[))/i;
@@ -127,12 +159,16 @@ const REASONS: Record<NotationProblem, string> = {
   bonus: `a bonus is at most ${MAX_MODIFIER} either way`,
   twice: "each modifier is used once, and dice are kept or dropped, not both",
   keep: "keep or drop at least one die and fewer than all of them",
-  reroll: `a reroll has to reroll the lowest face and spare the highest, and r may match at most half the faces (it stops after ${MAX_REROLLS}); ro rerolls once`,
-  explode: `dice explode only with ${MAX_EXPLODING_SIDES} sides or fewer, never Fate dice, and not together with keep or drop`,
+  reroll: `a reroll has to reroll some face and spare another, and r may match at most half the faces (it stops after ${MAX_REROLLS}); ro rerolls once`,
+  explode: `dice explode only with ${MAX_EXPLODING_SIDES} sides or fewer, never Fate dice, not together with keep or drop, and on some faces but not all`,
   kinds: `a roll has at most ${MAX_GROUPS} kinds of dice`,
   minus: "dice are added together; only the bonus can be taken away",
   times: `a roll is thrown 1 to ${MAX_TIMES} times`,
   custom: `a custom die has 2 to ${MAX_FACES} faces, each up to ${MAX_LABEL} characters with an optional =value (a whole number up to ${MAX_FACE_VALUE} either way) and #colour, and takes no modifiers`,
+  successes: "successes are counted over all the dice of a kind: the comparison must be one some dice meet and some do not, a failure (f) needs a success to take from and must not overlap it, and counting does not go with keep or drop",
+  clamp: "min and max take a face of the die: min above its lowest, max below its highest, and min no greater than max",
+  marks: "cs and cf take a comparison that some dice meet and some do not",
+  label: `a label is up to ${MAX_ROLL_LABEL} characters, without # [ ] { or }`,
   weights: `a loaded die has up to ${MAX_LOADED_SIDES} sides, and names faces it has with weights from 0 to ${MAX_WEIGHT} that are not all the same, leaving at least two faces that can come up`,
 };
 
@@ -168,6 +204,13 @@ function readWeights(sides: Sides, text: string): number[] | null {
   return loadedWeights(sides, weights) ?? null;
 }
 
+/** Whether an explosion's comparison is met by the die's highest face and no other: then it is a plain explosion. */
+function onlyTheHighest(when: Compare, sides: Sides): boolean {
+  if (sides === "F") return false;
+  for (let face = 1; face <= sides; face++) if (meets(when, face) !== (face === sides)) return false;
+  return true;
+}
+
 function refuse(problem: NotationProblem, part: string): NotationCheck {
   const shown = part.trim();
   return { ok: false, problem, part: shown, message: `${shown === "" ? "" : `“${shown}”: `}${REASONS[problem]}` };
@@ -185,8 +228,7 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
     const faces = readFaces(sidesText.slice(1, -1));
     if (faces === null || head[3] !== undefined) return refuse("custom", `d${sidesText}${head[3] ?? ""}`);
     const after = text.slice(whole.length);
-    const modifier = MODIFIER.exec(after);
-    if (modifier !== null) return refuse("custom", modifier[0]);
+    if (MODIFIER.test(after)) return refuse("custom", (EXPLODE.exec(after) ?? REROLL.exec(after) ?? CLAMP.exec(after) ?? MARK.exec(after) ?? SORT.exec(after) ?? KEEP.exec(after) ?? FAILURE.exec(after) ?? SUCCESS.exec(after) ?? MODIFIER.exec(after) ?? [after])[0]);
     return { group: { count, sides: faces.length, keep: "all", faces }, rest: after, countText };
   }
   const sides: Sides = sidesText === "%" ? 100 : sidesText.toLowerCase() === "f" ? "F" : Number(sidesText);
@@ -200,48 +242,115 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
   }
 
   let rest = text.slice(whole.length);
-  let explode: string | null = null;
-  let rerollPart: string | null = null;
-  let reroll: number | undefined;
-  let until = false;
-  let keepPart: string | null = null;
-  let keep: Keep = "all";
-  let keepCount = 1;
-  for (let match = MODIFIER.exec(rest); match !== null; match = MODIFIER.exec(rest)) {
-    const part = match[0];
-    rest = rest.slice(part.length);
-    if (match[1] !== undefined) {
-      if (explode !== null) return refuse("twice", part);
-      explode = part;
-    } else if (match[2] !== undefined) {
-      if (rerollPart !== null) return refuse("twice", part);
-      rerollPart = part;
-      reroll = Number(match[4]) - (match[3] === "<" ? 1 : 0);
-      until = match[2].toLowerCase() === "r" && options.legacyReroll !== true;
-      if (reroll < low || reroll >= high) return refuse("reroll", part);
-      if (until && (reroll - low + 1) * 2 > high - low + 1) return refuse("reroll", part);
-    } else {
-      if (keepPart !== null) return refuse("twice", part);
-      keepPart = part;
-      const n = match[7] === "" ? 1 : Number(match[7]);
-      if (n < 1 || n >= count) return refuse("keep", part);
-      const highest = (match[6] as string).toLowerCase() === "h";
+  const group: Partial<DiceGroup> & { count: number } = { count, sides, keep: "all" };
+  /** The text of each modifier read, by what it is, so a refusal can name it. */
+  const parts: Partial<Record<"explode" | "reroll" | "keep" | "floor" | "ceiling" | "success" | "failure" | "critical" | "fumble" | "sort", string>> = {};
+  const compare = (op: string, n: string): Compare => {
+    const at = Number(n);
+    return op === "<" ? { op: "<=", n: at - 1 } : op === ">" ? { op: ">=", n: at + 1 } : op === "!=" || op === "<>" ? { op: "<>", n: at } : { op: op as "=" | "<=" | ">=", n: at };
+  };
+  while (MODIFIER.test(rest)) {
+    let match: RegExpExecArray | null;
+    if ((match = EXPLODE.exec(rest)) !== null) {
+      if (parts.explode !== undefined) return refuse("twice", match[0]);
+      parts.explode = match[0];
+      group.explode = true;
+      const compound = match[1] === "!!";
+      const penetrating = (match[2] as string) !== "";
+      if (compound || penetrating) group.explodeKind = compound && penetrating ? "compound-penetrating" : compound ? "compound" : "penetrating";
+      if (match[3] !== undefined) group.explodeWhen = compare(match[3], match[4] as string);
+    } else if ((match = REROLL.exec(rest)) !== null) {
+      if (parts.reroll !== undefined) return refuse("twice", match[0]);
+      parts.reroll = match[0];
+      const once = (match[1] as string).toLowerCase() === "ro" || options.legacyReroll === true;
+      const op = match[2] ?? "=";
+      // r alone rerolls the die's lowest face.
+      const at = Number(match[3] ?? match[4] ?? low);
+      if (op === "<" || op === "<=") {
+        // The reroll this package has always had: a run of faces from the lowest.
+        const reroll = at - (op === "<" ? 1 : 0);
+        if (reroll < low || reroll >= high) return refuse("reroll", match[0]);
+        if (!once && (reroll - low + 1) * 2 > high - low + 1) return refuse("reroll", match[0]);
+        group[once ? "reroll" : "rerollUntil"] = reroll;
+      } else group[once ? "rerollWhen" : "rerollUntilWhen"] = compare(op, String(at));
+    } else if ((match = CLAMP.exec(rest)) !== null) {
+      const which = (match[1] as string).toLowerCase() === "min" ? "floor" : "ceiling";
+      if (parts[which] !== undefined) return refuse("twice", match[0]);
+      parts[which] = match[0];
+      group[which] = Number(match[2]);
+    } else if ((match = MARK.exec(rest)) !== null) {
+      const which = (match[1] as string).toLowerCase() === "s" ? "critical" : "fumble";
+      if (parts[which] !== undefined) return refuse("twice", match[0]);
+      parts[which] = match[0];
+      // cs alone marks the highest face, and cf alone the lowest.
+      group[which] = compare(match[2] ?? "=", match[3] ?? match[4] ?? String(which === "critical" ? high : low));
+    } else if ((match = SORT.exec(rest)) !== null) {
+      if (parts.sort !== undefined) return refuse("twice", match[0]);
+      parts.sort = match[0];
+      group.sort = match[1]?.toLowerCase() === "d" ? "descending" : "ascending";
+    } else if ((match = KEEP.exec(rest)) !== null) {
+      if (parts.keep !== undefined) return refuse("twice", match[0]);
+      parts.keep = match[0];
+      // kh3, dl1; k3 and b3 keep the highest; d1 drops the lowest; w1 keeps the lowest.
+      const letter = (match[1] ?? match[4] ?? "").toLowerCase();
+      const end = match[2]?.toLowerCase();
+      const digits = (match[3] ?? match[5]) as string;
+      const n = digits === "" ? 1 : Number(digits);
+      if (n < 1 || n >= count) return refuse("keep", match[0]);
+      const keeps = letter !== "d";
+      const highest = end !== undefined ? end === "h" : letter === "k" || letter === "b";
       // Dropping the lowest two of five is keeping the highest three.
-      if ((match[5] as string).toLowerCase() === "k") {
-        keep = highest ? "highest" : "lowest";
-        keepCount = n;
+      if (keeps) {
+        group.keep = highest ? "highest" : "lowest";
+        group.keepCount = n;
       } else {
-        keep = highest ? "lowest" : "highest";
-        keepCount = count - n;
+        const dropsHighest = end === "h";
+        group.keep = dropsHighest ? "lowest" : "highest";
+        group.keepCount = count - n;
       }
-    }
+    } else if ((match = FAILURE.exec(rest)) !== null) {
+      if (parts.failure !== undefined) return refuse("twice", match[0]);
+      parts.failure = match[0];
+      group.failure = compare(match[1] ?? "=", (match[2] ?? match[3]) as string);
+    } else if ((match = SUCCESS.exec(rest)) !== null) {
+      if (parts.success !== undefined) return refuse("twice", match[0]);
+      parts.success = match[0];
+      group.success = compare(match[1] as string, match[2] as string);
+    } else break;
+    rest = rest.slice(match[0].length);
   }
-  if (explode !== null && (sides === "F" || sides > MAX_EXPLODING_SIDES || keepPart !== null)) return refuse("explode", explode);
-  const group: Partial<DiceGroup> & { count: number } = { count, sides, keep, keepCount };
-  if (explode !== null) group.explode = true;
-  if (reroll !== undefined) group[until ? "rerollUntil" : "reroll"] = reroll;
+  if (parts.explode !== undefined && (sides === "F" || sides > MAX_EXPLODING_SIDES || parts.keep !== undefined)) return refuse("explode", parts.explode);
+  if (parts.failure !== undefined && parts.success === undefined) return refuse("successes", parts.failure);
+  if (parts.success !== undefined && parts.keep !== undefined) return refuse("successes", parts.success);
   if (weights !== undefined) group.weights = weights;
+  // Whatever the rules above did not catch: a rule that would be left out of the roll is refused by name, never dropped quietly.
+  const kept = normalizeSpec({ ...group, modifier: 0 });
+  const lost = (
+    [
+      ["explode", "explode", kept.explode !== true || (group.explodeKind !== kept.explodeKind) || (group.explodeWhen !== undefined && kept.explodeWhen === undefined && !onlyTheHighest(group.explodeWhen, sides))],
+      ["reroll", "reroll", kept.reroll === undefined && kept.rerollUntil === undefined && kept.rerollWhen === undefined && kept.rerollUntilWhen === undefined],
+      ["floor", "clamp", kept.floor === undefined],
+      ["ceiling", "clamp", kept.ceiling === undefined],
+      ["success", "successes", kept.success === undefined],
+      ["failure", "successes", kept.failure === undefined],
+      ["critical", "marks", kept.critical === undefined],
+      ["fumble", "marks", kept.fumble === undefined],
+    ] as const
+  ).find(([part, , gone]) => parts[part] !== undefined && gone);
+  if (lost !== undefined) return refuse(lost[1], parts[lost[0]] as string);
   return { group, rest, countText };
+}
+
+/** Where a label's `#` is: the first one outside a custom die's brackets and a loaded die's braces. −1 when there is none. */
+function labelStart(text: string): number {
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === "[" || c === "{") depth += 1;
+    else if (c === "]" || c === "}") depth = Math.max(0, depth - 1);
+    else if (c === "#" && depth === 0) return i;
+  }
+  return -1;
 }
 
 /** A spec from notation, or which part of the text was refused and why. Never a roll of something else. */
@@ -256,6 +365,21 @@ export function checkNotation(text: string, options: NotationOptions = {}): Nota
     times = Number(repeat[1]);
     if (times < 1 || times > MAX_TIMES) return refuse("times", repeat[0]);
     rest = text.slice(repeat[0].length);
+  }
+  // A label: `[fire] 2d6` in front, or `2d6 # fire` behind. A custom die's brackets follow a d, and its colours sit inside them.
+  let label: string | undefined;
+  const front = /^\s*\[([^\]]*)\]/.exec(rest);
+  if (front !== null) {
+    label = rollLabel(front[1]);
+    if (label === undefined) return refuse("label", front[0]);
+    rest = rest.slice(front[0].length);
+  }
+  const hash = labelStart(rest);
+  if (hash >= 0) {
+    const behind = rollLabel(rest.slice(hash + 1));
+    if (behind === undefined || label !== undefined) return refuse("label", rest.slice(hash));
+    label = behind;
+    rest = rest.slice(0, hash);
   }
   let dice = 0;
   for (;;) {
@@ -282,7 +406,7 @@ export function checkNotation(text: string, options: NotationOptions = {}): Nota
     if (Math.abs(modifier) > MAX_MODIFIER) return refuse("bonus", rest);
   }
   const [first, ...more] = groups;
-  return { ok: true, spec: normalizeSpec({ ...first, modifier, more: more as DiceGroup[], times }) };
+  return { ok: true, spec: normalizeSpec({ ...first, modifier, more: more as DiceGroup[], times, label }) };
 }
 
 /** A spec from notation, or null when the text is not dice this roller can throw. `checkNotation` says why. */
@@ -292,10 +416,7 @@ export function parseNotation(text: string, options: NotationOptions = {}): Roll
 }
 
 function formatGroup(group: DiceGroup): string {
-  const explode = group.explode === true ? "!" : "";
-  const reroll = group.rerollUntil !== undefined ? `r<${group.rerollUntil + 1}` : group.reroll !== undefined ? `ro<${group.reroll + 1}` : "";
-  const keep = group.keep === "all" ? "" : `${group.keep === "highest" ? "kh" : "kl"}${group.keepCount ?? 1}`;
-  return `${group.count}${dieName(group)}${explode}${reroll}${keep}`;
+  return `${group.count}${dieName(group)}${rulesText(group)}`;
 }
 
 /**
@@ -307,5 +428,5 @@ function formatGroup(group: DiceGroup): string {
 export function formatNotation(spec: RollSpec): string {
   const modifier = spec.modifier === 0 ? "" : spec.modifier > 0 ? `+${spec.modifier}` : `${spec.modifier}`;
   const times = spec.times !== undefined && spec.times > 1 ? `${spec.times}#` : "";
-  return `${times}${groupsOf(spec).map(formatGroup).join("+")}${modifier}`;
+  return `${times}${groupsOf(spec).map(formatGroup).join("+")}${modifier}${spec.label === undefined ? "" : ` # ${spec.label}`}`;
 }
