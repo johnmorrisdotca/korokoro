@@ -1,4 +1,4 @@
-import { faceRange, type Roll, type RollSpec, type Sides } from "./dice.ts";
+import { diceCount, diceOf, faceRange, sidesOf, type Roll, type RollSpec, type Sides } from "./dice.ts";
 import { formatNotation } from "./notation.ts";
 import { distributionOf, expectedTotal, luckOf } from "./odds.ts";
 
@@ -6,7 +6,9 @@ import { distributionOf, expectedTotal, luckOf } from "./odds.ts";
 export type Stats = {
   /** How many rolls the history holds. */
   rolls: number;
-  /** How many dice those rolls threw, rerolled and exploded dice included. */
+  /** How many of those rolls held some dice from the roll before. They count their new dice, and are left out of luck, streaks, matches and totals. */
+  heldRolls: number;
+  /** How many dice those rolls threw, rerolled and exploded dice included, held dice not. */
   diceThrown: number;
   /** Mean of each roll's luck (0 to 1); 0.5 is exactly as lucky as the dice promise. Null with no rolls. */
   luck: number | null;
@@ -80,8 +82,11 @@ export function faceStats(history: readonly Roll[], sides: Sides): FaceStats {
   const faces = high - low + 1;
   const counts = new Array<number>(faces).fill(0);
   for (const r of history) {
-    if (r.spec.sides !== sides) continue;
-    for (const face of r.faces) counts[face - low] = (counts[face - low] as number) + 1;
+    diceOf(r).forEach((die, i) => {
+      // A held die was thrown in an earlier roll and counted there.
+      if (r.held?.[i] === true || sidesOf(r.spec, die) !== sides) return;
+      counts[die.face - low] = (counts[die.face - low] as number) + 1;
+    });
   }
   const dice = counts.reduce((a, b) => a + b, 0);
   const each = dice / faces;
@@ -94,7 +99,8 @@ export function faceStats(history: readonly Roll[], sides: Sides): FaceStats {
 /** The totals of every roll of one spec in a history, beside what the odds expect. */
 export function totalStats(history: readonly Roll[], spec: RollSpec): TotalStats {
   const notation = formatNotation(spec);
-  const mine = history.filter((r) => formatNotation(r.spec) === notation);
+  // A roll with dice held is a choice as much as a throw, so it is not set against the odds.
+  const mine = history.filter((r) => r.held === undefined && formatNotation(r.spec) === notation);
   const d = distributionOf(spec);
   const seen = new Array<number>(d.probabilities.length).fill(0);
   for (const r of mine) seen[r.total - d.min] = (seen[r.total - d.min] ?? 0) + 1;
@@ -112,8 +118,12 @@ export function totalStats(history: readonly Roll[], spec: RollSpec): TotalStats
   };
 }
 
-/** Stats for a history, oldest roll first; `focus` picks which die and which spec to break down. */
-export function statsOf(history: readonly Roll[], focus?: RollSpec): Stats {
+/**
+ * Stats for a history, oldest roll first. `focus` picks which spec's totals to
+ * break down, and which die's faces: its first kind, or `sides` when a roll
+ * of several kinds wants another.
+ */
+export function statsOf(history: readonly Roll[], focus?: RollSpec, sides?: Sides): Stats {
   let hot = 0;
   let cold = 0;
   let longestHot = 0;
@@ -123,7 +133,14 @@ export function statsOf(history: readonly Roll[], focus?: RollSpec): Stats {
   let naturalTwenties = 0;
   let naturalOnes = 0;
   let diceThrown = 0;
+  let heldRolls = 0;
   for (const r of history) {
+    if (r.held !== undefined) {
+      // Only the dice thrown again are new; luck and streaks are for whole rolls.
+      heldRolls += 1;
+      diceThrown += r.held.filter((h) => !h).length;
+      continue;
+    }
     diceThrown += r.faces.length;
     luckSum += luckOf(r.spec, r.total);
     const mean = expectedTotal(r.spec);
@@ -139,26 +156,26 @@ export function statsOf(history: readonly Roll[], focus?: RollSpec): Stats {
     }
     longestHot = Math.max(longestHot, hot);
     longestCold = Math.max(longestCold, cold);
-    if (r.faces.length > 1 && r.faces.length === r.spec.count && r.faces.every((f) => f === r.faces[0])) matches += 1;
-    if (r.spec.sides === 20) {
-      r.faces.forEach((f, i) => {
-        if (!r.kept[i]) return;
-        if (f === 20) naturalTwenties += 1;
-        if (f === 1) naturalOnes += 1;
-      });
+    if (r.faces.length > 1 && r.faces.length === diceCount(r.spec) && r.faces.every((f) => f === r.faces[0])) matches += 1;
+    for (const die of diceOf(r)) {
+      if (die.status !== "kept" || sidesOf(r.spec, die) !== 20) continue;
+      if (die.face === 20) naturalTwenties += 1;
+      if (die.face === 1) naturalOnes += 1;
     }
   }
+  const whole = history.length - heldRolls;
   return {
     rolls: history.length,
+    heldRolls,
     diceThrown,
-    luck: history.length === 0 ? null : luckSum / history.length,
+    luck: whole === 0 ? null : luckSum / whole,
     longestHot,
     longestCold,
     currentStreak: hot > 0 ? hot : -cold,
     matches,
     naturalTwenties,
     naturalOnes,
-    faces: focus === undefined ? null : faceStats(history, focus.sides),
+    faces: focus === undefined ? null : faceStats(history, sides ?? focus.sides),
     totals: focus === undefined ? null : totalStats(history, focus),
   };
 }

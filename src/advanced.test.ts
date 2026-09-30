@@ -220,10 +220,10 @@ describe("keeping and dropping", () => {
 
 describe("rerolls", () => {
   it("throw a low die again, once, and the new face stands whatever it is", () => {
-    const spec = dice("2d6r<3");
+    const spec = dice("2d6ro<3");
     expect(spec).toEqual({ count: 2, sides: 6, modifier: 0, keep: "all", reroll: 2 });
-    expect(dice("2d6r<=2")).toEqual(spec);
-    expect(formatNotation(spec)).toBe("2d6r<3");
+    expect(dice("2d6ro<=2")).toEqual(spec);
+    expect(formatNotation(spec)).toBe("2d6ro<3");
     const r = roll(spec, scripted([2, 1, 5]), 1);
     expect(r.faces).toEqual([2, 1, 5]);
     expect(r.dice).toEqual([
@@ -236,7 +236,7 @@ describe("rerolls", () => {
   });
 
   it("make the low faces rarer, not impossible", () => {
-    const one = dice("1d6r<3");
+    const one = dice("1d6ro<3");
     expect(chanceExactly(one, 1)).toBeCloseTo(1 / 18, 14);
     expect(chanceExactly(one, 2)).toBeCloseTo(1 / 18, 14);
     expect(chanceExactly(one, 6)).toBeCloseTo(2 / 9, 14);
@@ -247,15 +247,15 @@ describe("rerolls", () => {
   it("match a count of every throw, with and without keeping", () => {
     const faces = [1, 2, 3, 4, 5, 6];
     const chance = (mark: number) => (face: number) => (face > mark ? 1 / 6 : 0) + mark / 36;
-    expectSame(dice("3d6r<3+2"), counted(3, faces, chance(2), (s) => sum(s) + 2));
-    expectSame(dice("4d6r<2kh3"), counted(4, faces, chance(1), (s) => sum([...s].sort((a, b) => b - a).slice(0, 3))));
-    expectSame(dice("5d6r<=4kl2"), counted(5, faces, chance(4), (s) => sum([...s].sort((a, b) => a - b).slice(0, 2))));
+    expectSame(dice("3d6ro<3+2"), counted(3, faces, chance(2), (s) => sum(s) + 2));
+    expectSame(dice("4d6ro<2kh3"), counted(4, faces, chance(1), (s) => sum([...s].sort((a, b) => b - a).slice(0, 3))));
+    expectSame(dice("5d6ro<=4kl2"), counted(5, faces, chance(4), (s) => sum([...s].sort((a, b) => a - b).slice(0, 2))));
     const fate = (face: number) => (face > -1 ? 1 / 3 : 0) + 1 / 9;
-    expectSame(dice("3dFr<0kh2"), counted(3, [-1, 0, 1], fate, (s) => sum([...s].sort((a, b) => b - a).slice(0, 2))));
+    expectSame(dice("3dFro<0kh2"), counted(3, [-1, 0, 1], fate, (s) => sum([...s].sort((a, b) => b - a).slice(0, 2))));
   });
 
   it("keep picks among the dice left standing, never a rerolled one", () => {
-    const r = roll(dice("3d6r<2kh2"), scripted([1, 4, 6, 1, 1]), 1);
+    const r = roll(dice("3d6ro<2kh2"), scripted([1, 4, 6, 1, 1]), 1);
     expect(r.dice?.map((d) => d.status)).toEqual(["rerolled", "kept", "kept", "rerolled", "dropped"]);
     expect(r.total).toBe(10);
   });
@@ -320,7 +320,7 @@ describe("exploding dice", () => {
   });
 
   it("rerolls first, then explodes on the face that stands", () => {
-    const r = roll(dice("2d6!r<2"), scripted([1, 6, 1, 3, 4]), 1);
+    const r = roll(dice("2d6!ro<2"), scripted([1, 6, 1, 3, 4]), 1);
     expect(r.dice).toEqual([
       { face: 1, status: "rerolled", exploded: false, die: 0 },
       { face: 6, status: "kept", exploded: true, die: 0 },
@@ -330,7 +330,7 @@ describe("exploding dice", () => {
     ]);
     expect(r.total).toBe(13);
     // A die stands on a six 7 times in 36: at once, or after a one.
-    const spec = dice("1d6!r<2");
+    const spec = dice("1d6!ro<2");
     expect(chanceExactly(spec, 1)).toBeCloseTo(1 / 36, 14);
     expect(chanceExactly(spec, 7)).toBeCloseTo((7 / 36) * (1 / 36), 14);
     expect(chanceExactly(spec, 8)).toBeCloseTo((7 / 36) * (7 / 36), 14);
@@ -340,7 +340,7 @@ describe("exploding dice", () => {
 
 describe("the dice and the odds agree", () => {
   // The odds are worked out and the dice are thrown by different code: over many seeded throws they must tell one story.
-  it.each(["3d6!r<2", "4d6r<3kh3", "5d10kl2", "4dFkh2", "2d8!+3", "3d14dl1-2", "5d4!", "2d20r<=10kl1"])("%s", (text) => {
+  it.each(["3d6!ro<2", "4d6ro<3kh3", "5d10kl2", "4dFkh2", "2d8!+3", "3d14dl1-2", "5d4!", "2d20ro<=10kl1"])("%s", (text) => {
     const spec = dice(text);
     const d = distributionOf(spec);
     const source = seededSource(`agree ${text}`);
@@ -364,7 +364,7 @@ describe("the dice and the odds agree", () => {
 });
 
 describe("a seed replays every die", () => {
-  it.each(["3d6!", "4d6r<3kh3", "5d4!r<2+1", "4dF", "2d1000", "5d2!"])("%s throws the same dice from the same seed", (text) => {
+  it.each(["3d6!", "4d6ro<3kh3", "5d4!ro<2+1", "4dF", "2d1000", "5d2!"])("%s throws the same dice from the same seed", (text) => {
     const spec = dice(text);
     const a = seededSource("replay");
     const b = seededSource("replay");
@@ -388,13 +388,13 @@ describe("a seed replays every die", () => {
       return [r.faces, r.total];
     };
     expect(thrown("5d4!")).toEqual([[4, 4, 2, 4, 4, 1, 1, 2, 4, 4, 3], 33]);
-    expect(thrown("4d6r<3kh3")).toEqual([[2, 6, 6, 4, 6], 18]);
+    expect(thrown("4d6ro<3kh3")).toEqual([[2, 6, 6, 4, 6], 18]);
     expect(thrown("4dF")).toEqual([[0, 1, 1, -1], 1]);
     expect(thrown("3d14")).toEqual([[6, 10, 10], 26]);
   });
 
   it("refuses faces the dice could not have thrown", () => {
-    const spec = dice("2d6!r<2");
+    const spec = dice("2d6!ro<2");
     expect(readDice(spec, [3, 4])).not.toBeNull();
     expect(readDice(spec, [3])).toBeNull();
     expect(readDice(spec, [3, 4, 5])).toBeNull();
@@ -402,9 +402,9 @@ describe("a seed replays every die", () => {
     expect(readDice(spec, [1, 4])).toBeNull();
     expect(readDice(spec, [3, 7])).toBeNull();
     expect(readDice(spec, [3, "4"])).toBeNull();
-    expect(readShared("roll=2d6!r<2&faces=6,4")).toBeNull();
-    expect(readShared("roll=2d6!r<2&faces=6,4,")).toBeNull();
-    expect(readShared(`roll=${encodeURIComponent("2d6!r<2")}&faces=6,4,2`)).toMatchObject({ total: 12 });
+    expect(readShared("roll=2d6!ro<2&faces=6,4")).toBeNull();
+    expect(readShared("roll=2d6!ro<2&faces=6,4,")).toBeNull();
+    expect(readShared(`roll=${encodeURIComponent("2d6!ro<2")}&faces=6,4,2`)).toMatchObject({ total: 12 });
     expect(parseHistory(JSON.stringify([{ spec, faces: [6, 4], at: 1 }]))).toEqual([]);
   });
 });
@@ -413,13 +413,13 @@ describe("notation", () => {
   it.each([
     ["d7", "1d7"],
     ["4d6dl1", "4d6kh3"],
-    ["4d6 kh3 r<2", "4d6r<2kh3"],
-    ["4D6R<=1KH3", "4d6r<2kh3"],
-    ["3d6!r<2+1", "3d6!r<2+1"],
-    ["3d6 r < 2 ! - 1", "3d6!r<2-1"],
+    ["4d6 kh3 ro<2", "4d6ro<2kh3"],
+    ["4D6RO<=1KH3", "4d6ro<2kh3"],
+    ["3d6!ro<2+1", "3d6!ro<2+1"],
+    ["3d6 ro < 2 ! - 1", "3d6!ro<2-1"],
     ["5d10dh2", "5d10kl3"],
     ["4df", "4dF"],
-    ["3dFr<=0", "3dFr<1"],
+    ["3dFro<=0", "3dFro<1"],
     ["d%!", "1d100!"],
     ["2d1000+99", "2d1000+99"],
   ])("reads %s and writes it back as %s", (text, canonical) => {
@@ -444,15 +444,15 @@ describe("notation", () => {
     ["1d20kh1", "keep", "kh1"],
     ["4d6kh3dl1", "twice", "dl1"],
     ["3d6!!", "twice", "!"],
-    ["3d6r<2r<3", "twice", "r<3"],
+    ["3d6ro<2ro<3", "twice", "ro<3"],
     ["4d6!kh3", "explode", "!"],
     ["4d6kh3!", "explode", "!"],
     ["4dF!", "explode", "!"],
     ["2d101!", "explode", "!"],
-    ["2d6r<1", "reroll", "r<1"],
-    ["2d6r<7", "reroll", "r<7"],
-    ["2d6r<=6", "reroll", "r<=6"],
-    ["4dFr<=1", "reroll", "r<=1"],
+    ["2d6ro<1", "reroll", "ro<1"],
+    ["2d6ro<7", "reroll", "ro<7"],
+    ["2d6ro<=6", "reroll", "ro<=6"],
+    ["4dFro<=1", "reroll", "ro<=1"],
     ["2d6r2", "shape", "r2"],
     ["2d6x", "shape", "x"],
     ["3d6+", "shape", "+"],
@@ -502,7 +502,7 @@ describe("normalizeSpec", () => {
 describe("limits", () => {
   it("the largest rolls are still counted quickly", () => {
     const started = performance.now();
-    for (const text of ["5d1000", "5d1000kh4", "5d1000r<500kl4", "5d100!", "5d100!r<50", "5d2!"]) {
+    for (const text of ["5d1000", "5d1000kh4", "5d1000ro<500kl4", "5d100!", "5d100!ro<50", "5d2!"]) {
       const d = distributionOf(dice(text));
       expect(sum(d.probabilities), text).toBeCloseTo(1, 9);
       expect(d.probabilities).toHaveLength(d.max - d.min + 1);
@@ -527,7 +527,7 @@ describe("limits", () => {
 
 describe("stats", () => {
   it("count every die thrown towards fairness, and no match in a roll that threw extra dice", () => {
-    const made: Roll[] = [roll(dice("2d6!"), scripted([6, 6, 6, 6, 1, 6, 2]), 1), roll(dice("2d6r<2"), scripted([1, 3, 3]), 2), roll(dice("2d6"), scripted([3, 3]), 3)];
+    const made: Roll[] = [roll(dice("2d6!"), scripted([6, 6, 6, 6, 1, 6, 2]), 1), roll(dice("2d6ro<2"), scripted([1, 3, 3]), 2), roll(dice("2d6"), scripted([3, 3]), 3)];
     const stats = statsOf(made, dice("2d6!"));
     expect(stats.diceThrown).toBe(12);
     expect(stats.matches).toBe(1);
@@ -604,7 +604,7 @@ describe("ten dice", () => {
     expect(exactCounts(dice("4dF"))?.counts).toEqual([1n, 4n, 10n, 16n, 19n, 16n, 10n, 4n, 1n]);
     expect(exactCounts(dice("4d6kh3"))).toBeNull();
     expect(exactCounts(dice("3d6!"))).toBeNull();
-    expect(exactCounts(dice("3d6r<2"))).toBeNull();
+    expect(exactCounts(dice("3d6ro<2"))).toBeNull();
   });
 
   it("keep and drop match a count of every throw", () => {
@@ -627,7 +627,7 @@ describe("ten dice", () => {
     expect(expectedTotal(dice("10d20kh7"))).toBeCloseTo(105 - expectedTotal(dice("10d20kl3")), 9);
   });
 
-  it.each(["10d6", "10d6kh3", "8d6!", "10d10r<3kl4", "10dF", "10d2!r<2"])("the dice and the odds agree on %s", (text) => {
+  it.each(["10d6", "10d6kh3", "8d6!", "10d10ro<3kl4", "10dF", "10d2!ro<2"])("the dice and the odds agree on %s", (text) => {
     const spec = dice(text);
     const d = distributionOf(spec);
     const source = seededSource(`ten ${text}`);
@@ -641,7 +641,7 @@ describe("ten dice", () => {
 
   it("the largest rolls are still counted quickly", () => {
     const started = performance.now();
-    for (const text of ["10d1000", "10d1000kh1", "10d1000kh9", "10d1000kh5", "10d1000r<500kl5", "10d1000r<500", "10d100!", "10d100!r<50", "10d2!"]) {
+    for (const text of ["10d1000", "10d1000kh1", "10d1000kh9", "10d1000kh5", "10d1000ro<500kl5", "10d1000ro<500", "10d100!", "10d100!ro<50", "10d2!"]) {
       const d = distributionOf(dice(text));
       expect(sum(d.probabilities), text).toBeCloseTo(1, 9);
       expect(d.probabilities).toHaveLength(d.max - d.min + 1);

@@ -21,12 +21,30 @@ export type RollerStrings = {
   notationKeep: string;
   notationReroll: string;
   notationExplode: string;
+  notationKinds: string;
+  notationMinus: string;
   dieDropped: string;
   dieRerolled: string;
   dieExploded: string;
   chartTail: string;
   soundOn: string;
   soundOff: string;
+  pool: string;
+  poolSays: string;
+  add: string;
+  addToRoll: string;
+  limitDice: string;
+  limitKinds: string;
+  takeOne: string;
+  clearPool: string;
+  clearPoolLabel: string;
+  tapAgainHold: string;
+  rollRest: string;
+  allHeld: string;
+  held: string;
+  heldBadge: string;
+  releaseAll: string;
+  oddsHolding: string;
   tapToRoll: string;
   tapAgain: string;
   rollLabel: string;
@@ -88,14 +106,16 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     keepHighest: "Highest",
     keepLowest: "Lowest",
     notation: "Dice notation",
-    notationHint: "e.g. 3d6+2, 2d20kh1, 4d6dl1, 3d6!, 4dF",
-    notationBad: "Not dice notation. Try 3d6+2, 2d20kh1, 4d6dl1, 3d6!, 2d8r<3 or 4dF",
+    notationHint: "e.g. 1d20+1d4+3, 2d20kh1, 4d6dl1, 3d6!, 4dF",
+    notationBad: "Not dice notation. Try 3d6+2, 1d20+1d4, 2d20kh1, 4d6dl1, 3d6!, 2d8r<3 or 4dF",
     notationCount: "“{part}”: roll 1 to 10 dice at a time",
     notationSides: "“{part}”: a die has 2 to 1000 sides, or is dF",
     notationBonus: "“{part}”: a bonus is at most 99 either way",
     notationTwice: "“{part}”: use each modifier once, and keep or drop, not both",
     notationKeep: "“{part}”: keep or drop at least one die, and fewer than all of them",
-    notationReroll: "“{part}”: a reroll has to include the lowest face and leave the highest",
+    notationReroll: "“{part}”: a reroll has to include the lowest face and leave the highest, and r (until clear) at most half the faces; ro rerolls once",
+    notationKinds: "“{part}”: a roll has at most 4 kinds of dice",
+    notationMinus: "“{part}”: dice are added together; only the bonus can be taken away",
     notationExplode: "“{part}”: only dice of 100 sides or fewer explode, and not Fate dice or dice that are kept or dropped",
     dieDropped: "dropped",
     dieRerolled: "rerolled",
@@ -103,6 +123,22 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     chartTail: "Totals past {total} are off the chart: together they come up {percent} of the time.",
     soundOn: "Sound is on. Tap to mute",
     soundOff: "Sound is off. Tap to turn it on",
+    pool: "Rolling",
+    poolSays: "Rolling {notation}",
+    add: "Add a die",
+    addToRoll: "Tap a die below to add it",
+    limitDice: "{n} dice is the most in one roll",
+    limitKinds: "{n} kinds of dice is the most in one roll",
+    takeOne: "Take one {die} away ({n} in the roll)",
+    clearPool: "Clear",
+    clearPoolLabel: "Take every die away",
+    tapAgainHold: "Tap the felt to roll again, or a die to hold it",
+    rollRest: "Tap the felt to roll the other {n}",
+    allHeld: "Every die is held. Tap one to let it go",
+    held: "held",
+    heldBadge: "{n} held",
+    releaseAll: "Release all",
+    oddsHolding: "{n} held, {notation} still to roll",
     tapToRoll: "Tap anywhere to roll",
     tapAgain: "Tap to roll again",
     rollLabel: "Roll {notation}",
@@ -153,7 +189,7 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     savedNowhere: "History is not being kept on this device (storage is blocked).",
   },
   ja: {
-    dice: "サイコロの数",
+    dice: "ダイスの数",
     die: "種類",
     modifier: "修正値",
     keep: "採用",
@@ -161,14 +197,16 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     keepHighest: "最大",
     keepLowest: "最小",
     notation: "ダイス表記",
-    notationHint: "例: 3d6+2、2d20kh1、4d6dl1、3d6!、4dF",
-    notationBad: "ダイス表記ではありません。例: 3d6+2、2d20kh1、4d6dl1、3d6!、2d8r<3、4dF",
+    notationHint: "例: 1d20+1d4+3、2d20kh1、4d6dl1、3d6!、4dF",
+    notationBad: "ダイス表記ではありません。例: 3d6+2、1d20+1d4、2d20kh1、4d6dl1、3d6!、2d8r<3、4dF",
     notationCount: "「{part}」: 一度に振れるのは1〜10個です",
     notationSides: "「{part}」: 面の数は2〜1000、または dF です",
     notationBonus: "「{part}」: 修正値は±99までです",
     notationTwice: "「{part}」: 同じ指定は一度だけです。採用と除外は同時に使えません",
     notationKeep: "「{part}」: 採用・除外は1個以上、全部より少なくしてください",
-    notationReroll: "「{part}」: 振り直しは最小の面を含み、最大の面を残してください",
+    notationReroll: "「{part}」: 振り直しは最小の面を含み、最大の面を残してください。r（出るまで振り直し）は面の半分まで、ro は一度だけです",
+    notationKinds: "「{part}」: 一度に振れるダイスは4種類までです",
+    notationMinus: "「{part}」: ダイスは足し算だけです。引けるのは修正値だけです",
     notationExplode: "「{part}」: 爆発できるのは100面以下のダイスだけです。dF や採用・除外とは併用できません",
     dieDropped: "不採用",
     dieRerolled: "振り直し",
@@ -176,6 +214,22 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     chartTail: "{total} より上の合計は省略しています（合わせて {percent}）。",
     soundOn: "音はオンです。タップで消音",
     soundOff: "音はオフです。タップでオン",
+    pool: "振るダイス",
+    poolSays: "{notation} を振ります",
+    add: "ダイスを追加",
+    addToRoll: "下のダイスをタップして追加",
+    limitDice: "一度に振れるのは{n}個までです",
+    limitKinds: "一度に振れるのは{n}種類までです",
+    takeOne: "{die} を1個減らす（いま {n} 個）",
+    clearPool: "クリア",
+    clearPoolLabel: "すべてのダイスを外す",
+    tapAgainHold: "フェルトをタップで振り直し、ダイスをタップでホールド",
+    rollRest: "フェルトをタップして残りの {n} 個を振る",
+    allHeld: "すべてホールド中です。ダイスをタップで解除",
+    held: "ホールド",
+    heldBadge: "{n} 個ホールド",
+    releaseAll: "すべて解除",
+    oddsHolding: "{n} 個ホールド、残りは {notation}",
     tapToRoll: "どこでもタップして振る",
     tapAgain: "タップしてもう一度",
     rollLabel: "{notation} を振る",
@@ -189,13 +243,13 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     history: "履歴",
     stats: "統計",
     odds: "確率",
-    noRolls: "まだ振っていません。サイコロをタップしてください。",
+    noRolls: "まだ振っていません。ダイスをタップしてください。",
     clear: "履歴を消す",
     clearSure: "{n} 回分をすべて消しますか？",
     copyLink: "この出目のリンクをコピー",
     copied: "コピーしました",
     rolls: "振った回数",
-    diceThrown: "振ったサイコロ",
+    diceThrown: "振ったダイス",
     luck: "運",
     luckHint: "50% ちょうどが確率どおり",
     hotStreak: "最長の好調",
@@ -205,8 +259,8 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     nat1: "出目1",
     faces: "d{sides} の各面（{n} 個）",
     fairnessWait: "公平さを判断するには、各面が5回ほど出るまで振ってください。",
-    fairnessOk: "公平に見えます。公平なサイコロでもこの程度の偏りは {percent} の確率で起きます。",
-    fairnessOdd: "珍しい偏りです（公平なサイコロで {percent}）。続けて振ってみましょう。",
+    fairnessOk: "公平に見えます。公平なダイスでもこの程度の偏りは {percent} の確率で起きます。",
+    fairnessOdd: "珍しい偏りです（公平なダイスで {percent}）。続けて振ってみましょう。",
     totals: "{notation} の合計（{n} 回）",
     seenVsExpected: "棒は実際の出目、印は確率上の期待値です。",
     average: "平均",

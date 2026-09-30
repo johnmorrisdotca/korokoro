@@ -6,6 +6,56 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-09-30
+
+### Changed
+
+- **`r` now rerolls until clear, and `ro` rerolls once**, as Roll20 and the
+  dice libraries that follow it write them. `2d8r<3` used to throw a 1 or a 2
+  again once; it now throws it again until it shows 3 or more. Write `2d8ro<3`
+  for the old behaviour. A reroll until clear may match at most half a die's
+  faces and stops after 10 rerolls (`MAX_REROLLS`), so it always ends, and its
+  odds are exact, that limit included. Specs, stored histories and links made
+  by 1.2.0 and 1.3.0 still mean what they meant: see `docs/migrating.md`.
+- In the tray, a tap on a die that has been rolled holds it, where it used to
+  roll again. A tap on the felt beside the dice, or Space, rolls. `hold: false`
+  keeps every tap a roll.
+- In the tray, tapping a die button adds a die of that kind to the roll, where
+  it used to change the kind of every die. The number row sets how many of the
+  kind last touched.
+- A dropped or rerolled die is struck through in the sum under the total,
+  where it was in brackets; brackets now gather a kind of dice, as in
+  `14 + (3 + 2) + 1`.
+
+### Added
+
+- Several kinds of dice in one roll: `1d20+1d4`, `2d6+1d8+3`,
+  `2d20kh1+1d4+5`. Up to four kinds and ten dice, each kind with its own
+  modifiers, with exact odds for the lot. `RollSpec.more` holds the other
+  kinds; a roll of one kind is the same object it always was.
+- Building a roll by tapping: each tap on a die adds one, a chip for each kind
+  takes one away, *Clear* empties the roll, and the notation box writes it out
+  as you go. At ten dice or four kinds the buttons that would go past dim and
+  the row says why.
+- Holding dice: after a roll, tap dice on the felt to hold them and roll the
+  rest, as Yacht and Farkle do. *Release all* lets them go. The Odds tab
+  follows the dice still to roll. `rollHeld`, `canHold` and
+  `distributionHolding` do the same from code; a roll records which dice were
+  held, and a seed replays it.
+- Every odds function takes a distribution as well as a spec.
+- `groupsOf`, `specOf`, `diceCount`, `sidesOf`, `MAX_GROUPS`, `MAX_REROLLS`,
+  `SHARE_VERSION`, and a `legacyReroll` option for reading old notation.
+- Refusals that name their part for the new rules: too many kinds, too many
+  dice over the whole roll, and dice taken away.
+- For phones: every control in the tray is at least 44px, the notation box
+  turns off autocorrect and capitals, and nothing below the felt moves when
+  the dice land or the roll grows.
+- `docs/strings-ja.md`, every Japanese string beside its English, made from
+  the source; and an issue template for fixing a translation. The Japanese has
+  not yet been reviewed by a native reader.
+- `docs/migrating.md`.
+- The README's notation tables and examples are now run by the tests.
+
 ## [1.3.0] - 2026-09-30
 
 ### Added
@@ -116,7 +166,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.4.0
 [1.3.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.3.0
 [1.2.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.2.0
 [1.1.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.1.0

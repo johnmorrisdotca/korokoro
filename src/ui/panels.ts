@@ -1,7 +1,7 @@
 import type { Roll, RollSpec } from "../dice.ts";
-import { diceOf, faceRange, rangeOf } from "../dice.ts";
+import { diceOf, faceRange, groupsOf, sidesOf, type Sides } from "../dice.ts";
 import { formatNotation } from "../notation.ts";
-import { chanceAtLeast, distributionOf, expectedTotal, luckOf, mostLikely, spreadOf } from "../odds.ts";
+import { chanceAtLeast, distributionHolding, distributionOf, expectedTotal, luckOf, mostLikely, spreadOf, type Distribution } from "../odds.ts";
 import { statsOf } from "../stats.ts";
 import { h } from "./dom.ts";
 import { faceText } from "./faces.ts";
@@ -33,17 +33,23 @@ export function historyPanel(history: readonly Roll[], t: RollerStrings, locale:
     const mini = h(
       "span",
       { class: "kk-mini" },
-      ...diceOf(r).map((die) =>
-        h("span", { "data-kept": String(die.status === "kept"), "data-exploded": die.exploded ? "true" : null }, `${faceText(r.spec.sides, die.face)}${die.exploded ? "!" : die.status === "rerolled" ? "↻" : ""}`),
+      ...diceOf(r).map((die, i, all) =>
+        h(
+          "span",
+          { "data-kept": String(die.status === "kept"), "data-exploded": die.exploded ? "true" : null, "data-held": r.held?.[i] === true ? "true" : null, "data-first": i > 0 && die.group !== all[i - 1]?.group ? "true" : null },
+          `${faceText(sidesOf(r.spec, die), die.face)}${die.exploded ? "!" : die.status === "rerolled" ? "↻" : ""}`,
+        ),
       ),
     );
-    const luck = luckOf(r.spec, r.total);
+    // A roll with dice held is judged against the dice thrown again.
+    const luck = luckOf(r.held !== undefined ? distributionHolding(r.spec, r.faces, r.held) : r.spec, r.total);
+    const heldNote = r.held !== undefined ? ` · ${fillIn(t.heldBadge, { n: r.held.filter(Boolean).length })}` : "";
     list.append(
       h(
         "li",
         { "data-testid": "kk-history-row" },
         h("time", { datetime: new Date(r.at).toISOString() }, time.format(r.at)),
-        h("span", { style: "display:grid;gap:3px" }, h("code", {}, formatNotation(r.spec)), mini),
+        h("span", { style: "display:grid;gap:3px" }, h("code", {}, `${formatNotation(r.spec)}${heldNote}`), mini),
         h(
           "span",
           { style: "display:inline-flex;align-items:center;gap:8px" },
@@ -80,7 +86,7 @@ function gathered(values: number[], width: number): number[] {
  */
 function chartEnd(spec: RollSpec, probabilities: number[], upTo: number): number {
   const last = probabilities.length - 1;
-  if (spec.explode !== true) return last;
+  if (!groupsOf(spec).some((g) => g.explode === true)) return last;
   let tail = 0;
   let end = last;
   while (end > 0 && tail + (probabilities[end] as number) < 0.001) tail += probabilities[end--] as number;
@@ -118,9 +124,9 @@ function axis(from: number, to: number): HTMLElement {
 }
 
 /** The history in numbers: luck, streaks, each face's count and the totals against the odds. */
-export function statsPanel(history: readonly Roll[], spec: RollSpec, t: RollerStrings, locale: string): HTMLElement {
+export function statsPanel(history: readonly Roll[], spec: RollSpec, sides: Sides, t: RollerStrings, locale: string): HTMLElement {
   if (history.length === 0) return h("p", { class: "kk-empty" }, t.noRolls);
-  const stats = statsOf(history, spec);
+  const stats = statsOf(history, spec, sides);
   const panel = h("div", { class: "kk-panel", style: "padding:0", "data-testid": "kk-stats" });
   const cards = h(
     "div",
@@ -180,10 +186,12 @@ export function oddsPanel(
   t: RollerStrings,
   locale: string,
   onTarget: (value: number) => void,
+  holding: { odds: Distribution; held: number; rest: string } | null = null,
 ): HTMLElement {
-  const d = distributionOf(spec);
-  const { min, max } = rangeOf(spec);
-  const now = current !== null && formatNotation(current.spec) === formatNotation(spec) ? current.total - d.min : null;
+  // With dice held, the odds are those of the dice still to roll, on top of the held ones.
+  const d = holding?.odds ?? distributionOf(spec);
+  const { min, max } = d;
+  const now = holding === null && current !== null && formatNotation(current.spec) === formatNotation(spec) ? current.total - d.min : null;
   const end = chartEnd(spec, d.probabilities, now ?? 0);
   const input = h("input", {
     type: "number",
@@ -194,14 +202,14 @@ export function oddsPanel(
     "aria-label": t.target,
     "data-testid": "kk-target",
   });
-  const chance = h("span", { class: "kk-big", "data-testid": "kk-chance" }, percent(chanceAtLeast(spec, target), locale));
+  const chance = h("span", { class: "kk-big", "data-testid": "kk-chance" }, percent(chanceAtLeast(d, target), locale));
   const said = h("span", { style: "color:var(--kk-muted);font-size:.85rem" }, fillIn(t.chanceAtLeast, { target }));
   // Updated in place, so the field keeps its focus while somebody types.
   input.addEventListener("input", () => {
     if (input.value.trim() === "") return;
     const value = Math.trunc(Number(input.value));
     if (!Number.isFinite(value)) return;
-    chance.textContent = percent(chanceAtLeast(spec, value), locale);
+    chance.textContent = percent(chanceAtLeast(d, value), locale);
     said.textContent = fillIn(t.chanceAtLeast, { target: value });
     onTarget(value);
   });
@@ -211,15 +219,15 @@ export function oddsPanel(
     h(
       "div",
       { class: "kk-cards" },
-      card(number(expectedTotal(spec), locale), t.expected),
-      card(`±${number(spreadOf(spec), locale)}`, t.spread),
-      card(mostLikely(spec).length > 3 ? `${min}–${max}` : mostLikely(spec).join(", "), t.mostLikely),
+      card(number(expectedTotal(d), locale), t.expected),
+      card(`±${number(spreadOf(d), locale)}`, t.spread),
+      card(mostLikely(d).length > 3 ? `${min}–${max}` : mostLikely(d).join(", "), t.mostLikely),
       card(`${min}–${max}`, t.range),
     ),
     h(
       "section",
       { class: "kk-chart" },
-      h("h4", {}, formatNotation(spec)),
+      h("h4", { "data-testid": "kk-odds-title" }, holding === null ? formatNotation(spec) : fillIn(t.oddsHolding, { n: holding.held, notation: holding.rest })),
       bars(d.probabilities.slice(0, end + 1), null, now),
       axis(min, min + end),
       tailNote(d, end, t, locale),

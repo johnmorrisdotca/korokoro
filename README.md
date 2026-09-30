@@ -1,7 +1,7 @@
 <h1 align="center">Korokoro <sub>コロコロ</sub></h1>
 
 <p align="center"><strong>Fair dice for the table, with the odds of every throw.</strong><br>
-Tap to roll up to ten dice, from a d4 to a d100, or type any dice at all. Exact probabilities, roll history and stats, in a tray that runs anywhere.</p>
+Tap dice to build a roll, up to ten in any mix from a d4 to a d100, or type any dice at all. Exact probabilities, roll history and stats, in a tray that runs anywhere.</p>
 
 <p align="center">
   <a href="https://github.com/johnmorrisdotca/korokoro/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/johnmorrisdotca/korokoro/actions/workflows/ci.yml/badge.svg"></a>
@@ -24,10 +24,12 @@ uses this package exactly as published.
 
 ## What it is
 
-Three things in one small package, each usable without the others:
+A dice roller and a dice notation parser for tabletop games, RPGs and board
+games, with the exact odds of every roll. Three things in one small package,
+each usable without the others:
 
-- **A tray** you put on any page: pick the dice, tap the felt, read the total,
-  the odds, the history and the stats. Plain DOM, no framework.
+- **A tray** you put on any page: tap dice to add them, tap the felt to roll,
+  read the total, the odds, the history and the stats. Plain DOM, no framework.
 - **A React component** that wraps the tray.
 - **A core of plain functions**: roll dice, read dice notation, work out exact
   odds, keep a history and summarise it. No DOM, so it runs in Node, Deno and
@@ -35,11 +37,14 @@ Three things in one small package, each usable without the others:
 
 ## Features
 
-- **Every die a table needs.** One to ten of d4, d6, d8, d10, d12, d20, d30 or
-  d100 at a tap, with a bonus, and advantage or disadvantage.
+- **Every die a table needs, in any mix.** Tap a die to add it: up to ten of
+  d4, d6, d8, d10, d12, d20, d30 and d100, up to four kinds in one roll
+  (`1d20+2d4+3`), with a bonus, and advantage or disadvantage.
+- **Hold and roll again.** After a roll, tap a die to hold it and roll the
+  rest, as Yacht and Farkle do. The odds follow the dice still to roll.
 - **And any other dice, by notation.** A die of any size from 2 sides to 1000,
-  Fate dice, keep or drop (`4d6dl1`), rerolls (`2d6r<3`) and exploding dice
-  (`3d6!`), with what became of each die shown on the felt.
+  Fate dice, keep or drop (`4d6dl1`), rerolls (`2d6r<3`, `2d6ro<3`) and
+  exploding dice (`3d6!`), with what became of each die shown on the felt.
 - **Fair by construction.** Rolls come from `crypto.getRandomValues`, turned
   into faces by rejection sampling, so no face is favoured by a modulo.
 - **Reproducible when asked.** A seeded mode throws the same dice for the same
@@ -50,10 +55,13 @@ Three things in one small package, each usable without the others:
   streaks, matching dice, natural 20s and 1s, each face's count with a
   chi-square fairness test, and your totals drawn against the odds.
 - **Shareable.** Any roll becomes a link that shows exactly what was thrown.
+- **Made for a phone.** One thumb does everything: every control is at least
+  44px, nothing needs a hover or a long press, and nothing moves when the dice
+  land. English and Japanese.
 - **It feels like dice.** Tap anywhere on the felt or press Space. The dice
   tumble for about half a second and land, with the sound of real dice and a
-  mute button. Light and dark, themeable, English and Japanese. Under reduced
-  motion there is no tumble and the sound starts off.
+  mute button. Light and dark, and themeable. Under reduced motion there is no
+  tumble and the sound starts off.
 - **Small and dependency-free.** About 57 kB minified (21 kB gzipped), plus
   36 kB of recorded sound that is fetched only when a roll first needs it.
 
@@ -127,37 +135,49 @@ chanceAtLeast(attack, 15);                  // 0.7975
 | `4d6kh3` | four d6, keep the highest three |
 | `4d6dl1` | four d6, drop the lowest one: the same roll as `4d6kh3` |
 | `5d10dh2` | five d10, drop the highest two: the same roll as `5d10kl3` |
-| `2d6r<3`, `2d6r<=2` | two d6; a 1 or a 2 is thrown again, once |
+| `2d6r<3`, `2d6r<=2` | two d6; a 1 or a 2 is thrown again until it clears |
+| `2d6ro<3`, `2d6ro<=2` | two d6; a 1 or a 2 is thrown again, once |
 | `3d6!` | three exploding d6: a 6 throws another die and adds it |
-| `3d6!r<2+1` | all of it together: reroll, explode, then add 1 |
+| `3d6!ro<2+1` | all of it together: reroll, explode, then add 1 |
+| `1d20+1d4` | a d20 and a d4, added |
+| `2d6+1d8+3` | two d6, a d8, plus 3 |
+| `2d20kh1+1d4+5` | advantage, a d4 on top, plus 5: each kind keeps its own rules |
 
 ```
-roll     = [count] "d" sides { modifier } [bonus]
-count    = 1 to 10, and 1 when left out
+roll     = dice { "+" dice } [bonus]
+dice     = [count] "d" sides { modifier }
+count    = 1 to 10 over the whole roll, and 1 when left out
 sides    = 2 to 1000, "%" for 100, or "F" for a Fate die
-modifier = "!" | "r<" face | "r<=" face | "kh" [n] | "kl" [n] | "dh" [n] | "dl" [n]
+modifier = "!" | "r<" face | "r<=" face | "ro<" face | "ro<=" face
+         | "kh" [n] | "kl" [n] | "dh" [n] | "dl" [n]
 bonus    = "+" or "-", then 0 to 99
 ```
 
-Letters in either case, spaces allowed between the parts.
+Letters in either case, spaces allowed between the parts. A roll holds up to
+four kinds of dice, each with its own modifiers, and the bonus comes last.
+Two kinds that are the same dice under the same rules are one kind: `2d6+3d6`
+is `5d6`.
 
 ### How the modifiers combine
 
 They may be written in any order, each at most once, and are always applied in
 this one:
 
-1. **Reroll.** A die showing the reroll face or lower is thrown again, once.
-   The new face stands whatever it is, so a low face becomes rarer, never
-   impossible. (Roll20 calls this `ro`; its `r` rerolls until the die clears.)
+1. **Reroll.** With `ro`, a die showing the reroll face or lower is thrown
+   again once, and the new face stands whatever it is. With `r`, it is thrown
+   again until it clears, up to 10 times. This is Roll20's meaning of the two,
+   and the one most dice libraries follow. (Until 1.4.0 this package's `r`
+   rerolled once: see [Migrating](./docs/migrating.md).)
 2. **Explode.** If the face left standing is the die's highest, another die is
    thrown and added, and it follows the same two rules. A die may throw up to
    10 more; the last is read as it lies.
-3. **Keep or drop** picks among the dice left standing. A tie keeps the die
-   thrown first.
-4. **The bonus** is added.
+3. **Keep or drop** picks among that kind's dice left standing. A tie keeps
+   the die thrown first.
+4. **The kinds are added**, and then the bonus.
 
-Each die is settled, rerolls and explosions and all, before the next is
-thrown, so a seeded roll replays die for die.
+The kinds are thrown in the order written, and each die is settled, rerolls
+and explosions and all, before the next is thrown, so a seeded roll replays
+die for die.
 
 ### What is refused
 
@@ -171,7 +191,11 @@ than quietly rolling something different:
 | `2d6+100` | a bonus is at most 99 either way |
 | `4d6kh4`, `4d6dl4`, `1d20kh1` | keep or drop has to leave at least one die and fewer than all |
 | `4d6kh3dl1`, `3d6!!` | one keep or drop, and each modifier once |
-| `2d6r<1`, `2d6r<7` | a reroll has to include the lowest face and spare the highest |
+| `2d6ro<1`, `2d6ro<7` | a reroll has to include the lowest face and spare the highest |
+| `1d6r<5` | a reroll until clear may match at most half the faces, so that it ends; `ro` has no such limit |
+| `1d4+1d6+1d8+1d10+1d12` | a roll has at most four kinds of dice |
+| `6d6+5d8` | ten dice at most over the whole roll |
+| `1d20-1d4` | dice are added together; only the bonus can be taken away |
 | `4d6!kh3` | exploding dice are not kept or dropped: tables disagree on whether an explosion is a new die in the pool or part of the die that threw it |
 | `4dF!`, `2d1000!` | Fate dice do not explode, nor do dice of more than 100 sides |
 
@@ -181,8 +205,9 @@ checkNotation("4d6!kh3");
 //   message: "“!”: dice explode only with 100 sides or fewer, never Fate dice, and not together with keep or drop" }
 ```
 
-`formatNotation` writes each roll one way: the dice, `!`, `r<`, `kh` or `kl`,
-then the bonus. So `4d6dl1` is written back as `4d6kh3`.
+`formatNotation` writes each roll one way: each kind as its dice, `!`, `r<` or
+`ro<`, `kh` or `kl`; the kinds joined by `+`; then the bonus. So `4d6dl1` is
+written back as `4d6kh3`.
 
 ## What a roll returns
 
@@ -226,6 +251,43 @@ dice   // die 0: 6 (exploded), 3 · die 1: 6 (exploded), 4 · die 2: 5
 total  // 24
 ```
 
+In a roll of several kinds each die also says which kind it is (`group`, from
+0), and `sidesOf(spec, die)` gives its sides. `1d20+2d4+3` from `table-7`:
+
+```ts
+faces  // [10, 2, 4]
+dice   // group 0 (the d20): 10 · group 1 (the d4s): 2, 4
+total  // 19
+```
+
+## Holding dice
+
+`rollHeld` keeps some dice of a roll and throws the rest again, from the same
+source, so a seeded game replays. Only plain dice can be held (`canHold`): no
+keep or drop, reroll or explosion.
+
+```ts
+const dice = seededSource("yacht");
+const first = roll(parseNotation("5d6")!, dice);                  // [3, 3, 6, 3, 6]
+const second = rollHeld(first, first.faces.map((f) => f === 6), dice);
+second.faces;  // [3, 4, 6, 1, 6]: the sixes stayed, the other three were thrown again
+second.held;   // [false, false, true, false, true]
+```
+
+The odds with dice held are those of the dice still to roll, on top of the
+held ones:
+
+```ts
+const odds = distributionHolding(first.spec, first.faces, [false, false, true, false, true]);
+odds.min;                // 15: two sixes held, three dice still to roll
+expectedTotal(odds);     // 22.5
+chanceAtLeast(odds, 24); // 0.375
+```
+
+Every odds function takes a spec or a distribution like this one. In a
+history, a roll with dice held counts only its new dice towards the stats,
+and is left out of luck, streaks and totals: what was held was a choice.
+
 ## Odds
 
 ```ts
@@ -246,8 +308,10 @@ Nothing is simulated and nothing is left out:
 | Plain dice, any size, and Fate dice | Every outcome counted in whole numbers (BigInt), however many there are |
 | Keep one (advantage) | Counted in whole numbers by the closed form: the highest is at most *k* when every die is |
 | Keep or drop several | The sum of the highest *n*, dealt out value by value over the pool |
-| Rerolls | Each face's chance after one reroll, then as above |
+| Rerolls, once or until clear | Each face's chance of being the one left standing, then as above |
 | Exploding dice | Each chain's chance up to the limit, then summed over the dice |
+| Several kinds of dice | Each kind as above, then every pair of their totals: a convolution |
+| Dice held | The dice still to roll as above, moved up by the held faces |
 
 **Counts.** Ten d1000 has 10^30 outcomes, far more than a JavaScript number
 holds exactly, so plain dice and advantage are counted as `BigInt` and only
@@ -257,6 +321,7 @@ out:
 ```ts
 exactCounts(parseNotation("8d6")!);
 // { min: 8, outcomes: 1679616n, counts: [1n, 8n, 36n, … ] }   135954n of them total 28
+exactCounts(parseNotation("1d20+1d4")!); // { min: 2, outcomes: 80n, counts: [1n, 2n, 3n, 4n, 4n, … ] }
 exactCounts(parseNotation("4d6dl1")!);   // null: see below
 ```
 
@@ -265,14 +330,18 @@ pool, do not have equally likely outcomes to count, so their odds are worked
 out as probabilities, right to the last digits a number holds (about fifteen).
 `exactCounts` returns `null` for them and never a guess.
 
-**Exploding dice** have no last total in theory. Here a die stops after 10
-explosions, in the roll and in the odds alike, so the odds are exactly those
-of the dice as thrown and they sum to 1. A d6 reaches that limit once in 60
-million dice.
+**Exploding dice and rerolls until clear** could go on for ever in theory.
+Here a die stops after 10 explosions, and after 10 rerolls, in the roll and in
+the odds alike, so the odds are exactly those of the dice as thrown and they
+sum to 1. Nothing is approximated and no remainder is left over. A d6
+exploding, or rerolling its 1s, reaches that limit once in 60 million dice; a
+reroll until clear of half a die's faces, the most allowed, reaches it once in
+a thousand.
 
 **Speed.** The slowest roll the package accepts, `10d1000kh9`, takes about a
 tenth of a second the first time and nothing after: each spec's odds are
-remembered.
+remembered. Large mixed pools (`5d1000+5d999`) are put together as
+probabilities, and `exactCounts` returns `null` for them.
 
 ## Seeded and shared rolls
 
@@ -302,12 +371,13 @@ for checking, not for secrets; anybody who knows the seed knows the dice.
 **Copy link to this roll** puts the throw in the address:
 
 ```
-?roll=4d6kh3&faces=6%2C4%2C2%2C1&at=1759190400000&seed=table-7
+?roll=4d6kh3&faces=6%2C4%2C2%2C1&at=1759190400000&seed=table-7&v=2
 ```
 
 Whoever opens it sees the same dice and total, marked as a shared roll and
 kept out of their own history. `readShared` refuses a link whose faces the
-dice could not have shown.
+dice could not have shown. `v=2` is the notation's version; a link without it
+was made before 1.4.0 and is read as it was written then.
 
 ## API
 
@@ -320,20 +390,31 @@ each has a doc comment your editor will show.
 type DieSides = 4 | 6 | 8 | 10 | 12 | 20 | 30 | 100;  // the dice with a button
 type Sides = number | "F";                           // 2 to 1000, or a Fate die
 type Keep = "all" | "highest" | "lowest";
-type RollSpec = {
-  count: number; sides: Sides; modifier: number; keep: Keep;
-  keepCount?: number; // how many `keep` keeps; left out when one
-  explode?: true;     // left out when the dice do not explode
-  reroll?: number;    // reroll once at this face or lower; left out when none
+type DiceGroup = {       // one kind of dice and its rules
+  count: number; sides: Sides; keep: Keep;
+  keepCount?: number;    // how many `keep` keeps; left out when one
+  explode?: true;        // left out when the dice do not explode
+  reroll?: number;       // `ro<`: reroll once at this face or lower
+  rerollUntil?: number;  // `r<`: reroll until above this face
+};
+type RollSpec = DiceGroup & {
+  modifier: number;
+  more?: DiceGroup[];    // the other kinds of dice; left out when there is one
 };
 
 roll(spec: Partial<RollSpec>, source?: RandomSource, at?: number): Roll
+rollHeld(previous: Roll, held: boolean[], source?: RandomSource, at?: number): Roll
+canHold(spec: RollSpec): boolean                    // plain dice only
+groupsOf(spec: RollSpec): DiceGroup[]               // the kinds of dice, in order
+specOf(groups: DiceGroup[], modifier?: number): RollSpec
+diceCount(spec: RollSpec): number                   // dice asked for, over all kinds
+sidesOf(spec: RollSpec, die: DieRoll): Sides        // the kind of die one die is
 diceOf(roll: Roll): DieRoll[]                       // roll.dice, or worked out from the faces
 readDice(spec: RollSpec, faces: number[]): DieRoll[] | null  // null if the dice could not show them
 normalizeSpec(spec: Partial<RollSpec>): RollSpec    // brings a spec into range
 rangeOf(spec: RollSpec): { min: number; max: number }
-parseNotation(text: string): RollSpec | null
-checkNotation(text: string): { ok: true; spec: RollSpec } | { ok: false; problem; part; message }
+parseNotation(text: string, options?: { legacyReroll?: boolean }): RollSpec | null
+checkNotation(text: string, options?): { ok: true; spec: RollSpec } | { ok: false; problem; part; message }
 formatNotation(spec: RollSpec): string
 ```
 
@@ -352,7 +433,9 @@ randomInt(source: RandomSource, n: number): number  // fair integer in [0, n)
 
 ```ts
 distributionOf(spec): { min: number; max: number; probabilities: number[] }
+distributionHolding(spec, faces, held): Distribution  // the odds with some dice held
 exactCounts(spec): { min: number; counts: bigint[]; outcomes: bigint } | null
+// Each of these takes a spec, or a distribution already in hand:
 chanceExactly(spec, total): number
 chanceAtLeast(spec, target): number
 chanceAtMost(spec, target): number
@@ -402,6 +485,7 @@ mountRoller(element: HTMLElement, options?: RollerOptions): RollerHandle
 | `animationMs` | `650` | From the throw to the last die landing; reduced motion always skips it |
 | `sound` | `true` | `false` makes the tray silent and takes the mute button away |
 | `playSound` | the recorded dice | Your own sound for each throw: `({ dice, ms, landings }) => void` |
+| `hold` | `true` | `false` stops dice being held: a tap anywhere on the felt rolls, a die included |
 
 ```ts
 type RollerHandle = {
@@ -413,10 +497,34 @@ type RollerHandle = {
 ```
 
 `setSpec` changes part of the dice (`{ sides: 20 }`) or, given a whole spec
-such as `parseNotation("4d6dl1")`, all of them. The buttons are the eight
-standard dice; everything else is typed into the notation box, which says
-which part it refuses. On the felt a dropped or rerolled die is struck through
-and an exploded die is ringed and marked `!`.
+such as `parseNotation("4d6dl1")`, all of them.
+
+### How the tray works
+
+One idea runs it: **the roll is a pool of dice.**
+
+1. **Tap a die to add it.** The tray opens with `2d6`. Tap d20 and the roll is
+   `2d6+1d20`; tap d20 again and it is `2d6+2d20`.
+2. **A chip takes one away.** The row marked *Rolling* has a chip for each
+   kind of dice (`2d6 −`). Tap it and there is one die fewer; the last die
+   takes the kind with it. *Clear* empties the roll, bonus and all.
+3. **The numbers set how many** of the kind you touched last, so three d8 is
+   *d8*, *3*.
+4. **Tap the felt to roll.** Space does the same from a keyboard.
+5. **Tap a die on the felt to hold it**, once it has been rolled. The next
+   tap on the felt rolls the others. *Release all* lets every die go. Only
+   plain dice can be held; with `hold: false`, none can.
+
+At ten dice or four kinds the buttons that would go past the limit dim, and
+the row's label says why. The notation box says the same roll in writing as
+you tap, and takes anything the buttons do not reach; it says which part it
+refuses. On the felt a dropped or rerolled die is struck through, an exploded
+die is ringed and marked `!`, and a held die is lifted, ringed in gold and
+tagged.
+
+Since 1.4.0 a tap on a die that has been rolled holds it, where before it
+rolled again like the rest of the felt. A page that wants the old behaviour
+passes `hold: false`.
 
 ### The roll itself never waits on the show
 
@@ -472,6 +580,8 @@ them by name.
 | Limit | Value | Constant |
 | --- | --- | --- |
 | Dice in one roll | 1 to 10 | `MIN_DICE`, `MAX_DICE` |
+| Kinds of dice in one roll | 4 | `MAX_GROUPS` |
+| Rerolls until clear, for each die | 10 | `MAX_REROLLS` |
 | Sides of a die | 2 to 1000, or `F` | `MIN_SIDES`, `MAX_SIDES` |
 | Bonus | −99 to +99 | `MAX_MODIFIER` |
 | Explosions for each die | 10 more dice | `MAX_EXPLOSIONS` |
@@ -485,15 +595,24 @@ Any browser from the last few years: it needs ES2020 with `BigInt`,
 `crypto.getRandomValues` and CSS `color-mix` (Chrome and Edge 111, Firefox
 113, Safari 16.2). The sound needs the Web Audio API and AAC decoding, which
 those browsers have; without them the tray is silent or plays its own knock.
-The core also runs in Node 20 and later, Deno and Bun.
+It is tested in Chromium and in WebKit, Safari's engine, at phone size with
+touch. The core also runs in Node 20 and later, Deno and Bun.
+
+## Languages
+
+English and Japanese, chosen by `locale` or the page's `lang`. **Japanese:
+included; not yet reviewed by a native reader. Corrections welcome.** Every
+Japanese string is listed beside its English in
+[docs/strings-ja.md](./docs/strings-ja.md), and there is an issue template
+for fixing one. Any other language is a table of your own passed as `strings`.
 
 ## Roadmap
 
-- Dice of different kinds in one roll (`1d20+1d4`)
-- Hold some dice and roll the rest, as Yacht and Farkle do
 - Custom dice with your own faces, and sets of dice saved on the device
+- More notation: counting successes, more kinds of explosion, arithmetic
+- A command-line tool
+- Presets for games, from Yacht to chinchirorin
 - Exploding dice that are kept or dropped, once a table's rule is chosen
-- Rerolling until the die clears (`r`, as Roll20 has it, beside reroll once)
 - Export the history as CSV
 
 Left out on purpose: shared live rooms, which need a server, and dice skins
@@ -515,7 +634,8 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md).
 
 ## Changes
 
-See [CHANGELOG.md](./CHANGELOG.md).
+See [CHANGELOG.md](./CHANGELOG.md), and [docs/migrating.md](./docs/migrating.md)
+for the one change so far that needs a second look: what `r` means.
 
 ## Licence
 

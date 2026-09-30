@@ -31,31 +31,56 @@ export const CSS = `
 .kk-label { font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--kk-muted); min-width: 3.2rem; }
 .kk-seg { display: inline-flex; flex-wrap: wrap; gap: 4px; background: var(--kk-surface); border: 1px solid var(--kk-rule); border-radius: 999px; padding: 3px; }
 /* Ten counts are one row where there is room and two rows of five on a phone, never a ragged wrap. */
-.kk-seg[data-testid="kk-count"] { display: inline-grid; grid-template-columns: repeat(10, auto); border-radius: 22px; }
+.kk-seg[data-testid="kk-count"] { display: inline-grid; grid-template-columns: repeat(10, auto); }
 @media (max-width: 540px) { .kk-seg[data-testid="kk-count"] { grid-template-columns: repeat(5, auto); } }
-.kk-seg button { border: 0; background: transparent; border-radius: 999px; min-width: 40px; min-height: 36px; padding: 0 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: background .15s, color .15s; }
+.kk-seg { border-radius: 26px; }
+.kk-seg button { border: 0; background: transparent; border-radius: 999px; min-width: 44px; min-height: 44px; padding: 0 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: background .15s, color .15s; }
 .kk-seg button[aria-pressed="true"] { background: var(--kk-ink); color: var(--kk-surface); }
-.kk-seg button:hover:not([aria-pressed="true"]) { background: color-mix(in srgb, var(--kk-ink) 8%, transparent); }
+.kk-seg button:hover:not([aria-pressed="true"]):not(:disabled) { background: color-mix(in srgb, var(--kk-ink) 8%, transparent); }
+.kk-root button:disabled { opacity: .32; cursor: default; }
+/* The pool: four places, one for each kind of dice a roll may hold, so it is one line however many are in it. */
+.kk-pool { flex: 1 1 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; min-height: 44px; }
+.kk-chip { min-width: 0; min-height: 44px; border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 999px; padding: 0 10px; font-weight: 700; font-size: .9rem; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.kk-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kk-chip i { font-style: normal; font-weight: 800; color: var(--kk-muted); }
+.kk-chip[data-lit="true"] { border-color: var(--kk-ink); }
+.kk-chip:hover { border-color: var(--kk-bad); }
+.kk-chip:hover i { color: var(--kk-bad); }
+.kk-seg .kk-clear { margin-left: auto; font-weight: 600; font-size: .85rem; color: var(--kk-muted); padding: 0 14px; }
+/* The eight dice and Clear on one line where the tray is wide, and two lines on a phone. */
+.kk-seg[data-testid="kk-sides"] { display: flex; gap: 2px; }
+.kk-seg[data-testid="kk-sides"] button { padding: 0 8px; }
+.kk-seg[data-testid="kk-sides"] .kk-clear { padding: 0 10px; }
+.kk-seg button[data-in="true"]:not([aria-pressed="true"]) { box-shadow: inset 0 0 0 1px var(--kk-rule); }
 .kk-icon { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 9; stroke-linejoin: round; }
 .kk-stepper { display: inline-flex; align-items: center; border: 1px solid var(--kk-rule); border-radius: 999px; background: var(--kk-surface); }
-.kk-stepper button { border: 0; background: transparent; width: 38px; height: 36px; font-size: 1.2rem; border-radius: 999px; }
+.kk-stepper button { border: 0; background: transparent; width: 44px; height: 44px; font-size: 1.2rem; border-radius: 999px; }
 .kk-stepper output { min-width: 2.6rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
 .kk-notation { display: inline-flex; gap: 6px; align-items: center; }
-.kk-notation input { width: 9.5rem; min-height: 36px; border: 1px solid var(--kk-rule); border-radius: 10px; padding: 0 10px; background: var(--kk-surface); color: var(--kk-ink); font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.kk-notation { flex: 1 1 8rem; min-width: 0; max-width: 16rem; }
+.kk-field { min-height: 44px; border: 1px solid var(--kk-rule); border-radius: 10px; padding: 0 10px; background: var(--kk-surface); color: var(--kk-ink); font: inherit; min-width: 0; }
+.kk-notation input { width: 100%; min-height: 44px; border: 1px solid var(--kk-rule); border-radius: 10px; padding: 0 10px; background: var(--kk-surface); color: var(--kk-ink); font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .kk-notation input[aria-invalid="true"] { border-color: var(--kk-bad); }
 .kk-error { color: var(--kk-bad); font-size: 0.8rem; }
 
-.kk-felt { position: relative; min-width: 0; }
-.kk-mute { position: absolute; top: 8px; right: 8px; z-index: 2; width: 44px; height: 44px; border: 0; border-radius: 50%; display: grid; place-items: center; background: transparent; color: var(--kk-felt-ink); opacity: .8; }
-.kk-root .kk-mute { color: var(--kk-felt-ink); }
+/* The felt is the picture; the tray is a button filling it, under the dice, so a tap anywhere but on a held die rolls. */
+.kk-felt { position: relative; min-width: 0; min-height: 250px; border-radius: calc(var(--kk-radius) + 6px); padding: 26px 16px 18px; display: grid; place-items: center; align-content: center; gap: 12px;
+  background: radial-gradient(120% 90% at 50% 20%, var(--kk-felt) 0%, var(--kk-felt-deep) 100%); color: var(--kk-felt-ink);
+  box-shadow: inset 0 2px 18px rgba(0,0,0,.35), inset 0 0 0 6px rgba(0,0,0,.12), 0 1px 0 rgba(255,255,255,.4); touch-action: manipulation; user-select: none; -webkit-user-select: none; overflow: hidden; }
+.kk-felt::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none; opacity: .12; background-image: radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px); background-size: 5px 5px; }
+.kk-tray { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; padding: 0; background: transparent; border-radius: inherit; }
+.kk-root .kk-tray:focus-visible { outline-offset: -6px; }
+.kk-root .kk-tray:disabled { opacity: 1; }
+.kk-dice, .kk-hint { position: relative; z-index: 1; pointer-events: none; }
+.kk-mute, .kk-release { position: absolute; top: 8px; z-index: 3; min-height: 44px; border: 0; display: grid; place-items: center; background: transparent; color: var(--kk-felt-ink); }
+.kk-mute { right: 8px; width: 44px; border-radius: 50%; opacity: .8; }
+.kk-release { left: 8px; padding: 0 14px; border-radius: 999px; font-size: .85rem; font-weight: 600; background: rgba(0,0,0,.28); box-shadow: inset 0 0 0 1px rgba(255,255,255,.35); }
+.kk-release[hidden] { display: none; }
+.kk-root .kk-mute, .kk-root .kk-release { color: var(--kk-felt-ink); }
 .kk-mute:hover { background: rgba(0,0,0,.18); opacity: 1; }
 .kk-mute[aria-pressed="false"] { opacity: .55; }
-.kk-tray { position: relative; border: 0; width: 100%; min-height: 250px; border-radius: calc(var(--kk-radius) + 6px); padding: 26px 16px 18px; display: grid; place-items: center; gap: 12px;
-  background: radial-gradient(120% 90% at 50% 20%, var(--kk-felt) 0%, var(--kk-felt-deep) 100%); color: var(--kk-felt-ink);
-  box-shadow: inset 0 2px 18px rgba(0,0,0,.35), inset 0 0 0 6px rgba(0,0,0,.12), 0 1px 0 rgba(255,255,255,.4); touch-action: manipulation; user-select: none; overflow: hidden; }
-.kk-tray::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .12; background-image: radial-gradient(rgba(255,255,255,.5) 1px, transparent 1px); background-size: 5px 5px; }
 .kk-dice { --kk-gap: clamp(8px, 2.5vw, 20px); display: flex; flex-wrap: wrap; justify-content: center; gap: var(--kk-gap); max-width: 560px; }
-.kk-die { width: clamp(64px, 18vw, 96px); aspect-ratio: 1; position: relative; filter: drop-shadow(0 7px 6px rgba(0,0,0,.35)); transition: opacity .25s, transform .25s; }
+.kk-die { width: clamp(64px, 18vw, 96px); aspect-ratio: 1; position: relative; display: block; border: 0; padding: 0; background: transparent; filter: drop-shadow(0 7px 6px rgba(0,0,0,.35)); transition: opacity .25s, transform .25s; }
 .kk-dice[data-count="1"] .kk-die { width: clamp(110px, 34vw, 150px); }
 .kk-dice[data-count="2"] .kk-die { width: clamp(90px, 28vw, 124px); }
 .kk-dice[data-count="4"] .kk-die, .kk-dice[data-count="5"] .kk-die { width: clamp(48px, 14vw, 92px); }
@@ -74,6 +99,13 @@ export const CSS = `
 .kk-number { fill: var(--kk-die-ink); paint-order: stroke; stroke: var(--kk-die); stroke-width: 7px; stroke-linejoin: round; font-weight: 800; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 .kk-underline { fill: var(--kk-die-ink); }
 .kk-caption { fill: var(--kk-die-ink); opacity: .6; font-weight: 700; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
+/* A die that can be held is a button over the felt; the rest let a tap through to it. */
+button.kk-die { pointer-events: auto; border-radius: 18%; }
+button.kk-die[aria-pressed="true"] { transform: translateY(-5px); }
+button.kk-die[aria-pressed="true"] .kk-body { stroke: #e0b43b; stroke-width: 7; }
+button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: absolute; z-index: 1; left: 50%; bottom: -7px; transform: translateX(-50%); padding: 1px 7px; border-radius: 999px; background: #e0b43b; color: #1f2320; font-size: .62rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; line-height: 1.4; }
+/* A little air between two kinds of dice, where there are few enough dice for it not to cost a row. */
+.kk-dice:not([data-count="6"]):not([data-count="7"]):not([data-count="8"]):not([data-count="9"]):not([data-count="10"]):not([data-count="many"]) .kk-die[data-first="true"] { margin-left: clamp(6px, 2vw, 14px); }
 .kk-die[data-kept="false"] { opacity: .38; transform: scale(.88); }
 .kk-die[data-kept="false"]::after { content: ""; position: absolute; left: 12%; right: 12%; top: 50%; height: 3px; background: var(--kk-felt-ink); border-radius: 3px; transform: rotate(-20deg); }
 .kk-die[data-exploded="true"] .kk-body { stroke: var(--kk-accent); stroke-width: 5; }
@@ -90,13 +122,17 @@ export const CSS = `
   100% { transform: none; }
 }
 @keyframes kk-land { 0% { transform: scale(.92); } 60% { transform: scale(1.06); } 100% { transform: none; } }
-.kk-root .kk-tray, .kk-root .kk-tray .kk-hint { color: var(--kk-felt-ink); }
+.kk-root .kk-felt, .kk-root .kk-felt .kk-hint { color: var(--kk-felt-ink); }
 .kk-hint { font-size: .85rem; opacity: .85; letter-spacing: .02em; display: inline-flex; align-items: center; gap: 6px; }
 @media (hover: none) { .kk-hint kbd { display: none; } }
 .kk-hint kbd { font: inherit; font-size: .72rem; border: 1px solid rgba(255,255,255,.45); border-radius: 5px; padding: 0 5px; }
-.kk-tray[data-rolling="true"] .kk-hint { visibility: hidden; }
+.kk-felt[data-rolling="true"] .kk-hint { visibility: hidden; }
+.kk-hint { text-align: center; min-height: 1.3em; }
 
-.kk-result { display: grid; gap: 6px; justify-items: center; text-align: center; min-height: 118px; }
+/* Room for a roll's total, its sum, a badge, its luck and its link, kept from the start: the choices below never move when the dice land. */
+.kk-result { display: grid; gap: 6px; justify-items: center; align-content: start; text-align: center; min-height: 214px; }
+.kk-luck[data-waiting="true"] { opacity: .3; min-height: 3.1em; align-content: start; }
+@media (min-width: 700px) { .kk-felt { min-height: 272px; } .kk-result { min-height: 226px; } }
 .kk-total { font-size: clamp(3rem, 12vw, 4.6rem); line-height: 1; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
 .kk-total small { font-size: .9rem; font-weight: 600; color: var(--kk-muted); letter-spacing: .06em; text-transform: uppercase; display: block; margin-bottom: 4px; }
 .kk-sum { font-variant-numeric: tabular-nums; color: var(--kk-muted); font-size: .95rem; }
@@ -107,8 +143,8 @@ export const CSS = `
 .kk-luck { width: min(320px, 100%); display: grid; gap: 4px; font-size: .85rem; color: var(--kk-muted); }
 .kk-meter { height: 8px; border-radius: 99px; background: linear-gradient(90deg, var(--kk-bad), #e0b43b 50%, var(--kk-good)); position: relative; }
 .kk-meter i { position: absolute; top: -4px; width: 4px; height: 16px; border-radius: 3px; background: var(--kk-ink); transform: translateX(-50%); box-shadow: 0 0 0 2px var(--kk-surface); transition: left .4s cubic-bezier(.3,1.3,.5,1); }
-.kk-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-.kk-link { border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 999px; min-height: 34px; padding: 0 14px; font-size: .85rem; }
+.kk-actions { display: flex; gap: 8px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.kk-link { border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 999px; min-height: 44px; padding: 0 14px; font-size: .85rem; }
 .kk-link[data-danger="true"] { border-color: var(--kk-bad); color: var(--kk-bad); }
 
 .kk-panels { border: 1px solid var(--kk-rule); border-radius: var(--kk-radius); background: var(--kk-surface); overflow: hidden; }
@@ -126,6 +162,9 @@ export const CSS = `
 .kk-history .kk-mini span { min-width: 22px; height: 22px; border-radius: 6px; border: 1px solid var(--kk-rule); display: inline-grid; place-items: center; font-size: .72rem; font-weight: 700; padding: 0 3px; font-variant-numeric: tabular-nums; }
 .kk-history .kk-mini span[data-kept="false"] { opacity: .4; text-decoration: line-through; }
 .kk-history .kk-mini span[data-exploded="true"] { border-color: var(--kk-accent); color: var(--kk-accent); }
+.kk-history .kk-mini span[data-held="true"] { border-color: #e0b43b; box-shadow: inset 0 0 0 1px #e0b43b; }
+.kk-history .kk-mini span[data-first="true"] { margin-left: 6px; }
+.kk-sum s { text-decoration-thickness: 1.5px; }
 .kk-history strong { font-size: 1.25rem; font-variant-numeric: tabular-nums; min-width: 2.5rem; text-align: right; }
 .kk-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
 .kk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
@@ -142,7 +181,7 @@ export const CSS = `
 .kk-bar[data-now="true"] > b { background: var(--kk-accent); }
 .kk-axis { display: flex; justify-content: space-between; font-size: .7rem; color: var(--kk-muted); font-variant-numeric: tabular-nums; }
 .kk-target { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.kk-target input { width: 5rem; min-height: 36px; border: 1px solid var(--kk-rule); border-radius: 10px; padding: 0 10px; background: var(--kk-surface); color: var(--kk-ink); font: inherit; font-weight: 700; }
+.kk-target input { width: 5rem; min-height: 44px; border: 1px solid var(--kk-rule); border-radius: 10px; padding: 0 10px; background: var(--kk-surface); color: var(--kk-ink); font: inherit; font-weight: 700; }
 .kk-big { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
 .kk-settings { display: grid; gap: 8px; font-size: .85rem; }
 .kk-settings p { margin: 0; color: var(--kk-muted); }

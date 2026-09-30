@@ -1,4 +1,4 @@
-import { isSides, normalizeSpec, readDice, totalOf, type Roll } from "./dice.ts";
+import { canHold, isSides, normalizeSpec, readDice, totalOf, type Roll } from "./dice.ts";
 
 /** A history keeps the latest rolls and forgets the oldest past this many. */
 export const HISTORY_LIMIT = 500;
@@ -31,7 +31,7 @@ function readRoll(value: unknown): Roll | null {
   if (!Number.isFinite(at)) return null;
   const faces = dice.map((d) => d.face);
   const kept = dice.map((d) => d.status === "kept");
-  return {
+  const read: Roll = {
     id: typeof r.id === "string" ? r.id : `${at.toString(36)}-s`,
     spec: fair,
     faces,
@@ -41,6 +41,9 @@ function readRoll(value: unknown): Roll | null {
     seed: typeof r.seed === "string" ? r.seed : null,
     dice,
   };
+  // Which dice were held is kept only when it fits the roll: one yes or no for each die of dice that can be held.
+  if (Array.isArray(r.held) && r.held.length === faces.length && canHold(fair)) read.held = r.held.map((h) => h === true);
+  return read;
 }
 
 /** A kept history read back from its text. Rolls that do not add up are dropped; text that is not a history reads as empty. */
@@ -62,7 +65,7 @@ export function parseHistory(text: string | null): Roll[] {
 /** A history as text, to keep in a browser's storage or anywhere else. `parseHistory` reads it back. */
 export function serializeHistory(history: readonly Roll[]): string {
   // Without `dice`: it is worked out from the faces on the way back in.
-  return JSON.stringify({ version: 1, rolls: history.map((r) => ({ id: r.id, spec: r.spec, faces: r.faces, kept: r.kept, total: r.total, at: r.at, seed: r.seed })) });
+  return JSON.stringify({ version: 1, rolls: history.map((r) => ({ id: r.id, spec: r.spec, faces: r.faces, kept: r.kept, total: r.total, at: r.at, seed: r.seed, held: r.held })) });
 }
 
 /** Read a kept history. A storage that throws (a private window, blocked cookies) reads as empty. */

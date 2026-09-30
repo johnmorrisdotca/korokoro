@@ -31,7 +31,12 @@ pnpm dlx serve site   # or any static server
   exact and quick, refuse it in the notation by name.
 - **The show never rolls the dice.** The tumble and the sound present a roll
   the generator has already made; they must not draw from it.
-- **Words go in `src/ui/strings.ts`**, in English and Japanese.
+- **Words go in `src/ui/strings.ts`**, in English and Japanese, then
+  `pnpm docs:make` to bring `docs/strings-ja.md` up to date. Japanese is plain
+  and polite, and uses the words Japanese tabletop players use: ダイス, ロール,
+  出目, 振り直し.
+- **Examples in the README are run by `src/docs.test.js`.** Change a number
+  in one and the other has to follow.
 - **Every export gets a doc comment**, and the README's tables (notation,
   options, limits) are kept in step with the code.
 - **Sounds.** The recordings are the `.m4a` files in `sounds/`; `pnpm sounds`

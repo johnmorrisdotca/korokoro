@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Korokoro · fair dice with the odds of every throw</title>
-    <meta name="description" content="Tap to roll up to ten dice: d4, d6, d8, d10, d12, d20, d30 or d100. Or type any dice: 8d6, 4d6 drop the lowest, exploding dice, rerolls, Fate dice, a d14. Exact odds, seeded rolls, history and stats. Free and open source." />
+    <meta name="description" content="Tap dice to build a roll: up to ten of d4, d6, d8, d10, d12, d20, d30 and d100, in any mix. Hold dice and roll the rest. Or type any dice: 4d6 drop the lowest, exploding dice, rerolls, Fate dice, a d14. Exact odds, seeded rolls, history and stats. Free and open source." />
     <meta name="theme-color" content="#2f5d4a" />
     <meta property="og:title" content="Korokoro dice roller" />
     <meta property="og:description" content="Fair dice for the table, with the odds of every throw." />
@@ -39,7 +39,7 @@
       <header>
         <div>
           <h1>Korokoro<span lang="ja">コロコロ</span></h1>
-          <p>Fair dice for the table, with the odds of every throw. Pick up to ten dice, from a d4 to a d100, and tap the felt to roll.</p>
+          <p>Fair dice for the table, with the odds of every throw. Tap a die to add it, up to ten, and tap the felt to roll.</p>
         </div>
         <nav>
           <a href="https://github.com/johnmorrisdotca/korokoro">GitHub</a>
@@ -49,15 +49,16 @@
       <div id="roller"></div>
       <section class="more" aria-labelledby="more-title">
         <h2 id="more-title">More dice, by notation</h2>
-        <p>The buttons are the dice a table owns: d4, d6, d8, d10, d12, d20, d30 and d100. Anything else is typed into the notation box beside the bonus, or tapped here.</p>
+        <p>The buttons are the dice a table owns: d4, d6, d8, d10, d12, d20, d30 and d100, in any mix. After a roll, tap a die on the felt to hold it and roll the rest. Anything else is typed into the notation box beside the bonus, or tapped here.</p>
         <ul>
           <li><button type="button" data-roll="4d6dl1"><code>4d6dl1</code><span>Four d6, drop the lowest: an ability score</span></button></li>
           <li><button type="button" data-roll="3d6!"><code>3d6!</code><span>Exploding dice: a 6 throws another die</span></button></li>
-          <li><button type="button" data-roll="2d6r<3+4"><code>2d6r&lt;3+4</code><span>Reroll a 1 or a 2, once, then add 4</span></button></li>
+          <li><button type="button" data-roll="2d6r<3+4"><code>2d6r&lt;3+4</code><span>Reroll every 1 and 2 until they clear, then add 4</span></button></li>
+          <li><button type="button" data-roll="2d8ro<3"><code>2d8ro&lt;3</code><span>Reroll a 1 or a 2 once, and take what comes</span></button></li>
           <li><button type="button" data-roll="4dF"><code>4dF</code><span>Four Fate dice: plus, blank or minus</span></button></li>
-          <li><button type="button" data-roll="5d10kl2"><code>5d10kl2</code><span>Five d10, keep the lowest two</span></button></li>
+          <li><button type="button" data-roll="1d20+1d4+3"><code>1d20+1d4+3</code><span>A d20 and a d4 together, plus 3</span></button></li>
           <li><button type="button" data-roll="1d14"><code>d14</code><span>A die of any size, from 2 sides to 1000</span></button></li>
-          <li><button type="button" data-roll="8d6"><code>8d6</code><span>Eight d6: up to ten dice in one roll</span></button></li>
+          <li><button type="button" data-roll="5d10kl2"><code>5d10kl2</code><span>Five d10, keep the lowest two</span></button></li>
           <li><button type="button" data-roll="2d20kh1+5"><code>2d20kh1+5</code><span>Advantage: two d20, keep the highest, add 5</span></button></li>
         </ul>
       </section>
