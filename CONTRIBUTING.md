@@ -13,10 +13,10 @@ quickest way to show a result that looks wrong.
 ```sh
 git clone https://github.com/johnmorrisdotca/korokoro
 cd korokoro
-npm install
-npm run check    # lint, types and tests: the same as CI
-npm run site     # builds the demo into ./site
-npx serve site   # or any static server
+pnpm install
+pnpm check    # lint, types and tests: the same as CI
+pnpm site     # builds the demo into ./site
+pnpm dlx serve site   # or any static server
 ```
 
 - **Keep the core pure.** Everything outside `src/ui` and `src/react.tsx` is
@@ -33,4 +33,4 @@ npx serve site   # or any static server
 ## Releasing
 
 Maintainers bump the version in `package.json`, move *Unreleased* to the new
-version in `CHANGELOG.md`, tag `vX.Y.Z` and run `npm publish`.
+version in `CHANGELOG.md`, tag `vX.Y.Z` and run `pnpm publish`.

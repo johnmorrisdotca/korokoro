@@ -45,7 +45,7 @@ uses this package exactly as published.
 ## Install
 
 ```sh
-npm install @johnmorrisdotca/korokoro
+pnpm add @johnmorrisdotca/korokoro
 ```
 
 ES modules with TypeScript types. The core and the tray have no dependencies;
@@ -245,9 +245,9 @@ Ideas and pull requests are welcome.
 See [CONTRIBUTING.md](./CONTRIBUTING.md). In short:
 
 ```sh
-npm install
-npm run check   # lint, types and tests
-npm run site    # build the demo into ./site, then serve it
+pnpm install
+pnpm check   # lint, types and tests
+pnpm site    # build the demo into ./site, then serve it
 ```
 
 Please follow the [code of conduct](./CODE_OF_CONDUCT.md).

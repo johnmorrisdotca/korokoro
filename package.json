@@ -59,9 +59,9 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
-    "check": "npm run lint && npm run typecheck && npm test",
-    "site": "npm run build && node scripts/site.mjs",
-    "prepublishOnly": "npm run check && npm run build"
+    "check": "pnpm lint && pnpm typecheck && pnpm test",
+    "site": "pnpm build && node scripts/site.mjs",
+    "prepublishOnly": "pnpm check && pnpm build"
   },
   "peerDependencies": {
     "react": ">=18"
@@ -82,5 +82,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "packageManager": "pnpm@10.11.0"
 }
