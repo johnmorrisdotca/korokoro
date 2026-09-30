@@ -6,6 +6,20 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-09-30
+
+### Added
+
+- The d30, a thirty-sided die: in the tray's row of dice, in notation (`d30`,
+  `2d30+3`, `2d30kh1`), in the exact odds, and in history, stats and shared
+  links. It is drawn as a rhombic triacontahedron seen face on.
+
+### Fixed
+
+- The package's `exports` now carry a `default` condition beside `import`, so
+  tools that resolve it from CommonJS-compiled code (Playwright specs, for one)
+  find it instead of failing with `No "exports" main defined`.
+
 ## [1.0.0] - 2026-09-30
 
 ### Added
@@ -27,5 +41,6 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.1.0
 [1.0.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.0.0

@@ -3,7 +3,9 @@ import { s } from "./dom.ts";
 
 /**
  * Each die drawn as its own shape, the way it looks on the table: a d6 with
- * pips, the others as their silhouette with the number in the middle.
+ * pips, the others as their silhouette with the number in the middle. The d30
+ * is a rhombic triacontahedron seen face on: ten sides round the edge, and the
+ * number on the diamond face that points at you.
  * Everything is in a 100 by 100 box and coloured by the tray's CSS variables.
  */
 const OUTLINES: Record<DieSides, string> = {
@@ -13,6 +15,7 @@ const OUTLINES: Record<DieSides, string> = {
   10: "M50 3 L94 42 L50 97 L6 42 Z",
   12: "M50 4 L94 36 L77 90 L23 90 L6 36 Z",
   20: "M50 3 L91 26 L91 74 L50 97 L9 74 L9 26 Z",
+  30: "M97 50 L88 22.4 L64.5 5.3 L35.5 5.3 L12 22.4 L3 50 L12 77.6 L35.5 94.7 L64.5 94.7 L88 77.6 Z",
   100: "M50 3 L94 42 L50 97 L6 42 Z",
 };
 
@@ -23,6 +26,7 @@ const FACETS: Partial<Record<DieSides, string>> = {
   100: "M6 42 L50 58 L94 42 M50 58 L50 97",
   12: "M50 22 L76 40 L66 72 L34 72 L24 40 Z",
   20: "M50 22 L78 70 L22 70 Z M50 3 L50 22 M91 74 L78 70 M9 74 L22 70",
+  30: "M50 29 L84 50 L50 71 L16 50 Z M3 50 L16 50 M84 50 L97 50 M35.5 5.3 L50 29 L64.5 5.3 M35.5 94.7 L50 71 L64.5 94.7",
 };
 
 const PIPS: Record<number, [number, number][]> = {
@@ -35,7 +39,7 @@ const PIPS: Record<number, [number, number][]> = {
 };
 
 /** Where the number sits, so it is inside the widest part of the shape. */
-const NUMBER_Y: Record<DieSides, number> = { 4: 68, 6: 50, 8: 52, 10: 44, 12: 52, 20: 54, 100: 44 };
+const NUMBER_Y: Record<DieSides, number> = { 4: 68, 6: 50, 8: 52, 10: 44, 12: 52, 20: 54, 30: 50, 100: 44 };
 
 export function dieFace(sides: DieSides, face: number, label: string): SVGElement {
   const svg = s("svg", { viewBox: "0 0 100 100", class: "kk-die-svg", role: "img", "aria-label": label });

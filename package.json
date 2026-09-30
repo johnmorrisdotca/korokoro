@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.0.0",
-  "description": "Fair dice for the table, with the odds of every throw: tap to roll one to five of d4, d6, d8, d10, d12, d20 or d100, with exact probabilities, roll history and stats. No dependencies.",
+  "version": "1.1.0",
+  "description": "Fair dice for the table, with the odds of every throw: tap to roll one to five of d4, d6, d8, d10, d12, d20, d30 or d100, with exact probabilities, roll history and stats. No dependencies.",
   "keywords": [
     "dice",
     "dice-roller",
@@ -12,6 +12,7 @@
     "rpg",
     "dnd",
     "d20",
+    "d30",
     "ttrpg",
     "typescript",
     "react"
@@ -37,11 +38,13 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
     "./react": {
       "types": "./dist/react.d.ts",
-      "import": "./dist/react.js"
+      "import": "./dist/react.js",
+      "default": "./dist/react.js"
     }
   },
   "files": [

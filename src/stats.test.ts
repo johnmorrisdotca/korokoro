@@ -6,7 +6,7 @@ import { seededSource } from "./random.ts";
 import { readShared, shareQuery } from "./share.ts";
 import { chiSquareTail, statsOf } from "./stats.ts";
 
-function made(faces: number[], sides: 6 | 20 = 6, keep: "all" | "highest" = "all", at = 0): Roll {
+function made(faces: number[], sides: 6 | 20 | 30 = 6, keep: "all" | "highest" = "all", at = 0): Roll {
   const spec = normalizeSpec({ count: faces.length, sides, keep });
   const kept = keptFaces(faces, spec.keep);
   return { id: String(at), spec, faces, kept, total: totalOf(faces, kept, 0), at, seed: null };
@@ -42,6 +42,30 @@ describe("statsOf", () => {
     expect(statsOf(loaded, normalizeSpec({ count: 1, sides: 6 })).faces?.fairness).toBeLessThan(0.001);
   });
 
+  it("counts each face of a d30 and finds a fair one fair", () => {
+    const source = seededSource("fair d30");
+    let thrown: Roll[] = [];
+    for (let i = 0; i < 400; i++) thrown = addToHistory(thrown, roll({ count: 5, sides: 30 }, source, i));
+    const stats = statsOf(thrown, normalizeSpec({ count: 5, sides: 30 }));
+    expect(stats.faces?.sides).toBe(30);
+    expect(stats.faces?.counts).toHaveLength(30);
+    expect(stats.faces?.dice).toBe(2000);
+    expect(stats.faces?.fairness).toBeGreaterThan(0.01);
+    expect(stats.totals?.notation).toBe("5d30");
+    expect(stats.totals?.expected).toBeCloseTo(77.5, 9);
+    expect(stats.totals?.seen.reduce((a, b) => a + b, 0)).toBe(400);
+    const loaded = Array.from({ length: 300 }, (_, i) => made([i % 2 === 0 ? 30 : 29], 30, "all", i));
+    expect(statsOf(loaded, normalizeSpec({ count: 1, sides: 30 })).faces?.fairness).toBeLessThan(0.001);
+  });
+
+  it("a 20 or a 1 on a d30 is not a natural: those belong to the d20", () => {
+    const stats = statsOf([made([20], 30), made([1], 30), made([30], 30), made([30, 30], 30)]);
+    expect(stats.naturalTwenties).toBe(0);
+    expect(stats.naturalOnes).toBe(0);
+    expect(stats.matches).toBe(1);
+    expect(stats.longestHot).toBe(2);
+  });
+
   it("chi-square tail is close to the table", () => {
     // 11.07 is the 5% point for five degrees of freedom.
     expect(chiSquareTail(11.07, 5)).toBeCloseTo(0.05, 2);
@@ -62,6 +86,12 @@ describe("history", () => {
     const bad = JSON.stringify({ rolls: [{ ...good, faces: [9, 9, 9] }, { spec: { sides: 7 } }, null] });
     expect(parseHistory(bad)).toEqual([]);
     expect(parseHistory("not json")).toEqual([]);
+  });
+
+  it("keeps a d30 roll, and drops one showing a 31", () => {
+    const good = roll({ count: 2, sides: 30, modifier: 3 }, seededSource("h30"), 7);
+    expect(parseHistory(serializeHistory([good]))).toEqual([good]);
+    expect(parseHistory(JSON.stringify({ rolls: [{ ...good, faces: [31, 1] }] }))).toEqual([]);
   });
 
   it("a storage that throws reads as empty and says it refused", () => {
@@ -85,6 +115,14 @@ describe("share", () => {
     const r = roll({ count: 2, sides: 20, keep: "highest", modifier: 3 }, seededSource("share"), 1234);
     const back = readShared(shareQuery(r));
     expect(back).toMatchObject({ faces: r.faces, total: r.total, at: 1234, seed: "share", spec: r.spec });
+  });
+
+  it("a shared d30 comes back as thrown", () => {
+    const r = roll({ count: 2, sides: 30, modifier: 3 }, seededSource("share30"), 99);
+    expect(shareQuery(r)).toContain("roll=2d30%2B3");
+    expect(readShared(shareQuery(r))).toMatchObject({ faces: r.faces, total: r.total, at: 99, seed: "share30", spec: r.spec });
+    expect(readShared("roll=2d30&faces=30,1")).toMatchObject({ total: 31 });
+    expect(readShared("roll=2d30&faces=31,1")).toBeNull();
   });
 
   it("refuses a link whose faces the dice could not show", () => {

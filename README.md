@@ -24,8 +24,8 @@ uses this package exactly as published.
 
 ## Features
 
-- **Every die a table needs.** One to five of d4, d6, d8, d10, d12, d20 or d100,
-  with a bonus, and advantage or disadvantage (keep the highest or lowest).
+- **Every die a table needs.** One to five of d4, d6, d8, d10, d12, d20, d30 or
+  d100, with a bonus, and advantage or disadvantage (keep the highest or lowest).
 - **Fair by construction.** Rolls come from `crypto.getRandomValues`, turned
   into faces by rejection sampling, so no face is favoured by a modulo.
 - **Reproducible when asked.** A seeded mode (sfc32) throws the same dice for the
@@ -102,11 +102,12 @@ chanceAtLeast(attack, 15);                  // 0.7975
 | `4d8-1` | four d8, minus 1 |
 | `2d20kh1` | two d20, keep the highest (advantage) |
 | `2d20kl1` | two d20, keep the lowest (disadvantage) |
+| `d30`, `2d30+3` | one thirty-sided die; two of them, plus 3 |
 | `d%`, `1d100` | one percentile die |
 
-One to five dice, of the seven kinds above, with a bonus from −99 to +99.
-Anything else is refused (`parseNotation` returns `null`) rather than quietly
-rolled as something different.
+One to five dice, of d4, d6, d8, d10, d12, d20, d30 or d100, with a bonus from
+−99 to +99. Anything else is refused (`parseNotation` returns `null`) rather
+than quietly rolled as something different.
 
 ## API
 
@@ -115,7 +116,7 @@ Every function is pure unless it says otherwise, and every type is exported.
 ### Rolling
 
 ```ts
-type DieSides = 4 | 6 | 8 | 10 | 12 | 20 | 100;
+type DieSides = 4 | 6 | 8 | 10 | 12 | 20 | 30 | 100;
 type Keep = "all" | "highest" | "lowest";
 type RollSpec = { count: number; sides: DieSides; modifier: number; keep: Keep };
 type Roll = {

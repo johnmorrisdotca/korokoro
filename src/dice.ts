@@ -1,7 +1,7 @@
 import { cryptoSource, randomInt, type RandomSource } from "./random.ts";
 
-/** The dice a tabletop player owns: the polyhedral set, plus the percentile die. */
-export const DIE_SIDES = [4, 6, 8, 10, 12, 20, 100] as const;
+/** The dice a tabletop player owns: the polyhedral set, the thirty-sided die, and the percentile die. */
+export const DIE_SIDES = [4, 6, 8, 10, 12, 20, 30, 100] as const;
 export type DieSides = (typeof DIE_SIDES)[number];
 
 /** One to five dice at once: as many as a hand holds, and as many as read at a glance. */

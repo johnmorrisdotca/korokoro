@@ -18,6 +18,23 @@ describe("randomInt", () => {
     expect([...seen].sort((a, b) => a - b)).toEqual(Array.from({ length: 20 }, (_, i) => i));
   });
 
+  it("throws a fair d30 from the seeded generator: each face about one time in thirty", () => {
+    // 2^32 is 16 mod 30, so a modulo alone would lean towards the low sixteen faces.
+    const source = seededSource("d30");
+    const throws = 30_000;
+    const counts = new Array<number>(30).fill(0);
+    for (let i = 0; i < throws; i++) {
+      const face = randomInt(source, 30);
+      counts[face] = (counts[face] as number) + 1;
+    }
+    expect(counts.every((c) => c > 0)).toBe(true);
+    const each = throws / 30;
+    const chiSquare = counts.reduce((sum, c) => sum + (c - each) ** 2 / each, 0);
+    // 49.59 is the 1% point for 29 degrees of freedom: a fair die passes 99 times in 100, and this seed is fixed.
+    expect(chiSquare).toBeLessThan(49.59);
+    for (const c of counts) expect(Math.abs(c - each)).toBeLessThan(each * 0.12);
+  });
+
   it("refuses a range it cannot pick from", () => {
     expect(() => randomInt(seededSource("x"), 0)).toThrow(RangeError);
     expect(() => randomInt(seededSource("x"), 2.5)).toThrow(RangeError);
