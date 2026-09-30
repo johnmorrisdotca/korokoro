@@ -1,30 +1,39 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "0.1.0",
-  "description": "Fair dice for tabletop games: tap to roll one to five of d4, d6, d8, d10, d12, d20 or d100, with exact odds, roll history and stats. No dependencies; runs anywhere, including GitHub Pages.",
-  "license": "MIT",
-  "author": "John Morris",
+  "version": "1.0.0",
+  "description": "Fair dice for the table, with the odds of every throw: tap to roll one to five of d4, d6, d8, d10, d12, d20 or d100, with exact probabilities, roll history and stats. No dependencies.",
+  "keywords": [
+    "dice",
+    "dice-roller",
+    "rng",
+    "random",
+    "probability",
+    "tabletop",
+    "rpg",
+    "dnd",
+    "d20",
+    "ttrpg",
+    "typescript",
+    "react"
+  ],
   "homepage": "https://johnmorrisdotca.github.io/korokoro/",
+  "bugs": {
+    "url": "https://github.com/johnmorrisdotca/korokoro/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/johnmorrisdotca/korokoro.git"
   },
-  "bugs": {
-    "url": "https://github.com/johnmorrisdotca/korokoro/issues"
+  "license": "MIT",
+  "author": {
+    "name": "John Morris",
+    "email": "john@johnmorris.ca",
+    "url": "https://johnmorris.ca"
   },
   "type": "module",
-  "sideEffects": false,
-  "keywords": [
-    "dice",
-    "dice-roller",
-    "rpg",
-    "dnd",
-    "d20",
-    "tabletop",
-    "random",
-    "probability",
-    "react"
-  ],
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -41,17 +50,18 @@
     "LICENSE",
     "CHANGELOG.md"
   ],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
+    "check": "npm run lint && npm run typecheck && npm test",
     "site": "npm run build && node scripts/site.mjs",
-    "prepublishOnly": "npm test && npm run build"
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.0",
-    "react": "^19.0.0",
-    "typescript": "^5.9.0",
-    "vitest": "^5.0.0"
+    "prepublishOnly": "npm run check && npm run build"
   },
   "peerDependencies": {
     "react": ">=18"
@@ -60,5 +70,17 @@
     "react": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/react": "^19.0.0",
+    "eslint": "^9.0.0",
+    "react": "^19.0.0",
+    "typescript": "^5.9.0",
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

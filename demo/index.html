@@ -3,32 +3,45 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Korokoro dice roller</title>
-    <meta name="description" content="Tap to roll one to five dice: d4, d6, d8, d10, d12, d20 or d100, with exact odds, roll history and stats." />
+    <title>Korokoro · fair dice with the odds of every throw</title>
+    <meta name="description" content="Tap to roll one to five dice, from a d4 to a d100, with a bonus, advantage or disadvantage. Exact odds, roll history and stats. Free and open source." />
     <meta name="theme-color" content="#2f5d4a" />
+    <meta property="og:title" content="Korokoro dice roller" />
+    <meta property="og:description" content="Fair dice for the table, with the odds of every throw." />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='20' fill='%23fffdf7' stroke='%232f5d4a' stroke-width='8'/%3E%3Ccircle cx='30' cy='30' r='9' fill='%231f2320'/%3E%3Ccircle cx='50' cy='50' r='11' fill='%23b5452c'/%3E%3Ccircle cx='70' cy='70' r='9' fill='%231f2320'/%3E%3C/svg%3E" />
     <style>
-      :root { color-scheme: light dark; --page: #f4efe4; --ink: #1f2320; }
-      @media (prefers-color-scheme: dark) { :root { --page: #141614; --ink: #ece8dc; } }
+      :root { color-scheme: light dark; --page: #f4efe4; --ink: #1f2320; --muted: #6b6f68; --rule: #ddd6c6; }
+      @media (prefers-color-scheme: dark) { :root { --page: #141614; --ink: #ece8dc; --muted: #a09d93; --rule: #3a3d38; } }
       body { margin: 0; background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-      main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 48px; }
-      header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-      h1 { margin: 0; font-size: 1.8rem; }
-      h1 span { font-size: 1rem; opacity: .6; margin-left: 6px; font-weight: 500; }
-      header p { margin: 0; opacity: .7; }
-      footer { margin-top: 32px; font-size: .85rem; opacity: .7; }
+      main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 40px; }
+      header { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 18px; }
+      h1 { margin: 0; font-size: 1.8rem; letter-spacing: -.01em; }
+      h1 span { font-size: 1rem; color: var(--muted); margin-left: 6px; font-weight: 500; }
+      header p { margin: 2px 0 0; color: var(--muted); }
+      nav { display: flex; gap: 8px; }
+      nav a { text-decoration: none; color: inherit; border: 1px solid var(--rule); border-radius: 999px; padding: 6px 14px; font-size: .9rem; font-weight: 600; }
+      nav a:hover { border-color: var(--ink); }
+      footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--rule); font-size: .85rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: space-between; }
+      footer code { font-size: .8rem; }
       a { color: inherit; }
     </style>
   </head>
   <body>
     <main>
       <header>
-        <h1>Korokoro<span lang="ja">コロコロ</span></h1>
-        <p>Fair dice for the table. Tap the felt to roll.</p>
+        <div>
+          <h1>Korokoro<span lang="ja">コロコロ</span></h1>
+          <p>Fair dice for the table, with the odds of every throw. Tap the felt to roll.</p>
+        </div>
+        <nav>
+          <a href="https://github.com/johnmorrisdotca/korokoro">GitHub</a>
+          <a href="https://www.npmjs.com/package/@johnmorrisdotca/korokoro">npm</a>
+        </nav>
       </header>
       <div id="roller"></div>
       <footer>
-        Open source under the MIT licence. Rolls use your device's cryptographic generator unless you choose a seed.
-        Your history stays on this device.
+        <span>Rolls use your device's cryptographic generator unless you choose a seed. Your history stays on this device.</span>
+        <span><code>npm install @johnmorrisdotca/korokoro</code> · MIT © John Morris</span>
       </footer>
     </main>
     <script type="module">

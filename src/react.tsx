@@ -4,55 +4,41 @@ import { mountRoller, type RollerOptions } from "./ui/mount.ts";
 
 export type DiceRollerProps = RollerOptions & Omit<HTMLAttributes<HTMLDivElement>, keyof RollerOptions>;
 
+const OPTION_NAMES = ["locale", "strings", "storage", "storageKey", "spec", "query", "shareBase", "theme", "wide", "onRoll", "animationMs"] as const;
+
 /**
  * The tray as a React component: `<DiceRoller wide spec={{ count: 1, sides: 20 }} />`.
  *
  * A thin wrapper. The tray is plain DOM, mounted into this component's own
  * element once the browser has it and taken back on unmount, so it renders
  * nothing on the server and needs no provider. Options are read when it
- * mounts; give it a new `key` to start over with different ones.
+ * mounts (and again when `locale` changes); give it a new `key` to start over
+ * with different ones. `onRoll` is always the newest one passed.
  */
-export function DiceRoller({
-  locale,
-  strings,
-  storage,
-  storageKey,
-  spec,
-  query,
-  shareBase,
-  theme,
-  wide,
-  onRoll,
-  animationMs,
-  ...element
-}: DiceRollerProps) {
+export function DiceRoller(props: DiceRollerProps) {
   const host = useRef<HTMLDivElement>(null);
-  // The newest callback, read at roll time, so a parent re-rendering never remounts the tray.
-  const latest = useRef(onRoll);
+  const options = useRef<RollerOptions>({});
+  const element: Record<string, unknown> = {};
+  const given: Record<string, unknown> = {};
+  for (const [name, value] of Object.entries(props)) {
+    if ((OPTION_NAMES as readonly string[]).includes(name)) given[name] = value;
+    else element[name] = value;
+  }
   useEffect(() => {
-    latest.current = onRoll;
+    options.current = given as RollerOptions;
   });
 
+  const { locale } = props;
   useEffect(() => {
     const target = host.current;
     if (target === null) return;
     const roller = mountRoller(target, {
+      ...options.current,
       locale,
-      strings,
-      storage,
-      storageKey,
-      spec,
-      query,
-      shareBase,
-      theme,
-      wide,
-      animationMs,
-      onRoll: (roll) => latest.current?.(roll),
+      onRoll: (roll) => options.current.onRoll?.(roll),
     });
     return () => roller.destroy();
-    // Mounted once per key and locale, as documented above.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [locale]);
 
-  return <div ref={host} {...element} />;
+  return <div ref={host} {...(element as HTMLAttributes<HTMLDivElement>)} />;
 }
