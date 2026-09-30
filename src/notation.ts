@@ -1,5 +1,11 @@
+import { MAX_MATH_NUMBER, checkMath, mathText, type MathFunction, type MathNode } from "./math.ts";
 import {
   MAX_DICE,
+  MAX_DICE_BY_CODE,
+  MAX_UNIQUE_SIDES,
+  diceCount,
+  groupRange,
+  isPlainDice,
   MAX_EXPLODING_SIDES,
   MAX_FACES,
   MAX_FACE_VALUE,
@@ -110,6 +116,14 @@ export type NotationProblem =
   | "clamp"
   /** A `cs` or `cf` that no die can meet, or every die meets. */
   | "marks"
+  /** Dice that cannot all differ: more dice than faces, a die past a hundred sides, a loaded or Fate die, another rule beside it, or `uo`, which is not read. */
+  | "unique"
+  /** A formula that cannot be read or used: brackets that do not match, a function it does not know, a number past 9999, a group that keeps other than one of its rolls, or totals too wide to count. */
+  | "math"
+  /** A formula that can come to something other than a whole number: a division that is not rounded. */
+  | "fraction"
+  /** A formula that can divide by nothing. */
+  | "zero"
   /** A label that is too long, or holds characters notation is written with. */
   | "label"
   /** A loaded die whose weights cannot be read: a face the die does not have, a weight past 99, fewer than two faces that can come up, a die too large to load, or weights that are all the same. */
@@ -131,13 +145,16 @@ export type NotationCheck =
 export type NotationOptions = {
   /** Read `r<` as 1.2.0 and 1.3.0 wrote it: reroll once. For text kept from those versions, such as an old shared link. */
   legacyReroll?: boolean;
+  /** The most dice the roll may have, from 10 (the default) to `MAX_DICE_BY_CODE`. Past ten, every kind has to be plain dice, all added or one kept. */
+  maxDice?: number;
 };
 
 const HEAD = /^\s*(\d*)\s*d\s*(\d+|%|f|\[[^\]]*\])(\s*\{[^}]*\})?/i;
 /** A comparison: an operator and a number. */
 const COMPARE = "(<=|>=|<>|!=|=|<|>)\\s*(\\d+)";
 /** Any one modifier, to tell where a kind's modifiers end. */
-const MODIFIER = new RegExp(`^\\s*(?:!|ro?\\s*[<>=!\\d]|ro?(?![\\w[%])|[kd]\\s*[hl]|[kdbw]\\s*\\d|[kdbw](?![\\w[%])|min\\s*\\d|max\\s*\\d|[<>=]|f\\s*[<>=!\\d]|c[sf]|s[ad]|s(?![\\w[%]))`, "i");
+const MODIFIER = new RegExp(`^\\s*(?:!|ro?\\s*[<>=!\\d]|ro?(?![\\w[%])|[kd]\\s*[hl]|[kdbw]\\s*\\d|[kdbw](?![\\w[%])|min\\s*\\d|max\\s*\\d|[<>=]|f\\s*[<>=!\\d]|c[sf]|s[ad]|s(?![\\w[%])|u)`, "i");
+const UNIQUE = /^\s*u(o?)/i;
 const EXPLODE = new RegExp(`^\\s*(!!?)(p?)(?:\\s*(<=|>=|<>|=|<|>)\\s*(\\d+))?`, "i");
 const REROLL = new RegExp(`^\\s*(ro?)\\s*(?:${COMPARE}|(\\d+)|(?![\\w[%]))`, "i");
 const KEEP = /^\s*(?:([kd])\s*([hl])\s*(\d*)|([kdbw])\s*(\d*))/i;
@@ -168,6 +185,10 @@ const REASONS: Record<NotationProblem, string> = {
   successes: "successes are counted over all the dice of a kind: the comparison must be one some dice meet and some do not, a failure (f) needs a success to take from and must not overlap it, and counting does not go with keep or drop",
   clamp: "min and max take a face of the die: min above its lowest, max below its highest, and min no greater than max",
   marks: "cs and cf take a comparison that some dice meet and some do not",
+  unique: `dice that all differ (u) are fair dice of ${MAX_UNIQUE_SIDES} sides or fewer, no more of them than the die has faces, all added, with no reroll or explosion; uo (reroll a duplicate once) is not read`,
+  math: `a formula is dice and whole numbers up to ${MAX_MATH_NUMBER} with + - * / and brackets, floor() ceil() round() abs() max() min(), or a group {a,b}kh1 that keeps one of its rolls; its brackets have to match, and its totals must not spread too wide to count`,
+  fraction: "a division has to be rounded so that the roll comes to a whole number: floor(…), ceil(…) or round(…)",
+  zero: "this formula can divide by nothing",
   label: `a label is up to ${MAX_ROLL_LABEL} characters, without # [ ] { or }`,
   weights: `a loaded die has up to ${MAX_LOADED_SIDES} sides, and names faces it has with weights from 0 to ${MAX_WEIGHT} that are not all the same, leaving at least two faces that can come up`,
 };
@@ -217,18 +238,31 @@ function refuse(problem: NotationProblem, part: string): NotationCheck {
 }
 
 /** One kind of dice from the front of the text, and what is left after it. */
+/** The most dice a reading allows: ten, or what `maxDice` raises it to. */
+function mostDice(options: NotationOptions): number {
+  return Math.min(MAX_DICE_BY_CODE, Math.max(MAX_DICE, Math.trunc(Number(options.maxDice) || MAX_DICE)));
+}
+
+/** A refusal for too many dice, which says the limit that was asked for. */
+function tooMany(part: string, options: NotationOptions): NotationCheck {
+  const most = mostDice(options);
+  if (most === MAX_DICE) return refuse("count", part);
+  const shown = part.trim();
+  return { ok: false, problem: "count", part: shown, message: `“${shown}”: roll ${MIN_DICE} to ${most} dice at a time, and past ${MAX_DICE} only plain dice, all added or one kept` };
+}
+
 function readGroup(text: string, options: NotationOptions): { group: Partial<DiceGroup> & { count: number }; rest: string; countText: string } | NotationCheck {
   const head = HEAD.exec(text);
   if (head === null) return refuse("shape", text);
   const [whole, countText, sidesText] = head as unknown as [string, string, string];
   const count = countText === "" ? 1 : Number(countText);
-  if (count < MIN_DICE || count > MAX_DICE) return refuse("count", countText);
+  if (count < MIN_DICE || count > mostDice(options)) return tooMany(countText, options);
   if (sidesText.startsWith("[")) {
     // A custom die: its faces, and nothing after them but the next kind or the bonus.
     const faces = readFaces(sidesText.slice(1, -1));
     if (faces === null || head[3] !== undefined) return refuse("custom", `d${sidesText}${head[3] ?? ""}`);
     const after = text.slice(whole.length);
-    if (MODIFIER.test(after)) return refuse("custom", (EXPLODE.exec(after) ?? REROLL.exec(after) ?? CLAMP.exec(after) ?? MARK.exec(after) ?? SORT.exec(after) ?? KEEP.exec(after) ?? FAILURE.exec(after) ?? SUCCESS.exec(after) ?? MODIFIER.exec(after) ?? [after])[0]);
+    if (MODIFIER.test(after)) return refuse("custom", (EXPLODE.exec(after) ?? REROLL.exec(after) ?? CLAMP.exec(after) ?? MARK.exec(after) ?? UNIQUE.exec(after) ?? SORT.exec(after) ?? KEEP.exec(after) ?? FAILURE.exec(after) ?? SUCCESS.exec(after) ?? MODIFIER.exec(after) ?? [after])[0]);
     return { group: { count, sides: faces.length, keep: "all", faces }, rest: after, countText };
   }
   const sides: Sides = sidesText === "%" ? 100 : sidesText.toLowerCase() === "f" ? "F" : Number(sidesText);
@@ -244,7 +278,7 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
   let rest = text.slice(whole.length);
   const group: Partial<DiceGroup> & { count: number } = { count, sides, keep: "all" };
   /** The text of each modifier read, by what it is, so a refusal can name it. */
-  const parts: Partial<Record<"explode" | "reroll" | "keep" | "floor" | "ceiling" | "success" | "failure" | "critical" | "fumble" | "sort", string>> = {};
+  const parts: Partial<Record<"explode" | "reroll" | "keep" | "floor" | "ceiling" | "success" | "failure" | "critical" | "fumble" | "sort" | "unique", string>> = {};
   const compare = (op: string, n: string): Compare => {
     const at = Number(n);
     return op === "<" ? { op: "<=", n: at - 1 } : op === ">" ? { op: ">=", n: at + 1 } : op === "!=" || op === "<>" ? { op: "<>", n: at } : { op: op as "=" | "<=" | ">=", n: at };
@@ -284,6 +318,11 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
       parts[which] = match[0];
       // cs alone marks the highest face, and cf alone the lowest.
       group[which] = compare(match[2] ?? "=", match[3] ?? match[4] ?? String(which === "critical" ? high : low));
+    } else if ((match = UNIQUE.exec(rest)) !== null) {
+      if (parts.unique !== undefined) return refuse("twice", match[0]);
+      if ((match[1] as string) !== "") return refuse("unique", match[0]);
+      parts.unique = match[0];
+      group.unique = true;
     } else if ((match = SORT.exec(rest)) !== null) {
       if (parts.sort !== undefined) return refuse("twice", match[0]);
       parts.sort = match[0];
@@ -335,6 +374,7 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
       ["failure", "successes", kept.failure === undefined],
       ["critical", "marks", kept.critical === undefined],
       ["fumble", "marks", kept.fumble === undefined],
+      ["unique", "unique", kept.unique !== true],
     ] as const
   ).find(([part, , gone]) => parts[part] !== undefined && gone);
   if (lost !== undefined) return refuse(lost[1], parts[lost[0]] as string);
@@ -356,7 +396,6 @@ function labelStart(text: string): number {
 /** A spec from notation, or which part of the text was refused and why. Never a roll of something else. */
 export function checkNotation(text: string, options: NotationOptions = {}): NotationCheck {
   if (text.length > LONGEST) return refuse("shape", `${text.slice(0, 16)}…`);
-  const groups: (Partial<DiceGroup> & { count: number })[] = [];
   let rest = text;
   // `6#`: the roll after it is thrown six times, as a set.
   let times = 1;
@@ -381,14 +420,23 @@ export function checkNotation(text: string, options: NotationOptions = {}): Nota
     label = behind;
     rest = rest.slice(0, hash);
   }
+  const flat = readFlat(rest, options, times, label);
+  if (flat.ok || !looksLikeMath(rest)) return flat;
+  return readMath(rest, options, times, label);
+}
+
+/** The roll this package has always read: kinds of dice added together, then a bonus. */
+function readFlat(text: string, options: NotationOptions, times: number, label: string | undefined): NotationCheck {
+  const groups: (Partial<DiceGroup> & { count: number })[] = [];
+  let rest = text;
   let dice = 0;
   for (;;) {
     const from = rest;
     const read = readGroup(rest, options);
     if ("ok" in read) return read;
     dice += read.group.count;
-    // The kind that takes the roll past ten dice is the part refused.
-    if (dice > MAX_DICE) return refuse("count", from.slice(0, from.length - read.rest.length));
+    // The kind that takes the roll past its most dice is the part refused.
+    if (dice > mostDice(options)) return tooMany(from.slice(0, from.length - read.rest.length), options);
     if (groups.length === MAX_GROUPS) return refuse("kinds", from.slice(0, from.length - read.rest.length));
     groups.push(read.group);
     rest = read.rest;
@@ -406,7 +454,172 @@ export function checkNotation(text: string, options: NotationOptions = {}): Nota
     if (Math.abs(modifier) > MAX_MODIFIER) return refuse("bonus", rest);
   }
   const [first, ...more] = groups;
-  return { ok: true, spec: normalizeSpec({ ...first, modifier, more: more as DiceGroup[], times, label }) };
+  const spec = normalizeSpec({ ...first, modifier, more: more as DiceGroup[], times, label }, { maxDice: mostDice(options) });
+  // Past ten dice only plain dice are rolled: a roll that was brought back to ten is refused, not shortened.
+  if (diceCount(spec) < dice) return tooMany(text, options);
+  return { ok: true, spec };
+}
+
+/** Whether text that is not a plain roll is reaching for a formula: it multiplies, divides, brackets, groups, or takes dice away. */
+function looksLikeMath(text: string): boolean {
+  // Custom faces and loaded weights are set aside: what is inside them is not arithmetic.
+  const bare = text.replace(/d\s*\[[^\]]*\]/gi, "d6").replace(/(d\s*\d+)\s*\{[^}]*\}/gi, "$1");
+  return /[*/()×{]/.test(bare) || /^\s*\d+\s*[-+]/.test(bare) || /\d\s*x\s*[\d(]/i.test(bare) || /[)\d]\s*x\s*\d*\s*d/i.test(bare) || /-\s*\d*\s*d\s*[\d%f[]/i.test(bare) || /[+-]\s*\d+\s*[+-]/.test(bare);
+}
+
+const FUNCTION = /^\s*(floor|ceil|round|abs|max|min)\s*\(/i;
+const DICE_AHEAD = /^\s*\d*\s*d\s*(?:\d|%|f|\[)/i;
+const GROUP_KEEP = /^\s*(k|d)\s*([hl]?)\s*(\d*)/i;
+
+/**
+ * A formula: dice and whole numbers put together with + - * / and brackets,
+ * the functions floor, ceil, round, abs, max and min, and a group
+ * `{a,b}kh1` that keeps the highest or lowest of its rolls. `x` and `×`
+ * multiply too. Each kind of dice is read as it always is, with its own
+ * modifiers. A formula that only adds comes back as the plain roll it is.
+ */
+function readMath(text: string, options: NotationOptions, times: number, label: string | undefined): NotationCheck {
+  const groups: (Partial<DiceGroup> & { count: number })[] = [];
+  let rest = text;
+  let dice = 0;
+  let nodes = 0;
+  type Read = MathNode | NotationCheck;
+  const failed = (read: Read): read is NotationCheck => "ok" in read;
+  const eat = (pattern: RegExp): RegExpExecArray | null => {
+    const match = pattern.exec(rest);
+    if (match !== null) rest = rest.slice(match[0].length);
+    return match;
+  };
+
+  function primary(): Read {
+    if (++nodes > 60) return refuse("math", text);
+    const named = eat(FUNCTION);
+    if (named !== null) {
+      const name = (named[1] as string).toLowerCase() as MathFunction;
+      const args: MathNode[] = [];
+      for (;;) {
+        const arg = sum();
+        if (failed(arg)) return arg;
+        args.push(arg);
+        if (eat(/^\s*,/) === null) break;
+      }
+      if (eat(/^\s*\)/) === null) return refuse("math", rest === "" ? named[0] : rest);
+      const several = name === "max" || name === "min";
+      if (several ? args.length < 2 || args.length > MAX_GROUPS : args.length !== 1) return refuse("math", named[0]);
+      return { kind: "call", name, args };
+    }
+    if (eat(/^\s*\(/) !== null) {
+      const inside = sum();
+      if (failed(inside)) return inside;
+      if (eat(/^\s*\)/) === null) return refuse("math", rest === "" ? "(" : rest);
+      return inside;
+    }
+    if (eat(/^\s*\{/) !== null) {
+      // A group: several rolls, of which the highest or the lowest is kept.
+      const rolls: MathNode[] = [];
+      for (;;) {
+        const one = sum();
+        if (failed(one)) return one;
+        rolls.push(one);
+        if (eat(/^\s*,/) === null) break;
+      }
+      if (eat(/^\s*\}/) === null) return refuse("math", rest === "" ? "{" : rest);
+      const keep = GROUP_KEEP.exec(rest);
+      if (keep === null || rolls.length < 2 || rolls.length > MAX_GROUPS) return refuse("math", rest === "" ? "}" : rest);
+      rest = rest.slice(keep[0].length);
+      const n = keep[3] === "" ? 1 : Number(keep[3]);
+      const keeps = (keep[1] as string).toLowerCase() === "k";
+      const high = keep[2] === "" ? keeps : (keep[2] as string).toLowerCase() === "h";
+      // kh1 and kl1 keep one; dropping all but one keeps the other end.
+      if (keeps ? n !== 1 : rolls.length - n !== 1) return refuse("math", keep[0]);
+      return { kind: "call", name: (keeps ? high : !high) ? "max" : "min", args: rolls };
+    }
+    if (DICE_AHEAD.test(rest)) {
+      const from = rest;
+      const read = readGroup(rest, options);
+      if ("ok" in read) return read;
+      const part = from.slice(0, from.length - read.rest.length);
+      dice += read.group.count;
+      if (dice > mostDice(options)) return tooMany(part, options);
+      if (groups.length === MAX_GROUPS) return refuse("kinds", part);
+      groups.push(read.group);
+      rest = read.rest;
+      return { kind: "dice", group: groups.length - 1 };
+    }
+    const number = eat(/^\s*(\d+)(?![\d.])/);
+    if (number === null) return refuse(rest.trim() === "" ? "math" : "shape", rest.trim() === "" ? text : rest);
+    if (Number(number[1]) > MAX_MATH_NUMBER) return refuse("math", number[0]);
+    return { kind: "number", value: Number(number[1]) };
+  }
+
+  function unary(): Read {
+    if (eat(/^\s*-/) !== null) {
+      const inside = unary();
+      if (failed(inside)) return inside;
+      return inside.kind === "number" ? { kind: "number", value: -inside.value } : { kind: "op", op: "-", left: { kind: "number", value: 0 }, right: inside };
+    }
+    return primary();
+  }
+
+  function product(): Read {
+    let left = unary();
+    for (;;) {
+      if (failed(left)) return left;
+      const op = eat(/^\s*([*/x×])/i);
+      if (op === null) return left;
+      const right = unary();
+      if (failed(right)) return right;
+      left = { kind: "op", op: op[1] === "/" ? "/" : "*", left, right };
+    }
+  }
+
+  function sum(): Read {
+    let left = product();
+    for (;;) {
+      if (failed(left)) return left;
+      const op = eat(/^\s*([+-])/);
+      if (op === null) return left;
+      const right = product();
+      if (failed(right)) return right;
+      left = { kind: "op", op: op[1] as "+" | "-", left, right };
+    }
+  }
+
+  const math = sum();
+  if (failed(math)) return math;
+  if (rest.trim() !== "") return refuse(/^\s*[)}\],]/.test(rest) ? "math" : "shape", rest);
+  if (groups.length === 0) return refuse("shape", text);
+  const limits = { maxDice: mostDice(options) };
+  const [first, ...more] = groups;
+
+  // A formula that only adds is the plain roll it always was, written one way.
+  const plain = added(math);
+  if (plain !== null && Math.abs(plain) <= MAX_MODIFIER) {
+    const spec = normalizeSpec({ ...first, modifier: plain, more: more as DiceGroup[], times, label }, limits);
+    if (diceCount(spec) < dice) return tooMany(text, options);
+    return { ok: true, spec };
+  }
+  const spec = normalizeSpec({ ...first, modifier: 0, more: more as DiceGroup[], times, label, math }, limits);
+  if (spec.math === undefined) {
+    // Why the formula could not be kept, by name.
+    // Each kind on its own, so that two kinds that are the same dice stay two.
+    const kinds = groups.map((group) => groupsOf(normalizeSpec({ ...group, modifier: 0 }, limits))[0] as DiceGroup);
+    const problem = checkMath(math, kinds.map(groupRange));
+    if (diceCount(spec) < dice || !kinds.every((g) => dice <= MAX_DICE || isPlainDice(g))) return tooMany(text, options);
+    return refuse(problem === "fraction" ? "fraction" : problem === "zero" ? "zero" : "math", text);
+  }
+  if (diceCount(spec) < dice) return tooMany(text, options);
+  return { ok: true, spec };
+}
+
+/** What a formula adds to its dice when it is nothing but adding: the bonus, or null when it multiplies, divides, calls a function or takes dice away. */
+function added(node: MathNode, sign = 1): number | null {
+  if (node.kind === "dice") return sign === 1 ? 0 : null;
+  if (node.kind === "number") return sign * node.value;
+  if (node.kind !== "op" || (node.op !== "+" && node.op !== "-")) return null;
+  const left = added(node.left, sign);
+  const right = added(node.right, node.op === "-" ? -sign : sign);
+  return left === null || right === null ? null : left + right;
 }
 
 /** A spec from notation, or null when the text is not dice this roller can throw. `checkNotation` says why. */
@@ -428,5 +641,7 @@ function formatGroup(group: DiceGroup): string {
 export function formatNotation(spec: RollSpec): string {
   const modifier = spec.modifier === 0 ? "" : spec.modifier > 0 ? `+${spec.modifier}` : `${spec.modifier}`;
   const times = spec.times !== undefined && spec.times > 1 ? `${spec.times}#` : "";
-  return `${times}${groupsOf(spec).map(formatGroup).join("+")}${modifier}${spec.label === undefined ? "" : ` # ${spec.label}`}`;
+  const groups = groupsOf(spec);
+  const dice = spec.math !== undefined ? mathText(spec.math, (i) => formatGroup(groups[i] as DiceGroup)) : `${groups.map(formatGroup).join("+")}${modifier}`;
+  return `${times}${dice}${spec.label === undefined ? "" : ` # ${spec.label}`}`;
 }

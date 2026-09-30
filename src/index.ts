@@ -7,6 +7,7 @@
  */
 export * from "./random.ts";
 export * from "./dice.ts";
+export * from "./math.ts";
 export * from "./notation.ts";
 export * from "./odds.ts";
 export * from "./stats.ts";

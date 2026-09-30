@@ -456,7 +456,7 @@ describe("notation", () => {
     ["2d6rx", "shape", "rx"],
     ["2d6x", "shape", "x"],
     ["3d6+", "shape", "+"],
-    ["2d6+1+1", "shape", "+1+1"],
+    ["2d6+", "shape", "+"],
     ["1 2d6", "shape", "1 2d6"],
     ["hello", "shape", "hello"],
     ["", "shape", ""],

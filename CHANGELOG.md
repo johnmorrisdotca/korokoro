@@ -6,6 +6,40 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-09-30
+
+### Added
+
+- **Arithmetic.** `(2d6+3)*2`, `2d6x2`, `1d20-1d4`, `floor(4d6/2)`,
+  `ceil(…)`, `round(…)`, `abs(1d6-1d6)`, `max(1d6,1d8)`, `min(…)`, with
+  brackets as deep as you like. Worked out in whole-number fractions, never in
+  floating point, in the roll and in its odds alike, and the odds are exact.
+  A division has to be rounded, so that a roll always comes to a whole number.
+- **Grouped rolls that keep one**: `{4d6,3d8}kh1` and `kl1`, written back as
+  `max(4d6,3d8)` and `min(…)`.
+- **Dice that all differ**: `4d6u`. Each die is thrown from the faces not yet
+  showing. Exact odds, counted in whole numbers.
+- **More than ten dice, from code**: `parseNotation("40d6", { maxDice: 100 })`
+  and `normalizeSpec(spec, { maxDice: 100 })`, up to a hundred plain dice, all
+  added or one kept. The tray and typed notation stay at ten.
+- `MathNode`, `evaluateMath`, `checkMath`, `mathText`, `mathRange`,
+  `spreadMath`, `groupTotals`, `groupRange`, `isPlainDice`, `formulaText`,
+  `MAX_DICE_BY_CODE`, `MAX_UNIQUE_SIDES` and the `MAX_MATH_…` limits.
+- In the tray, a formula is typed and shown as it was written, each kind of
+  dice as it fell: `([6 4]+3)*2`. The dice buttons start a new roll and cannot
+  change a formula, and the tray says so.
+
+### Changed
+
+- Four spellings that were refused are now read: `1d20-1d4` (dice taken away),
+  and `2d6+3+1d4`, `3+2d6` and `2d6+1+1`, which are the plain rolls
+  `2d6+1d4+3`, `2d6+3` and `2d6+2`. `checkNotation` no longer gives the
+  `"minus"` problem.
+- `roll` and `rollMany` throw up to a hundred plain dice when handed a spec
+  that asks for them. They brought it back to ten before. Nothing else about
+  them changes, and every seeded roll replays as it did.
+
+
 ## [1.8.0] - 2026-09-30
 
 ### Added
@@ -337,7 +371,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.9.0
 [1.8.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.8.0
 [1.7.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.7.0
 [1.6.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.6.0

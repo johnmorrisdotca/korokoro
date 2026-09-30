@@ -255,6 +255,9 @@ Korokoro has siblings, each made for the same site, each MIT, each at
   away (`f=1`), dice that explode on the faces you say, compounding and
   penetrating dice, a least and a most for each die, critical marks, sorted
   dice and a label for the roll. The odds are exact for all of it.
+- **Arithmetic.** `(2d6+3)*2`, `1d20-1d4`, `floor(4d6/2)`, `max(1d20,1d20)+5`,
+  worked out in exact fractions, with exact odds. And dice that all differ
+  (`4d6u`).
 - **Games, with their dice and their readings.** Yahtzee, Risk, craps,
   backgammon, Catan, Farkle, chō-han (丁半), chinchirorin (チンチロリン) and
   more: 44 games in one searchable list, each read the way the game reads
@@ -328,6 +331,12 @@ Korokoro has siblings, each made for the same site, each MIT, each at
 | `1d20cs>=19cf=1`, `1d20cscf` | mark critical successes and failures; `cs` alone is the highest face and `cf` the lowest. Only marks: the total is the same |
 | `4d6sd`, `4d6sa`, `4d6s` | show the dice sorted, descending or ascending |
 | `2d6+3 # fire damage`, `[fire damage] 2d6+3` | a label, saying what the roll is for |
+| `4d6u` | four d6 that all show different faces |
+| `(2d6+3)*2`, `2d6x2` | arithmetic: `+ - * /` and brackets; `x` multiplies too |
+| `1d20-1d4` | dice taken away |
+| `floor(4d6/2)`, `ceil(4d6/2)`, `round(4d6/2)` | a division, rounded down, up, or to the nearest (a half goes up) |
+| `abs(1d6-1d6)`, `max(1d6,1d8)`, `min(1d6,1d8,4)` | how far apart; the higher; the lowest |
+| `{4d6,3d8}kh1`, `{4d6,3d8}kl1` | a group: the higher, or the lower, of its rolls |
 | `1d20+1d4` | a d20 and a d4, added |
 | `2d6+1d8+3` | two d6, a d8, plus 3 |
 | `2d20kh1+1d4+5` | advantage, a d4 on top, plus 5: each kind keeps its own rules |
@@ -339,7 +348,7 @@ Korokoro has siblings, each made for the same site, each MIT, each at
 | `d6{6:3}` | a loaded d6: its 6 weighs three times the rest, and it is marked as loaded everywhere |
 
 ```
-roll     = [times "#"] dice { "+" dice } [bonus] [ "#" label ]
+roll     = [times "#"] ( dice { "+" dice } [bonus] | formula ) [ "#" label ]
 times    = 1 to 100: how many times the whole roll is thrown
 dice     = [count] "d" sides { modifier }
 count    = 1 to 10 over the whole roll, and 1 when left out
@@ -357,14 +366,58 @@ modifier = ( "!" | "!!" | "!p" | "!!p" ) [compare]     explode; compounding; pen
          | "sa" | "sd" | "s"                           show the dice sorted
 compare  = ( "=" | "<" | ">" | "<=" | ">=" | "<>" ) number
 point    = compare | "!=" number | number              a bare number is "="
+         | "u"                                         the dice all differ
 bonus    = "+" or "-", then 0 to 99
 label    = up to 40 characters; "[label]" in front of the roll is read too
+formula  = term { ( "+" | "-" ) term }
+term     = factor { ( "*" | "x" | "/" ) factor }
+factor   = dice | number | "-" factor | "(" formula ")"
+         | ( "floor" | "ceil" | "round" | "abs" ) "(" formula ")"
+         | ( "max" | "min" ) "(" formula "," formula { "," formula } ")"
+         | "{" formula "," formula { "," formula } "}" ( "kh1" | "kl1" )
+number   = a whole number up to 9999
 ```
 
 Letters in either case, spaces allowed between the parts. A roll holds up to
 four kinds of dice, each with its own modifiers, and the bonus comes last.
 Two kinds that are the same dice under the same rules are one kind: `2d6+3d6`
 is `5d6`.
+
+### Formulas
+
+Anything past adding is a formula: `(2d6+3)*2`, `1d20-1d4`, `floor(4d6/2)`,
+`max(1d20,1d20)+5`. The dice are thrown exactly as they would be without it,
+each kind in the order written with its own modifiers; the formula is only how
+their totals are put together.
+
+```ts
+const half = roll(parseNotation("floor(4d6/2)")!, seededSource("table-7"));
+half.faces;                       // [6, 4, 2, 1]
+half.total;                       // 6: thirteen, halved, rounded down
+rangeOf(half.spec);               // { min: 2, max: 12 }
+expectedTotal(half.spec);         // 6.75
+chanceAtLeast(half.spec, 8);      // 0.3356
+```
+
+- **The odds are exact**, as everywhere else. Each kind of dice is named once,
+  so the kinds stay independent, and the arithmetic is done in whole-number
+  fractions, never in floating point.
+- **A roll comes to a whole number.** A division has to be rounded: `4d6/2` is
+  refused, and the refusal says to write `floor(4d6/2)`, `ceil(…)` or
+  `round(…)`. `round` sends a half up.
+- **A formula that only adds is a plain roll**, written the one way:
+  `(2d6+3)` and `3+2d6` are `2d6+3`.
+- **A group keeps one of its rolls**: `{4d6,3d8}kh1` is `max(4d6,3d8)`, and is
+  written back so.
+- In the tray a formula is typed, and changed where it was typed: the dice
+  buttons start a new roll, and cannot take a die out of the middle of one.
+
+### Dice that all differ
+
+`4d6u` is four d6 showing four different faces. Each die is thrown from the
+faces not yet showing, which comes to the same odds as rerolling any duplicate
+until there is none, and never needs a second throw. Fair dice of up to 100
+sides, no more of them than the die has faces. `6d6u` is always 21.
 
 ### How the modifiers combine
 
@@ -411,7 +464,7 @@ than quietly rolling something different:
 
 | Refused | Why |
 | --- | --- |
-| `11d6`, `0d6` | one to ten dice at a time |
+| `11d6`, `0d6` | one to ten dice at a time (code may ask for more: see [Limits](#limits)) |
 | `d1`, `d1001` | a die has 2 to 1000 sides |
 | `2d6+100` | a bonus is at most 99 either way |
 | `4d6kh4`, `4d6dl4`, `1d20kh1` | keep or drop has to leave at least one die and fewer than all |
@@ -424,11 +477,15 @@ than quietly rolling something different:
 | `3d6!>=1`, `3d6!=7` | dice explode on some faces, never all and never none |
 | `4d6min1`, `4d6max6`, `4d6min5max4` | `min` goes above the lowest face and `max` below the highest, with `min` no greater than `max` |
 | `1d20cs>=21` | a mark has to be one some dice can meet |
+| `4d6/2`, `max(1d6/2,3)` | a division has to be rounded, so that the roll comes to a whole number |
+| `6/(1d4-1)` | a formula must not be able to divide by nothing |
+| `(2d6`, `floor(2d6,2)`, `{4d6,3d8}kh2`, `2d6*10000` | brackets match, a function takes what it takes, a group keeps one of its rolls, and numbers stop at 9999 |
+| `1d1000*1d1000*1d1000` | a formula's totals must not spread too wide to count |
+| `7d6u`, `4d6uo`, `3d6!u` | dice that all differ: no more dice than faces, no rule that throws a die again, and `uo` (reroll a duplicate once) is not read |
 | `2d6 # 3`, `2d6 # one # two` | a label is up to 40 characters, not only digits, and has no `#`, brackets or braces (for a repeat, write `3#2d6`) |
 | `0#2d6`, `101#2d6` | a roll is thrown 1 to 100 times |
 | `1d4+1d6+1d8+1d10+1d12` | a roll has at most four kinds of dice |
 | `6d6+5d8` | ten dice at most over the whole roll |
-| `1d20-1d4` | dice are added together; only the bonus can be taken away |
 | `d[only]`, `2d[Yes,No]kh1` | a custom die has 2 to 20 faces and takes no modifiers |
 | `d6{7:2}`, `d6{6:1}` | a loaded die names faces it has, and a die whose weights are all the same is not loaded |
 | `4d6!kh3` | exploding dice are not kept or dropped: tables disagree on whether an explosion is a new die in the pool or part of the die that threw it |
@@ -830,7 +887,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.8.0", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.9.0", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet
@@ -923,6 +980,7 @@ type DiceGroup = {       // one kind of dice and its rules
   critical?: Compare;    // `cs>=19`
   fumble?: Compare;      // `cf=1`
   sort?: "ascending" | "descending";  // `sa`, `sd`
+  unique?: true;         // `u`: the dice all differ
 };
 type Compare = { op: "=" | "<=" | ">=" | "<>"; n: number };  // `<3` is kept as `<=2`, `>7` as `>=8`
 type RollSpec = DiceGroup & {
@@ -930,7 +988,13 @@ type RollSpec = DiceGroup & {
   more?: DiceGroup[];    // the other kinds of dice; left out when there is one
   times?: number;        // `6#`: how many times it is thrown; left out when once
   label?: string;        // `# fire damage`: what the roll is for; only ever shown as text
+  math?: MathNode;       // a formula over the kinds' totals; left out when they are added
 };
+type MathNode =
+  | { kind: "dice"; group: number }        // the total of the kind at this place
+  | { kind: "number"; value: number }
+  | { kind: "op"; op: "+" | "-" | "*" | "/"; left: MathNode; right: MathNode }
+  | { kind: "call"; name: "floor" | "ceil" | "round" | "abs" | "max" | "min"; args: MathNode[] };
 
 roll(spec: Partial<RollSpec>, source?: RandomSource, at?: number): Roll
 rollHeld(previous: Roll, held: boolean[], source?: RandomSource, at?: number): Roll
@@ -943,9 +1007,12 @@ diceOf(roll: Roll): DieRoll[]                       // roll.dice, or worked out 
 readDice(spec: RollSpec, faces: number[]): DieRoll[] | null  // null if the dice could not show them
 rollMany(spec, times?, source?, at?): RollSet        // { rolls, sum, highest, lowest }; times from the spec unless given
 setOf(rolls: Roll[]): RollSet                       // the same summary of rolls already made
-normalizeSpec(spec: Partial<RollSpec>): RollSpec    // brings a spec into range
+normalizeSpec(spec: Partial<RollSpec>, limits?: { maxDice?: number }): RollSpec  // brings a spec into range
+groupTotals(roll: Roll): number[]                   // what each kind came to: what a formula puts together
+groupRange(group: DiceGroup): { min: number; max: number }
+isPlainDice(group: DiceGroup): boolean              // plain enough to be rolled in any number
 rangeOf(spec: RollSpec): { min: number; max: number }
-parseNotation(text: string, options?: { legacyReroll?: boolean }): RollSpec | null
+parseNotation(text: string, options?: { legacyReroll?: boolean; maxDice?: number }): RollSpec | null
 checkNotation(text: string, options?): { ok: true; spec: RollSpec } | { ok: false; problem; part; message }
 formatNotation(spec: RollSpec): string
 isSuccessRoll(spec: RollSpec): boolean              // the total is a count of successes
@@ -1192,6 +1259,10 @@ them by name.
 | Limit | Value | Constant |
 | --- | --- | --- |
 | Dice in one roll | 1 to 10 | `MIN_DICE`, `MAX_DICE` |
+| Dice in one roll, asked for from code | up to 100, all plain | `MAX_DICE_BY_CODE` |
+| Sides of dice that all differ | 100 | `MAX_UNIQUE_SIDES` |
+| A number in a formula | 9999 | `MAX_MATH_NUMBER` |
+| The span of a formula's totals | 1,000,000 | `MAX_MATH_TOTALS` |
 | Kinds of dice in one roll | 4 | `MAX_GROUPS` |
 | Rerolls until clear, for each die | 10 | `MAX_REROLLS` |
 | Faces of a custom die | 2 to 20 | `MAX_FACES` |
@@ -1207,6 +1278,25 @@ them by name.
 | A roll's label | 40 characters | `MAX_ROLL_LABEL` |
 | Rolls kept in a history | 500 | `HISTORY_LIMIT` |
 | Length of notation read | 400 characters | |
+
+### More than ten dice
+
+The tray and typed notation stop at ten dice: that is what fits a felt, and
+what a table throws. Code may ask for up to a hundred:
+
+```ts
+const volley = parseNotation("40d6", { maxDice: 100 })!;
+roll(volley).faces.length;        // 40
+expectedTotal(volley);            // 140
+chanceAtLeast(volley, 150);       // 0.1902
+exactCounts(volley)!.outcomes;    // 6 to the 40th, a whole number of 32 digits
+```
+
+Past ten, every kind has to be plain dice: fair numbered or Fate dice, all
+added or one kept (`100d20kh1`), which is where the odds stay exact and quick
+however many there are. Anything else past ten is refused by name.
+`normalizeSpec(spec, { maxDice: 100 })` does the same for a spec made by hand,
+and `roll` throws what it is given.
 
 ## Browser support
 
@@ -1230,8 +1320,8 @@ for fixing one. Any other language is a table of your own passed as `strings`.
 
 ## Roadmap
 
-- More notation: arithmetic and brackets, grouped rolls, and dice that must
-  all differ ([Notation compared](./docs/notation-compared.md) keeps the list)
+- More notation, as tables ask for it
+  ([Notation compared](./docs/notation-compared.md) keeps the list)
 - Standalone executables of the command line, for machines without Node
 - A web component and a Vue wrapper, and a documentation site
 - More games: [suggest one](https://github.com/johnmorrisdotca/korokoro/issues/new?template=suggest-a-game.md)

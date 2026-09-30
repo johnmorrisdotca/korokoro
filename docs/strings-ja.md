@@ -88,6 +88,11 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `notationClamp` | “{part}”: min goes above the die's lowest face and max below its highest, with min no greater than max | 「{part}」: min は最小の面より上、max は最大の面より下にし、min は max 以下にしてください |
 | `notationMarks` | “{part}”: cs and cf take a comparison some dice meet and some do not | 「{part}」: cs と cf には、一部のダイスだけが満たす条件を指定してください |
 | `notationLabel` | “{part}”: a label is up to 40 characters, without # [ ] { or } | 「{part}」: ラベルは40文字までで、# [ ] { } は使えません |
+| `notationUnique` | “{part}”: dice that all differ (u) are fair dice of 100 sides or fewer, no more of them than the die has faces, with no reroll, explosion or keep; uo is not read | 「{part}」: すべて異なる出目（u）にできるのは、100面以下の公平なダイスで、個数が面数以下のときだけです。振り直し・爆発・採用とは併用できません。uo は使えません |
+| `notationMath` | “{part}”: a formula is dice and whole numbers up to 9999 with + - * / and brackets that match, floor() ceil() round() abs() max() min(), or {a,b}kh1; its totals must not spread too wide to count | 「{part}」: 式に使えるのは、ダイス、9999までの整数、+ - * /、対応の取れた括弧、floor() ceil() round() abs() max() min()、{a,b}kh1 です。合計の範囲が広すぎる式は計算できません |
+| `notationFraction` | “{part}”: round a division so the roll comes to a whole number: floor(…), ceil(…) or round(…) | 「{part}」: 割り算は floor(…)、ceil(…)、round(…) のいずれかで整数にしてください |
+| `notationZero` | “{part}”: this can divide by nothing | 「{part}」: この式は0で割ることがあります |
+| `formula` | This roll is a formula. Change it in the box, or tap a die to start again | このロールは式です。入力欄で変更するか、ダイスをタップして新しく始めてください |
 | `successes` | Successes | 成功数 |
 | `dieSuccess` | a success | 成功 |
 | `dieFailure` | takes a success away | 成功を1つ減らす |

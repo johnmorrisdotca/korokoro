@@ -67,6 +67,7 @@ export const CSS = `
 .kk-notation input { width: 100%; min-height: 44px; border: 1px solid var(--kk-rule); border-radius: 10px; padding: 0 10px; background: var(--kk-surface); color: var(--kk-ink); font: inherit; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .kk-notation input[aria-invalid="true"] { border-color: var(--kk-bad); }
 .kk-error { color: var(--kk-bad); font-size: 0.8rem; }
+.kk-formula { flex-basis: 100%; }
 
 /* The felt is the picture; the tray is a button filling it, under the dice, so a tap anywhere but on a held die rolls. */
 .kk-felt { position: relative; min-width: 0; min-height: 250px; border-radius: calc(var(--kk-radius) + 6px); padding: 26px 16px 18px; display: grid; place-items: center; align-content: center; gap: 12px;

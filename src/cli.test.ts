@@ -39,7 +39,8 @@ describe("the command line rolls dice", () => {
     expect(run("1d6{6:3} -s table").out).toContain("(loaded dice)");
     expect(runCli(["2d6 + 3 # fire damage", "-s", "table"], { now }).out).toMatch(/^2d6\+3 # fire damage: \d+/);
     // A roll written with a minus sign in front is dice, not an option.
-    expect(run("-1d6").code).toBe(1);
+    expect(run("-1d6 -s table").out).toMatch(/^-1d6: -\d {2}-\[\d\]\n$/);
+    expect(run("(2d6+3)*2 -s table").out).toBe("(2d6+3)*2: 12  ([1 2]+3)*2\n");
   });
 
   it("says what it cannot roll, on standard error, and rolls the rest", () => {

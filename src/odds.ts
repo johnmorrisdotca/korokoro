@@ -1,4 +1,5 @@
-import { MAX_EXPLOSIONS, MAX_REROLLS, canHold, chancesOf, dieName, dieOutcomes, faceRange, groupsOf, keptCount, playsByNewRules, rangeOf, rulesText, valueOfFace, type DiceGroup, type RollSpec } from "./dice.ts";
+import { MAX_EXPLOSIONS, MAX_REROLLS, canHold, chancesOf, dieName, dieOutcomes, faceRange, groupRange, groupsOf, keptCount, playsByNewRules, rangeOf, rulesText, valueOfFace, type DiceGroup, type RollSpec } from "./dice.ts";
+import { mathText, spreadMath } from "./math.ts";
 
 /**
  * Exact odds for a spec, worked out rather than simulated: every total the
@@ -220,6 +221,7 @@ function multiply(a: bigint[], b: bigint[]): bigint[] {
  */
 function waysOf(group: DiceGroup): { ways: bigint[]; outcomes: bigint } | null {
   if (group.reroll !== undefined || group.rerollUntil !== undefined || group.explode === true || playsByNewRules(group)) return null;
+  if (group.unique === true) return waysToDiffer(group.count, group.sides as number);
   const kept = keptCount(group);
   if (group.keep !== "all" && kept !== 1) return null;
   if (plain(group)) {
@@ -253,6 +255,29 @@ function waysOf(group: DiceGroup): { ways: bigint[]; outcomes: bigint } | null {
   return { ways: group.keep === "highest" ? ways : ways.reverse(), outcomes };
 }
 
+/**
+ * Dice that all differ: the sets of `count` different faces of a die, by what
+ * they add up to. Every set is as likely as the next, so they are counted:
+ * each face in turn either joins the sets made so far or does not. Index 0 is
+ * the lowest faces together.
+ */
+function waysToDiffer(count: number, sides: number): { ways: bigint[]; outcomes: bigint } {
+  const most = (count * (2 * sides - count + 1)) / 2;
+  // sets[j][sum] is how many sets of j faces add up to sum, among the faces looked at so far.
+  const sets = Array.from({ length: count + 1 }, () => new Array<bigint>(most + 1).fill(0n));
+  (sets[0] as bigint[])[0] = 1n;
+  for (let face = 1; face <= sides; face++) {
+    for (let j = Math.min(count, face); j >= 1; j--) {
+      const from = sets[j - 1] as bigint[];
+      const to = sets[j] as bigint[];
+      for (let sum = most; sum >= face; sum--) if (from[sum - face] !== 0n) to[sum] = (to[sum] as bigint) + (from[sum - face] as bigint);
+    }
+  }
+  const least = (count * (count + 1)) / 2;
+  const ways = (sets[count] as bigint[]).slice(least);
+  return { ways, outcomes: ways.reduce((a, b) => a + b, 0n) };
+}
+
 /** A distribution with the totals that cannot happen taken off its ends: a loaded die's weightless faces leave some. */
 function trimmed<T extends number | bigint>(min: number, values: T[]): { min: number; values: T[] } {
   let from = 0;
@@ -264,7 +289,7 @@ function trimmed<T extends number | bigint>(min: number, values: T[]): { min: nu
 
 /** The least total a spec could make if every face of every die could come up: where its odds are counted from. */
 function anchorOf(spec: RollSpec): number {
-  return groupsOf(spec).reduce((sum, group) => sum + keptCount(group) * (playsByNewRules(group) ? dieOutcomes(group).least : leastOf(group)), spec.modifier);
+  return groupsOf(spec).reduce((sum, group) => sum + (group.unique === true ? groupRange(group).min : keptCount(group) * (playsByNewRules(group) ? dieOutcomes(group).least : leastOf(group))), spec.modifier);
 }
 
 /**
@@ -277,6 +302,8 @@ function anchorOf(spec: RollSpec): number {
  * answers for every roll.
  */
 export function exactCounts(spec: RollSpec): ExactCounts | null {
+  // A formula's outcomes are not equally likely totals to count.
+  if (spec.math !== undefined) return null;
   let counts: bigint[] = [1n];
   let outcomes = 1n;
   for (const group of groupsOf(spec)) {
@@ -341,11 +368,23 @@ function keyOf(group: DiceGroup): string {
  */
 export function distributionOf(spec: RollSpec): Distribution {
   const groups = groupsOf(spec);
-  const key = `${groups.map(keyOf).join("+")}m${spec.modifier}`;
+  const key = spec.math !== undefined ? mathText(spec.math, (i) => keyOf(groups[i] as DiceGroup)) : `${groups.map(keyOf).join("+")}m${spec.modifier}`;
   const known = cache.get(key);
   if (known !== undefined) return known;
   let made: Distribution;
-  if (groups.every(plain)) {
+  if (spec.math !== undefined) {
+    // Each kind's own odds, then the formula over them: the kinds share no dice, so their chances multiply.
+    const leaves = groups.map((group) => {
+      const alone = distributionOf({ ...group, modifier: 0 });
+      return new Map(alone.probabilities.flatMap((p, i): [number, number][] => (p > 0 ? [[alone.min + i, p]] : [])));
+    });
+    const totals = spreadMath(spec.math, leaves);
+    const min = Math.min(...totals.keys());
+    const max = Math.max(...totals.keys());
+    const probabilities = new Array<number>(max - min + 1).fill(0);
+    for (const [total, chance] of totals) probabilities[total - min] = chance;
+    made = { min, max, probabilities };
+  } else if (groups.every(plain)) {
     const { min, max } = rangeOf(spec);
     let probabilities: number[];
     if (groups.length === 1) probabilities = probabilitiesOf(groups[0] as DiceGroup);

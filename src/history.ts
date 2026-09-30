@@ -1,4 +1,4 @@
-import { canHold, isSides, normalizeSpec, rollFrom, type Roll } from "./dice.ts";
+import { MAX_DICE_BY_CODE, canHold, isSides, normalizeSpec, rollFrom, type Roll } from "./dice.ts";
 
 /** A history keeps the latest rolls and forgets the oldest past this many. */
 export const HISTORY_LIMIT = 500;
@@ -22,7 +22,7 @@ function readRoll(value: unknown): Roll | null {
   const r = value as Record<string, unknown>;
   const spec = r.spec as Record<string, unknown> | undefined;
   if (spec === undefined || !isSides(spec.sides)) return null;
-  const fair = normalizeSpec(spec);
+  const fair = normalizeSpec(spec, { maxDice: MAX_DICE_BY_CODE });
   if (!Array.isArray(r.faces)) return null;
   const at = Number(r.at);
   if (!Number.isFinite(at)) return null;

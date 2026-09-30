@@ -88,6 +88,13 @@ export type RollerStrings = {
   notationClamp: string;
   notationMarks: string;
   notationLabel: string;
+  /** Refusals for the rules added in 1.9.0. */
+  notationUnique: string;
+  notationMath: string;
+  notationFraction: string;
+  notationZero: string;
+  /** Said where the dice buttons are, when the roll is a formula: they cannot change it. */
+  formula: string;
   /** The headline's label on a roll that counts successes, where other rolls say Total. */
   successes: string;
   /** What became of a die, for a screen reader and a hover: a success, a die that takes one away, a marked die. */
@@ -266,6 +273,11 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     notationClamp: "“{part}”: min goes above the die's lowest face and max below its highest, with min no greater than max",
     notationMarks: "“{part}”: cs and cf take a comparison some dice meet and some do not",
     notationLabel: "“{part}”: a label is up to 40 characters, without # [ ] { or }",
+    notationUnique: "“{part}”: dice that all differ (u) are fair dice of 100 sides or fewer, no more of them than the die has faces, with no reroll, explosion or keep; uo is not read",
+    notationMath: "“{part}”: a formula is dice and whole numbers up to 9999 with + - * / and brackets that match, floor() ceil() round() abs() max() min(), or {a,b}kh1; its totals must not spread too wide to count",
+    notationFraction: "“{part}”: round a division so the roll comes to a whole number: floor(…), ceil(…) or round(…)",
+    notationZero: "“{part}”: this can divide by nothing",
+    formula: "This roll is a formula. Change it in the box, or tap a die to start again",
     successes: "Successes",
     dieSuccess: "a success",
     dieFailure: "takes a success away",
@@ -438,6 +450,11 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     notationClamp: "「{part}」: min は最小の面より上、max は最大の面より下にし、min は max 以下にしてください",
     notationMarks: "「{part}」: cs と cf には、一部のダイスだけが満たす条件を指定してください",
     notationLabel: "「{part}」: ラベルは40文字までで、# [ ] { } は使えません",
+    notationUnique: "「{part}」: すべて異なる出目（u）にできるのは、100面以下の公平なダイスで、個数が面数以下のときだけです。振り直し・爆発・採用とは併用できません。uo は使えません",
+    notationMath: "「{part}」: 式に使えるのは、ダイス、9999までの整数、+ - * /、対応の取れた括弧、floor() ceil() round() abs() max() min()、{a,b}kh1 です。合計の範囲が広すぎる式は計算できません",
+    notationFraction: "「{part}」: 割り算は floor(…)、ceil(…)、round(…) のいずれかで整数にしてください",
+    notationZero: "「{part}」: この式は0で割ることがあります",
+    formula: "このロールは式です。入力欄で変更するか、ダイスをタップして新しく始めてください",
     successes: "成功数",
     dieSuccess: "成功",
     dieFailure: "成功を1つ減らす",
@@ -554,4 +571,8 @@ export const REFUSALS: Record<NotationProblem, keyof RollerStrings> = {
   clamp: "notationClamp",
   marks: "notationMarks",
   label: "notationLabel",
+  unique: "notationUnique",
+  math: "notationMath",
+  fraction: "notationFraction",
+  zero: "notationZero",
 };

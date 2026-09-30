@@ -1,5 +1,5 @@
 import { hasTotal, isSuccessRoll, roll, rollMany, setOf, MAX_TIMES, type Roll, type RollSpec } from "./dice.ts";
-import { diceText, exportedRoll, resultText, toCSV, EXPORT_FORMAT, type ExportedRoll } from "./export.ts";
+import { diceText, exportedRoll, formulaText, resultText, toCSV, EXPORT_FORMAT, type ExportedRoll } from "./export.ts";
 import { PRESETS, getPreset, presetOdds, presetSpec, readPreset, type Preset } from "./games/presets.ts";
 import { checkNotation, formatNotation, type NotationProblem } from "./notation.ts";
 import { distributionOf, expectedTotal, mostLikely, spreadOf } from "./odds.ts";
@@ -328,7 +328,7 @@ export function runCli(args: readonly string[], around: CliSurroundings = {}): C
       const name = game === undefined ? formatNotation({ ...r.spec, times: undefined } as RollSpec) : `${language === "ja" ? game.nameJa : game.name} (${formatNotation({ ...r.spec, times: undefined } as RollSpec)})`;
       if (!hasTotal(r.spec)) return `${name}: ${bold(words ?? resultText(r))}${words === null ? "" : `  [${diceText(r)}]`}\n`;
       const headline = game !== undefined && !game.total && words !== null ? words : `${r.total}${words === null ? "" : ` · ${words}`}`;
-      return `${name}: ${bold(headline)}  [${diceText(r)}]${r.loaded === true ? `  (${t.loaded})` : ""}\n`;
+      return `${name}: ${bold(headline)}  ${r.spec.math !== undefined ? formulaText(r) : `[${diceText(r)}]`}${r.loaded === true ? `  (${t.loaded})` : ""}\n`;
     });
     const first = rolls[0] as Roll;
     const all = setOf(rolls);

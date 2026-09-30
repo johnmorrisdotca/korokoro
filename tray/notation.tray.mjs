@@ -1,7 +1,7 @@
 // Dice typed as notation: what is rolled, what is refused and how it says so, and the rules a roll is shown by.
 import { expect, test } from "@playwright/test";
 
-import { open, roll, sound, state, type } from "./tray.mjs";
+import { open, roll, sound, state, tap, type } from "./tray.mjs";
 
 test("typed notation is rolled as typed, and written back one way", async ({ page }) => {
   const errors = await open(page);
@@ -93,4 +93,45 @@ test("a link to typed dice opens them, and a label is only ever text", async ({ 
   const s = await sound(page, errors);
   expect(s.notation).toBe("2d6 # <b>bold</b>");
   expect(s.markup).toBe(false);
+});
+
+test("a formula is rolled as written, shown with its dice, and left alone by the buttons", async ({ page }) => {
+  const errors = await open(page, "?seed=formula");
+  await type(page, "( 2d6 + 3 ) x 2");
+  let s = await sound(page, errors);
+  expect(s.notation).toBe("(2d6+3)*2");
+  await expect(page.locator('[data-testid="kk-formula"]')).toBeVisible();
+  // The chips, the count, the bonus and Keep cannot change a formula.
+  await expect(page.locator('[data-testid="kk-chip"]').first()).toBeDisabled();
+  await expect(page.locator('[data-testid="kk-mod-up"]')).toBeDisabled();
+  await expect(page.locator('[data-testid="kk-count"] button').first()).toBeDisabled();
+  await roll(page);
+  s = await sound(page, errors);
+  const [a, b] = s.dice.map((d) => d.face);
+  expect(Number(s.total)).toBe((a + b + 3) * 2);
+  expect(s.sum).toBe(`([${a} ${b}]+3)*2`);
+  // A division has to be rounded, and the refusal says how.
+  await type(page, "4d6/2");
+  expect((await state(page)).error).toContain("floor(…)");
+  await type(page, "floor(4d6/2)");
+  await roll(page);
+  s = await sound(page, errors);
+  expect(Number(s.total)).toBe(Math.floor(s.dice.reduce((sum, d) => sum + d.face, 0) / 2));
+  // A die tapped starts a new roll.
+  await tap(page, '[data-testid="kk-sides"] button[data-value="20"]');
+  s = await sound(page, errors);
+  expect(s.notation).toBe("1d20");
+  await expect(page.locator('[data-testid="kk-formula"]')).toHaveCount(0);
+});
+
+test("dice that all differ never show a face twice", async ({ page }) => {
+  const errors = await open(page, "?seed=differ");
+  await type(page, "5d6u");
+  for (let i = 0; i < 8; i++) {
+    await roll(page);
+    const s = await state(page);
+    expect(new Set(s.dice.map((d) => d.face)).size).toBe(5);
+  }
+  await tap(page, '[data-testid="kk-tab-odds"]');
+  await sound(page, errors);
 });

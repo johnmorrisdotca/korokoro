@@ -37,7 +37,7 @@ import { cryptoSource, newSeed, seededSource, type RandomSource } from "../rando
 import { loadSets, makeSet, readSet, setQuery, storeSets, withSet, withoutSet, type DiceSet } from "../sets.ts";
 import { readShared, readSharedMany, shareQuery, shareQueryMany } from "../share.ts";
 import { getPreset, presetSpec, readPreset, type Preset } from "../games/presets.ts";
-import { fromJSON, toCSV, toJSON, toText } from "../export.ts";
+import { formulaText, fromJSON, toCSV, toJSON, toText } from "../export.ts";
 import { gamesPanel, type GamesState } from "./games.ts";
 import { h, refill, s } from "./dom.ts";
 import { dieFace, dieIcon, faceText } from "./faces.ts";
@@ -353,7 +353,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
    */
   function addDie(die: DiceGroup, count = 1) {
     const name = dieName(die);
-    const all = suggested && !kinds().some((g) => dieName(g) === name) ? [] : kinds();
+    // A formula is not added to by a tap: the die tapped starts a new roll, as it does on the dice the tray opened with.
+    const all = spec.math !== undefined || (suggested && !kinds().some((g) => dieName(g) === name)) ? [] : kinds();
     suggested = false;
     const at = all.findIndex((g) => dieName(g) === name);
     // Never past the limits: the buttons dim there, and a die made or loaded below is held to them too.
@@ -379,13 +380,15 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
 
   function renderControls() {
     const all = kinds();
+    // A roll written as a formula is changed where it was written: the buttons cannot take a die out of the middle of it.
+    const formula = !empty && spec.math !== undefined;
     const total = all.reduce((sum, g) => sum + g.count, 0);
     const mine = all[lit];
     const room = MAX_DICE - total;
     const full = room < 1;
     const counts = Array.from({ length: MAX_DICE - MIN_DICE + 1 }, (_, i) => i + MIN_DICE);
-    const minus = h("button", { type: "button", "aria-label": `${t.modifier} −1`, "data-testid": "kk-mod-down" }, "−");
-    const plus = h("button", { type: "button", "aria-label": `${t.modifier} +1`, "data-testid": "kk-mod-up" }, "+");
+    const minus = h("button", { type: "button", "aria-label": `${t.modifier} −1`, "data-testid": "kk-mod-down", disabled: formula }, "−");
+    const plus = h("button", { type: "button", "aria-label": `${t.modifier} +1`, "data-testid": "kk-mod-up", disabled: formula }, "+");
     minus.addEventListener("click", () => changeSpec({ modifier: spec.modifier - 1 }));
     plus.addEventListener("click", () => changeSpec({ modifier: spec.modifier + 1 }));
     const mod = spec.modifier > 0 ? `+${spec.modifier}` : String(spec.modifier);
@@ -433,7 +436,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       const text = formatNotation(specOf([group]));
       const chip = h(
         "button",
-        { type: "button", class: "kk-chip", "data-testid": "kk-chip", "data-value": dieName(group).slice(1), "data-lit": String(index === lit), "data-suggested": String(suggested), "aria-label": fillIn(t.takeOne, { die: dieName(group), n: group.count }), title: text },
+        { type: "button", class: "kk-chip", "data-testid": "kk-chip", "data-value": dieName(group).slice(1), "data-lit": String(index === lit), "data-suggested": String(suggested), "aria-label": formula ? text : fillIn(t.takeOne, { die: dieName(group), n: group.count }), title: text, disabled: formula },
         h("span", {}, text),
         h("i", { "aria-hidden": "true" }, "−"),
       );
@@ -452,9 +455,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     // A button that would take the roll past a limit is dimmed, and the row's label says which limit.
     const allKinds = all.length >= MAX_GROUPS;
     const inRoll = (sides: Sides) => all.some((g) => dieName(g) === dieName(plainDie(sides)));
-    const cannotAdd = (sides: Sides) => full || (allKinds && !inRoll(sides));
+    const cannotAdd = (sides: Sides) => !formula && (full || (allKinds && !inRoll(sides)));
     // While the dice are only suggested, a tap chooses; after that, it adds. The label says which.
-    const addLabel = full ? fillIn(t.limitDice, { n: MAX_DICE }) : allKinds ? fillIn(t.limitKinds, { n: MAX_GROUPS }) : suggested ? t.choose : t.add;
+    const addLabel = formula ? t.choose : full ? fillIn(t.limitDice, { n: MAX_DICE }) : allKinds ? fillIn(t.limitKinds, { n: MAX_GROUPS }) : suggested ? t.choose : t.add;
 
     refill(controls,
       h("div", { class: "kk-row" }, h("span", { class: "kk-label" }, t.pool), h("div", { class: "kk-pool", role: "group", "aria-label": t.pool, "data-testid": "kk-pool", "data-suggested": String(suggested) }, ...chips)),
@@ -465,7 +468,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         (n) => String(n),
         (n) => changeLit({ count: n }),
         "kk-count",
-        (n) => mine === undefined || n > mine.count + room,
+        (n) => formula || mine === undefined || n > mine.count + room,
       ),
       // The buttons are the dice a table owns; any other die is typed as notation, and then no button is lit.
       segment<Sides>(
@@ -487,6 +490,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         h("div", { class: "kk-stepper" }, minus, h("output", { "data-testid": "kk-mod" }, mod), plus),
         h("span", { class: "kk-notation" }, input),
         error,
+        formula ? h("span", { class: "kk-fine kk-formula", "data-testid": "kk-formula" }, t.formula) : null,
       ),
       // Always there, so the rows below never move; dimmed while there is one die or none to choose among.
       segment<Keep>(
@@ -496,7 +500,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         (k) => (k === "all" ? t.keepAll : k === "highest" ? t.keepHighest : t.keepLowest),
         (k) => changeLit({ keep: k, keepCount: 1 }),
         "kk-keep",
-        (k) => mine === undefined || (mine.count < 2 && k !== "all"),
+        (k) => formula || mine === undefined || (mine.count < 2 && k !== "all"),
       ),
       h(
         "details",
@@ -724,6 +728,11 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const thrown = diceOf(r);
     const all = groupsOf(r.spec);
     const line = h("div", { class: "kk-sum", "data-testid": "kk-sum" });
+    // A formula is shown as it was written, each kind of dice as it fell.
+    if (r.spec.math !== undefined) {
+      line.append(formulaText(r));
+      return line;
+    }
     all.forEach((group, index) => {
       const mine = thrown.filter((die) => (die.group ?? 0) === index);
       // Signs and words sit side by side; numbers are added.
@@ -854,7 +863,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     }
     refill(result,
       h("div", { class: "kk-total", "data-testid": "kk-total" }, h("small", {}, `${isSuccessRoll(r.spec) ? t.successes : t.total} · ${formatNotation(r.spec)}`), String(r.total)),
-      r.faces.length > 1 || r.spec.modifier !== 0 ? sumLine(r) : null,
+      r.faces.length > 1 || r.spec.modifier !== 0 || r.spec.math !== undefined ? sumLine(r) : null,
       says,
       h(
         "div",

@@ -1,5 +1,6 @@
 import { diceOf, groupOf, hasTotal, isSuccessRoll, valueOfFace, type DieRoll, type Roll } from "./dice.ts";
 import { parseHistory } from "./history.ts";
+import { mathText } from "./math.ts";
 import { formatNotation } from "./notation.ts";
 import { statsOf, type Stats } from "./stats.ts";
 import { VERSION } from "./version.ts";
@@ -106,6 +107,14 @@ export function diceText(roll: Roll): string {
     .join(" ");
 }
 
+/** A formula's roll with each kind of dice written as it fell: `([6 1]+3)*2-[3]`. For a roll without a formula, the same as `diceText`. */
+export function formulaText(roll: Roll): string {
+  const { math } = roll.spec;
+  if (math === undefined) return diceText(roll);
+  const dice = diceOf(roll);
+  return mathText(math, (group) => `[${dice.filter((die) => (die.group ?? 0) === group).map((die) => dieText(roll, die)).join(" ")}]`);
+}
+
 /** A roll's result as it would be said: its total, or for dice that are only words, the words. */
 export function resultText(roll: Roll): string {
   return hasTotal(roll.spec)
@@ -115,9 +124,10 @@ export function resultText(roll: Roll): string {
         .join(" ");
 }
 
-/** One roll on one line: `2d20kh1+5: 22  [17 (4)]`. */
+/** One roll on one line: `2d20kh1+5: 22  [17 (4)]`, or for a formula `(2d6+3)*2: 20  ([6 1]+3)*2`. */
 export function rollText(roll: Roll): string {
-  return `${formatNotation(roll.spec)}: ${resultText(roll)}${hasTotal(roll.spec) ? `  [${diceText(roll)}]` : ""}`;
+  const dice = roll.spec.math !== undefined ? formulaText(roll) : `[${diceText(roll)}]`;
+  return `${formatNotation(roll.spec)}: ${resultText(roll)}${hasTotal(roll.spec) ? `  ${dice}` : ""}`;
 }
 
 /** Rolls as plain text, one to a line, each with its time in UTC, oldest first as given. */

@@ -44,7 +44,8 @@ quietly rolled as something else.
 | Critical success and failure marks | `1d20cs>=19`, `1d20cf<3`, `1d20cscf` | **yes** | Marks only, as elsewhere |
 | Sort | `4d6s`, `4d6sa`, `4d6sd` | **yes** | The roll keeps the order thrown; the dice are shown sorted |
 | A label for the roll | `2d6+3 # fire damage`, `[fire damage] 2d6+3` | **yes** | One label for the roll |
-| Unique dice | `4d6u`, `4d6uo` | **not yet** | Planned |
+| Unique dice | `4d6u`, `5d10usd` | **yes** | Each die is thrown from the faces not yet showing: the same odds as rerolling duplicates until there are none |
+| Reroll a duplicate once | `4d6uo` | **not yet** | Its odds are not quick to count exactly |
 | Exploding dice kept or dropped | `4d6!kh3` | **not yet** | Tables disagree on whether an explosion is a new die in the pool; to be chosen |
 | Successes among the dice kept | `4d6kh3>=5` | **not yet** | |
 
@@ -53,12 +54,17 @@ quietly rolled as something else.
 | Feature | Korokoro | Status | Notes |
 | --- | --- | --- | --- |
 | A bonus | `2d6+3`, `4d8-1` | **yes** | One whole number up to 99, added or taken away |
-| Multiplying and dividing | `2d6*2`, `4d6/2` | **not yet** | Planned |
-| Brackets | `(2d6+3)*2` | **not yet** | Planned |
-| Dice taken away | `1d20-1d4` | **not yet** | Planned with arithmetic |
-| Functions | `floor(2d6/3)`, `max(1d6,1d8)` | **not yet** | Planned |
-| Grouped rolls | `{4d6,3d8}kh1` | **not yet** | Planned |
-| More than ten dice | `11d6` | **not yet** | Ten in the tray for good; more from code is planned where the odds stay exact |
+| Multiplying | `2d6*2`, `2d6x2`, `1d4*1d6` | **yes** | |
+| Dividing | `floor(4d6/2)`, `ceil(4d6/2)`, `round(4d6/2)` | **yes** | A division is always rounded: a roll comes to a whole number |
+| A division left unrounded | `4d6/2` | **not yet** | Refused by name, with what to write. Other rollers give 6.5 |
+| Brackets | `(2d6+3)*2`, `1d20-(1d4+2)` | **yes** | |
+| Dice taken away | `1d20-1d4`, `-1d6+10` | **yes** | |
+| Functions | `floor(2d6/3)`, `abs(1d6-1d6)`, `max(1d6,1d8)`, `min(1d6,1d8,4)` | **yes** | floor, ceil, round, abs, max, min |
+| Powers and roots | `2d6^2`, `sqrt(2d6)` | **not yet** | |
+| Grouped rolls, one kept | `{4d6,3d8}kh1`, `{4d6,3d8}kl1` | **yes** | Written back as `max(…)` and `min(…)` |
+| Grouped rolls, several kept or counted | `{4d6,3d8,2d10}kh2` | **not yet** | |
+| Decimal numbers | `2d6*1.5` | **not yet** | Write `floor(2d6*3/2)` |
+| More than ten dice | `11d6` | **not yet** | Ten in the tray and in typed notation. Code may ask for a hundred plain dice: `parseNotation("40d6", { maxDice: 100 })` |
 
 ## The order modifiers are applied in
 
@@ -89,8 +95,8 @@ A roll that uses only one of these at a time comes out the same either way.
 ## Other notations
 
 - **Roll20.** `r` rerolls until clear and `ro` once, as Roll20 has them. Its
-  grouped rolls and inline labels on each die are with the arithmetic above:
-  not yet.
+  grouped rolls that keep one roll are read; inline labels on each die are
+  not.
 - **BCDice**, which Japanese tables use, is a different notation with a
   command for each game system. It is a candidate for a later release, as a
   reader beside this one.

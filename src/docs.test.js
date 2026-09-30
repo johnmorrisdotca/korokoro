@@ -15,6 +15,7 @@ import { makeSet, readSet, setQuery } from "./sets.ts";
 import { fairnessTest, readResults } from "./stats.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
 import { chanceAnyAtLeast, expectedHighest } from "./odds.ts";
+import { rangeOf } from "./dice.ts";
 import { chanceAtLeast, chanceExactly, distributionHolding, distributionOf, exactCounts, expectedTotal, luckOf, mostLikely, spreadOf } from "./odds.ts";
 import { seededSource } from "./random.ts";
 import { shareQuery } from "./share.ts";
@@ -472,7 +473,38 @@ describe("the README on the command line and export", () => {
     const rolls = [roll(parseNotation("2d20kh1+5 # attack"), seededSource("table"), Date.UTC(2026, 8, 30, 12)), roll(parseNotation("4d6dl1"), seededSource("table"), Date.UTC(2026, 8, 30, 12, 0, 5))];
     for (const line of toText(rolls).trim().split("\n")) expect(readme).toContain(line);
     for (const line of toCSV(rolls).trim().split("\r\n")) expect(readme).toContain(line);
-    expect(toJSON(rolls)).toContain('"generator": "korokoro ');
+    // The version it shows being written is this one.
+    expect(readme).toContain(toJSON(rolls).split("\n")[2].trim().replace(/,$/, ""));
     expect(run("--stdin --json --seed table").code).toBe(0);
+  });
+});
+
+describe("the README on formulas and many dice", () => {
+  it("half of 4d6 from table-7", () => {
+    const half = roll(parseNotation("floor(4d6/2)"), seededSource("table-7"));
+    expect(readme).toContain("half.faces;                       // [6, 4, 2, 1]");
+    expect([half.faces, half.total]).toEqual([[6, 4, 2, 1], 6]);
+    expect(rangeOf(half.spec)).toEqual({ min: 2, max: 12 });
+    expect(readme).toContain("expectedTotal(half.spec);         // 6.75");
+    expect(expectedTotal(half.spec)).toBeCloseTo(6.75, 12);
+    expect(readme).toContain("chanceAtLeast(half.spec, 8);      // 0.3356");
+    expect(chanceAtLeast(half.spec, 8)).toBeCloseTo(0.3356, 4);
+    expect(formatNotation(parseNotation("(2d6+3)"))).toBe("2d6+3");
+    expect(formatNotation(parseNotation("3+2d6"))).toBe("2d6+3");
+    expect(formatNotation(parseNotation("{4d6,3d8}kh1"))).toBe("max(4d6,3d8)");
+    expect(checkNotation("4d6/2").message).toContain("floor(…), ceil(…) or round(…)");
+    expect(distributionOf(parseNotation("6d6u"))).toEqual({ min: 21, max: 21, probabilities: [1] });
+  });
+
+  it("forty dice", () => {
+    const volley = parseNotation("40d6", { maxDice: 100 });
+    expect(roll(volley).faces).toHaveLength(40);
+    expect(readme).toContain("expectedTotal(volley);            // 140");
+    expect(expectedTotal(volley)).toBeCloseTo(140, 9);
+    expect(readme).toContain("chanceAtLeast(volley, 150);       // 0.1902");
+    expect(chanceAtLeast(volley, 150)).toBeCloseTo(0.1902, 4);
+    expect(String(exactCounts(volley).outcomes)).toHaveLength(32);
+    expect(exactCounts(volley).outcomes).toBe(6n ** 40n);
+    expect(parseNotation("100d20kh1", { maxDice: 100 })).not.toBeNull();
   });
 });
