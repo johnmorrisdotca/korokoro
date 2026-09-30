@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import { expect, test } from "@playwright/test";
 
 const site = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
+const pages = join(dirname(fileURLToPath(import.meta.url)), "pages");
+const vue = join(dirname(fileURLToPath(import.meta.url)), "..", "node_modules", "vue", "dist", "vue.esm-browser.prod.js");
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".png": "image/png" };
 
 /** Open the demo with a query, and collect anything the page complains of. */
@@ -17,11 +19,13 @@ export async function open(page, query = "?seed=tray") {
   page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
   await page.route("http://korokoro.test/**", (route) => {
     const { pathname } = new URL(route.request().url());
-    const file = join(site, pathname === "/" ? "index.html" : pathname);
+    // The demo, and beside it the pages that try the custom element and the Vue component, with Vue's own browser build for the second.
+    const file = pathname === "/vue.js" ? vue : pathname.startsWith("/pages/") ? join(pages, pathname.slice(7)) : join(site, pathname === "/" ? "index.html" : pathname);
     if (!existsSync(file)) return route.fulfill({ status: 404, body: "" });
     return route.fulfill({ body: readFileSync(file), contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream" });
   });
-  await page.goto(`http://korokoro.test/${query}`);
+  // A query opens the demo; a path opens another page.
+  await page.goto(`http://korokoro.test/${query.startsWith("/") ? query.slice(1) : query}`);
   await expect(page.locator('[data-testid="kk-tray"]')).toBeVisible();
   return errors;
 }

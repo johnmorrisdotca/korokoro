@@ -514,3 +514,20 @@ describe("the README on formulas and many dice", () => {
     expect(parseNotation("100d20kh1", { maxDice: 100 })).not.toBeNull();
   });
 });
+
+describe("the README on the web component and the Vue component", () => {
+  it("names every attribute the element watches, and no other", async () => {
+    const { KorokoroRoller } = await import("./element.ts");
+    const rows = table("### 5. A web component");
+    const named = rows.flatMap(([cell]) => codes(cell).map((text) => text.split("=")[0]));
+    expect([...named].sort()).toEqual([...KorokoroRoller.observedAttributes].sort());
+  });
+
+  it("names the exports it imports from", () => {
+    const { exports } = JSON.parse(readFileSync("package.json", "utf8"));
+    for (const entry of ["./element", "./vue", "./react"]) {
+      expect(exports, entry).toHaveProperty(entry);
+      expect(readme).toContain(`@johnmorrisdotca/korokoro/${entry.slice(2)}`);
+    }
+  });
+});

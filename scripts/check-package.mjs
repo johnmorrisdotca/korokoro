@@ -44,11 +44,11 @@ for (const file of new Set(pointed)) {
 }
 console.log(`ok   every file package.json points at is in the tarball (${new Set(pointed).size})`);
 
-// 3. Install it into an empty project, with the one optional peer its React entry needs.
+// 3. Install it into an empty project, with the optional peers its React and Vue entries need.
 const project = join(scratch, "project");
 mkdirSync(project);
 writeFileSync(join(project, "package.json"), JSON.stringify({ name: "scratch", private: true, version: "0.0.0" }));
-run("npm", ["install", "--no-audit", "--no-fund", "--silent", tarball, "react"], project, true);
+run("npm", ["install", "--no-audit", "--no-fund", "--silent", tarball, "react", "vue"], project, true);
 console.log("ok   npm install of the tarball");
 
 // 4. Every entry in `exports`, by ESM and by require.

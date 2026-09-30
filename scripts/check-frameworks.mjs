@@ -1,5 +1,5 @@
-// Proves the claim in the README: the packed package works in React, Vue, Svelte, Angular and a
-// plain page, with nothing for the consumer to configure. It packs the package, makes a small
+// Proves the claim in the README: the packed package works in React, Vue, Svelte, Angular, as a
+// custom element and in a plain page, with nothing for the consumer to configure. It packs the package, makes a small
 // project for each in a scratch folder, installs the tarball and each framework's own tools
 // there (never here: the package has no dependencies), and builds it. With KOROKORO_BROWSER
 // set to the path of a Playwright module it also opens each built page and rolls the dice.
@@ -40,22 +40,30 @@ const projects = {
       "index.html": page(`<script type="module" src="/src/main.js"></script>`),
       "src/main.js": `import { createApp } from "vue";\nimport App from "./App.vue";\ncreateApp(App).mount("#app");\n`,
       "src/App.vue": `<script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
-import { mountRoller } from "@johnmorrisdotca/korokoro";
+import { ref } from "vue";
+import { DiceRoller } from "@johnmorrisdotca/korokoro/vue";
 
-const box = ref(null);
 const total = ref(null);
-let roller;
-onMounted(() => {
-  roller = mountRoller(box.value, { spec: { count: 1, sides: 20 }, query: "?seed=vue", onRoll: (roll) => (total.value = roll.total) });
-});
-onBeforeUnmount(() => roller?.destroy());
 </script>
 
 <template>
-  <div ref="box"></div>
+  <DiceRoller notation="1d20" query="?seed=vue" @roll="(roll) => (total = roll.total)" />
   <p id="total">{{ total }}</p>
 </template>
+`,
+    },
+  },
+  // The custom element, in a page with a bundler and no framework.
+  element: {
+    out: "dist",
+    files: {
+      "package.json": { name: "check-element", private: true, type: "module", dependencies: { "@johnmorrisdotca/korokoro": korokoro }, devDependencies: { vite: "^7.0.0" } },
+      "vite.config.js": `export default { base: "./" };\n`,
+      "index.html": page(`<korokoro-roller notation="1d20" query="?seed=element"></korokoro-roller><p id="total"></p><script type="module" src="/src/main.js"></script>`),
+      "src/main.js": `import { defineRoller } from "@johnmorrisdotca/korokoro/element";
+
+defineRoller();
+document.addEventListener("korokoro-roll", (event) => (document.getElementById("total").textContent = event.detail.total));
 `,
     },
   },

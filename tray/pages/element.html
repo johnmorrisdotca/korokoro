@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>korokoro-roller</title>
+    <style>
+      body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; }
+    </style>
+  </head>
+  <body>
+    <korokoro-roller id="roller" notation="1d20+5" query="?seed=element" storage="none" sound="off"></korokoro-roller>
+    <p>Last total: <output id="total"></output> · rolls heard: <output id="heard">0</output></p>
+    <button id="ja" type="button">日本語</button>
+    <button id="dice" type="button">4d6dl1</button>
+    <button id="wide" type="button">wide</button>
+    <button id="theme" type="button">theme</button>
+    <button id="away" type="button">remove</button>
+    <script type="module">
+      import { defineRoller } from "/dist/element.js";
+
+      defineRoller();
+      defineRoller();
+      const roller = document.getElementById("roller");
+      let heard = 0;
+      // The event bubbles: it is heard on the page, not only on the element.
+      document.body.addEventListener("korokoro-roll", (event) => {
+        document.getElementById("total").textContent = String(event.detail.total);
+        document.getElementById("heard").textContent = String(++heard);
+      });
+      document.getElementById("ja").addEventListener("click", () => roller.setAttribute("lang", "ja"));
+      document.getElementById("dice").addEventListener("click", () => roller.setAttribute("notation", "4d6dl1"));
+      document.getElementById("wide").addEventListener("click", () => roller.toggleAttribute("wide"));
+      document.getElementById("theme").addEventListener("click", () => (roller.options = { theme: { "--kk-felt": "rgb(34, 51, 68)" } }));
+      document.getElementById("away").addEventListener("click", () => roller.remove());
+      window.roller = roller;
+    </script>
+  </body>
+</html>

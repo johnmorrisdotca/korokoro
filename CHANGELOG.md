@@ -6,6 +6,27 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-09-30
+
+### Added
+
+- **A web component**: `<korokoro-roller notation="2d20kh1+5" wide>`, from
+  `@johnmorrisdotca/korokoro/element`. Call `defineRoller()` once. Attributes
+  for the dice, the language and the everyday options; an `options` property
+  for what a string cannot carry; `roll()`, `setSpec()` and `history` on the
+  element; and a `korokoro-roll` event for each roll. Importing it on a
+  server does nothing and throws nothing.
+- **A Vue component**: `<DiceRoller notation="2d20kh1+5" wide @roll="…" />`,
+  from `@johnmorrisdotca/korokoro/vue`. The tray's options as props, a `roll`
+  event, the dice and the language followed as they change, and `roll()`,
+  `history()`, `setSpec()` and `setLocale()` on a template ref. It renders an
+  empty box on a server. Vue is an optional peer dependency, 3.3 or later;
+  the package itself still has none.
+- Both are tapped in Chromium and WebKit by `pnpm test:tray`, imported from
+  the npm tarball by ESM and by `require` in `pnpm test:package`, and built
+  into a small project each by `scripts/check-frameworks.mjs`.
+
+
 ## [1.9.0] - 2026-09-30
 
 ### Added
@@ -373,7 +394,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.9.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.10.0...HEAD
+[1.10.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.10.0
 [1.9.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.9.0
 [1.8.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.8.0
 [1.7.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.7.0

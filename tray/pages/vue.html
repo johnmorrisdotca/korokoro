@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DiceRoller for Vue</title>
+    <style>
+      body { margin: 0; padding: 16px; font-family: system-ui, sans-serif; }
+    </style>
+    <script type="importmap">
+      { "imports": { "vue": "/vue.js" } }
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import { createApp, h, ref } from "vue";
+      import { DiceRoller } from "/dist/vue.js";
+
+      createApp({
+        setup() {
+          const total = ref("");
+          const heard = ref(0);
+          const notation = ref("1d20+5");
+          const locale = ref("en");
+          const shown = ref(true);
+          const roller = ref(null);
+          return () =>
+            h("div", {}, [
+              shown.value
+                ? h(DiceRoller, {
+                    ref: roller,
+                    notation: notation.value,
+                    locale: locale.value,
+                    query: "?seed=vue",
+                    storage: null,
+                    sound: false,
+                    onRoll: (roll) => {
+                      total.value = String(roll.total);
+                      heard.value += 1;
+                    },
+                  })
+                : null,
+              h("p", {}, ["Last total: ", h("output", { id: "total" }, total.value), " · rolls heard: ", h("output", { id: "heard" }, String(heard.value))]),
+              h("button", { id: "ja", type: "button", onClick: () => (locale.value = "ja") }, "日本語"),
+              h("button", { id: "dice", type: "button", onClick: () => (notation.value = "4d6dl1") }, "4d6dl1"),
+              h("button", { id: "code", type: "button", onClick: () => roller.value.roll() }, "roll from code"),
+              h("button", { id: "away", type: "button", onClick: () => (shown.value = false) }, "remove"),
+            ]);
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>

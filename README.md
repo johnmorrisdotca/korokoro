@@ -79,9 +79,10 @@ affiliated with or endorsed by them; it rolls the dice their rules call for.
 
 ## Use it in your project
 
-Korokoro is three things, each usable without the others: **an API** of plain
-functions (roll, read notation, work out odds, keep a history), **a tray** you
-mount into any element, and **a React component** that wraps the tray.
+Korokoro is an API and a tray, each usable without the other: **an API** of
+plain functions (roll, read notation, work out odds, keep a history), and **a
+tray** you mount into any element, which also comes as **a React component**,
+**a Vue component** and **a web component**.
 
 ### 1. The API alone
 
@@ -131,19 +132,55 @@ from a client component (`"use client"`).
 
 ```vue
 <script setup>
-import { onBeforeUnmount, onMounted, ref } from "vue";
-import { mountRoller } from "@johnmorrisdotca/korokoro";
-
-const box = ref(null);
-let roller;
-onMounted(() => (roller = mountRoller(box.value, { onRoll: (roll) => console.log(roll.total) })));
-onBeforeUnmount(() => roller?.destroy());
+import { DiceRoller } from "@johnmorrisdotca/korokoro/vue";
 </script>
 
-<template><div ref="box"></div></template>
+<template>
+  <DiceRoller notation="2d20kh1+5" wide @roll="(roll) => save(roll)" />
+</template>
 ```
 
-### 5. Svelte and Angular
+The props are the tray's options, with `notation` as a shorter way to give the
+dice, and each roll is a `roll` event. The dice and `locale` are followed as
+they change; `roll()`, `history()`, `setSpec()` and `setLocale()` are there on
+a template ref. It renders an empty box on the server (Nuxt included) and
+mounts the tray in the browser. Vue 3.3 or later.
+
+### 5. A web component
+
+```html
+<korokoro-roller notation="2d20kh1+5" wide></korokoro-roller>
+
+<script type="module">
+  import { defineRoller } from "@johnmorrisdotca/korokoro/element";
+
+  defineRoller();
+  document.addEventListener("korokoro-roll", (event) => console.log(event.detail.total));
+</script>
+```
+
+A custom element, for any page and any framework that renders HTML. Call
+`defineRoller()` once; each roll is a `korokoro-roll` event that bubbles, with
+the roll as its `detail`.
+
+| Attribute | What it does |
+| --- | --- |
+| `notation` | The dice showing at first, and again whenever it changes |
+| `lang` | `ja` for Japanese, anything else English; the page's own language when left out |
+| `wide` | Tray and panels side by side on a wide screen |
+| `sound="off"` | No sound and no mute button |
+| `hold="off"` | Dice are not held |
+| `placeholder="off"` | The opening dice are the user's own roll |
+| `language-chooser` | The tray's own choice of English or 日本語 |
+| `storage="none"`, `storage-key` | Keep no history; or the key it is kept under |
+| `animation-ms`, `share-base`, `query` | As the options of the same names |
+
+What an attribute cannot carry (a theme, your own words, your own sound) goes
+on the element's `options` property. `roll()`, `setSpec()` and `history` are
+on the element. The tray is drawn in the element's own light DOM, so the
+page's `--kk-…` variables theme it as they do a mounted tray.
+
+### 6. Svelte and Angular
 
 The same one call in the framework's mount hook, and `destroy()` on the way
 out:
@@ -173,8 +210,9 @@ ngOnDestroy() {
 }
 ```
 
-Each of the five is built from the packed tarball and rolled in Chromium and
-WebKit by `scripts/check-frameworks.mjs` before a release names it.
+Each of the six (Vue, Svelte, Angular, React, the web component and a plain
+page) is built from the packed tarball and rolled in Chromium and WebKit by
+`scripts/check-frameworks.mjs` before a release names it.
 
 ### What a developer gets
 
@@ -888,7 +926,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.9.0", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.10.0", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet
@@ -1328,7 +1366,7 @@ for fixing one. Any other language is a table of your own passed as `strings`.
 - More notation, as tables ask for it
   ([Notation compared](./docs/notation-compared.md) keeps the list)
 - Standalone executables of the command line, for machines without Node
-- A web component and a Vue wrapper, and a documentation site
+- A documentation site, with live examples
 - More games: [suggest one](https://github.com/johnmorrisdotca/korokoro/issues/new?template=suggest-a-game.md)
 - BCDice's notation, which Japanese tables use, as a candidate
 - Ports to other languages are welcome; a conformance suite is planned so
