@@ -54,6 +54,9 @@ check("CSV, ended CRLF", ["2d6", "--seed", "table", "--csv"], { code: 0, out: /^
 check("the odds", ["--odds", "2d6"], { code: 0, out: /range 2 to 12 · expected 7/, err: "" });
 check("a game", ["--game", "yahtzee", "--seed", "table"], { code: 0, out: "Yahtzee (5d6): Chance, for 13  [1 2 1 5 4]\n", err: "" });
 check("the games", ["--games"], { code: 0, out: /^backgammon|\nyahtzee /, err: "" });
+check("more than ten dice, when asked for", ["40d6", "--seed", "table", "--max-dice", "100"], { code: 0, out: /^40d6: \d+ {2}\[(\d ){39}\d\]\n$/, err: "" });
+check("more than ten dice, when not", ["40d6"], { code: 1, out: "", err: "korokoro: 40d6: “40”: roll 1 to 10 dice at a time\n" });
+check("--max-dice past a hundred", ["2d6", "--max-dice", "101"], { code: 2, out: "", err: /--max-dice takes a whole number from 10 to 100/ });
 check("a real die", ["--test", "3 5 6 6 1 2"], { code: 0, out: "6 results on a d6: too few to say. The test wants 30.\n", err: "" });
 check("Japanese by flag", ["--game", "cho-han", "--seed", "table", "--lang", "ja"], { code: 0, out: /^丁半 \(2d6\): (丁|半)/, err: "" });
 check("Japanese by LANG", ["--help"], { code: 0, out: /^使い方: korokoro/ }, { env: { LANG: "ja_JP.UTF-8" } });

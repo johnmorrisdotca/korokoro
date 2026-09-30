@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_DICE, MAX_DICE_BY_CODE, canHold, diceCount, diceOf, groupsOf, groupTotals, isSuccessRoll, normalizeSpec, rangeOf, readDice, roll, rollFrom, type RollSpec } from "./dice.ts";
+import { MAX_DICE, MAX_DICE_BY_CODE, canHold, diceCount, diceOf, groupsOf, groupTotals, isSuccessRoll, normalizeSpec, rangeOf, readDice, roll, rollFrom, rollMany, type RollSpec } from "./dice.ts";
 import { fromJSON, toJSON } from "./export.ts";
 import { checkMath, evaluateMath, mathText, type MathNode } from "./math.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
@@ -319,7 +319,7 @@ describe("more than ten dice, from code", () => {
     const big = spec("50d6+30d8kh1+2", { maxDice: 100 });
     expect(diceCount(big)).toBe(80);
     expect(formatNotation(big)).toBe("50d6+30d8kh1+2");
-    const made = roll(big, seededSource("many"), 1);
+    const made = roll(big, seededSource("many"), { at: 1, maxDice: 100 });
     expect(made.faces).toHaveLength(80);
     expect(made.total).toBe(made.faces.slice(0, 50).reduce((a, b) => a + b, 0) + Math.max(...made.faces.slice(50)) + 2);
     expect(rollFrom(made.spec, made.faces, made.id, made.at, made.seed)).toEqual(made);
@@ -346,14 +346,27 @@ describe("more than ten dice, from code", () => {
     expect(parseNotation("10d6!", { maxDice: 100 })).toEqual(parseNotation("10d6!"));
   });
 
-  it("is what `roll` throws, and what `normalizeSpec` keeps only when asked", () => {
+  it("is only for a caller that asks: `roll`, `rollMany` and `normalizeSpec` stop at ten otherwise, as they always have", () => {
     expect(normalizeSpec({ count: 50, sides: 6 }).count).toBe(10);
     expect(normalizeSpec({ count: 50, sides: 6 }, { maxDice: 100 }).count).toBe(50);
     expect(normalizeSpec({ count: 500, sides: 6 }, { maxDice: 1000 }).count).toBe(100);
-    expect(roll({ count: 50, sides: 6 }, seededSource("x"), 1).faces).toHaveLength(50);
+    // The cap a project may rely on: fifty asked for, ten thrown.
+    expect(roll({ count: 50, sides: 6 }).faces).toHaveLength(10);
+    expect(roll({ count: 50, sides: 6 }, seededSource("x"), 1).faces).toHaveLength(10);
+    expect(roll({ count: 50, sides: 6 }, seededSource("x"), { at: 1 }).faces).toHaveLength(10);
+    expect(rollMany({ count: 50, sides: 6 }, 3, seededSource("x"), 1).rolls.map((r) => r.faces.length)).toEqual([10, 10, 10]);
+    // A spec read with the option is still brought to ten by a roll that does not pass it on.
+    expect(roll(spec("50d6", { maxDice: 100 }), seededSource("x"), 1).faces).toHaveLength(10);
+    // With the option, fifty.
+    expect(roll({ count: 50, sides: 6 }, seededSource("x"), { maxDice: 100 }).faces).toHaveLength(50);
+    expect(roll({ count: 50, sides: 6 }, seededSource("x"), { at: 7, maxDice: 100 }).at).toBe(7);
+    expect(rollMany({ count: 50, sides: 6 }, 3, seededSource("x"), { maxDice: 100 }).rolls.map((r) => r.faces.length)).toEqual([50, 50, 50]);
+    expect(roll({ count: 500, sides: 6 }, seededSource("x"), { maxDice: 1000 }).faces).toHaveLength(100);
+    // The same dice from the same seed, whichever way the time is given.
+    expect(roll({ count: 2, sides: 6 }, seededSource("x"), { at: 1 }).faces).toEqual(roll({ count: 2, sides: 6 }, seededSource("x"), 1).faces);
     // Dice that are not plain are brought back to ten, as ever.
     expect(normalizeSpec({ count: 50, sides: 6, explode: true }, { maxDice: 100 }).count).toBe(10);
-    expect(roll({ count: 50, sides: 6, keep: "highest", keepCount: 3 }, seededSource("x"), 1).spec.count).toBe(10);
+    expect(roll({ count: 50, sides: 6, keep: "highest", keepCount: 3 }, seededSource("x"), { maxDice: 100 }).spec.count).toBe(10);
   });
 
   it("a formula may use them", () => {

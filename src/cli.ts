@@ -1,4 +1,4 @@
-import { hasTotal, isSuccessRoll, roll, rollMany, setOf, MAX_TIMES, type Roll, type RollSpec } from "./dice.ts";
+import { hasTotal, isSuccessRoll, roll, rollMany, setOf, MAX_DICE, MAX_DICE_BY_CODE, MAX_TIMES, type Roll, type RollSpec } from "./dice.ts";
 import { diceText, exportedRoll, formulaText, resultText, toCSV, EXPORT_FORMAT, type ExportedRoll } from "./export.ts";
 import { PRESETS, getPreset, presetOdds, presetSpec, readPreset, type Preset } from "./games/presets.ts";
 import { checkNotation, formatNotation, type NotationProblem } from "./notation.ts";
@@ -60,6 +60,7 @@ Roll dice written as notation, with exact odds.
 Options:
   -s, --seed <seed>    the same seed throws the same dice
   -t, --times <n>      throw each roll n times (1 to ${MAX_TIMES})
+      --max-dice <n>   allow up to n dice in a roll (${MAX_DICE} to ${MAX_DICE_BY_CODE}; default ${MAX_DICE})
   -o, --odds           show the odds and do not roll
   -g, --game <name>    roll a game's dice
       --games          list the games
@@ -80,6 +81,8 @@ With no dice, rolls 2d6. Exit codes: 0 done, 1 something could not be rolled,
     needs: "{part} needs a value",
     timesBad: `--times takes a whole number from 1 to ${MAX_TIMES}`,
     sidesBad: "--sides takes a whole number from 2 to 1000",
+    maxDiceBad: `--max-dice takes a whole number from ${MAX_DICE} to ${MAX_DICE_BY_CODE}`,
+    countMany: "“{part}”: roll 1 to {n} dice at a time, and past 10 only plain dice, all added or one kept",
     langBad: "--lang takes en or ja",
     noGame: "no game is called “{part}”. `koro --games` lists them",
     both: "--json and --csv are one or the other",
@@ -115,6 +118,7 @@ With no dice, rolls 2d6. Exit codes: 0 done, 1 something could not be rolled,
 オプション:
   -s, --seed <シード>   同じシードなら同じ出目になります
   -t, --times <回数>    それぞれを n 回振ります（1〜${MAX_TIMES}）
+      --max-dice <n>    1回に振れるダイスを n 個までにします（${MAX_DICE}〜${MAX_DICE_BY_CODE}、既定は${MAX_DICE}）
   -o, --odds            確率を表示し、振りません
   -g, --game <名前>     ゲームのダイスを振ります
       --games           ゲームの一覧
@@ -135,6 +139,8 @@ With no dice, rolls 2d6. Exit codes: 0 done, 1 something could not be rolled,
     needs: "{part} には値が必要です",
     timesBad: `--times は1〜${MAX_TIMES}の整数です`,
     sidesBad: "--sides は2〜1000の整数です",
+    maxDiceBad: `--max-dice は${MAX_DICE}〜${MAX_DICE_BY_CODE}の整数です`,
+    countMany: "「{part}」: 一度に振れるのは1〜{n}個です。10個を超えるときは、すべて足すか1個だけ採用する、ほかの指定のないダイスに限ります",
     langBad: "--lang は en か ja です",
     noGame: "「{part}」というゲームはありません。`koro --games` で一覧を表示します",
     both: "--json と --csv はどちらか一方です",
@@ -162,7 +168,7 @@ export function cliLanguage(flag: string | undefined, env: Record<string, string
   return (named ?? locale ?? "en").toLowerCase().startsWith("ja") ? "ja" : "en";
 }
 
-const FLAGS_WITH_VALUES: Record<string, string> = { "-s": "seed", "--seed": "seed", "-t": "times", "--times": "times", "-g": "game", "--game": "game", "--test": "test", "--sides": "sides", "--lang": "lang" };
+const FLAGS_WITH_VALUES: Record<string, string> = { "-s": "seed", "--seed": "seed", "-t": "times", "--times": "times", "--max-dice": "maxDice", "-g": "game", "--game": "game", "--test": "test", "--sides": "sides", "--lang": "lang" };
 const FLAGS: Record<string, string> = { "-o": "odds", "--odds": "odds", "--games": "games", "-j": "json", "--json": "json", "--csv": "csv", "--stdin": "stdin", "--no-color": "noColour", "--no-colour": "noColour", "-h": "help", "--help": "help", "-v": "version", "--version": "version" };
 
 type Asked = { values: Record<string, string>; flags: Set<string>; dice: string[]; wrong: { message: "unknown" | "needs"; part: string } | null };
@@ -269,6 +275,11 @@ export function runCli(args: readonly string[], around: CliSurroundings = {}): C
     times = Number(asked.values.times);
     if (!Number.isInteger(times) || times < 1 || times > MAX_TIMES) return wrong(t.timesBad);
   }
+  let maxDice = MAX_DICE;
+  if (asked.values.maxDice !== undefined) {
+    maxDice = Number(asked.values.maxDice);
+    if (!Number.isInteger(maxDice) || maxDice < MAX_DICE || maxDice > MAX_DICE_BY_CODE) return wrong(t.maxDiceBad);
+  }
   let game: Preset | undefined;
   if (asked.values.game !== undefined) {
     game = getPreset(asked.values.game);
@@ -280,8 +291,10 @@ export function runCli(args: readonly string[], around: CliSurroundings = {}): C
   const specs: RollSpec[] = [];
   const errors: { input: string; problem: NotationProblem; part: string; message: string }[] = [];
   for (const input of typed) {
-    const read = checkNotation(input);
+    const read = checkNotation(input, { maxDice });
     if (read.ok) specs.push(read.spec);
+    // Past ten dice the limit is the one asked for, and the refusal says so, in either language.
+    else if (read.problem === "count" && maxDice > MAX_DICE) errors.push({ input, problem: read.problem, part: read.part, message: fillIn(t.countMany, { part: read.part, n: maxDice }) });
     else errors.push({ input, problem: read.problem, part: read.part, message: language === "ja" ? fillIn(STRINGS.ja[REFUSALS[read.problem]], { part: read.part }) : read.message });
   }
   if (typed.length === 0) specs.push(game !== undefined ? presetSpec(game) : (checkNotation("2d6") as { spec: RollSpec }).spec);
@@ -299,7 +312,7 @@ export function runCli(args: readonly string[], around: CliSurroundings = {}): C
   const at = around.now ?? Date.now();
   const thrown: Roll[][] = specs.map((spec) => {
     const many = times ?? spec.times ?? 1;
-    return many > 1 ? rollMany(spec, many, source, at).rolls : [roll(spec, source, at)];
+    return many > 1 ? rollMany(spec, many, source, { at, maxDice }).rolls : [roll(spec, source, { at, maxDice })];
   });
   const readings = (rolls: Roll[]) => rolls.map((r, i) => (game === undefined ? null : readPreset(game, r, rolls.slice(0, i), language)));
 

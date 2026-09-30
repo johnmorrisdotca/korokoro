@@ -15,7 +15,7 @@ import { makeSet, readSet, setQuery } from "./sets.ts";
 import { fairnessTest, readResults } from "./stats.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
 import { chanceAnyAtLeast, expectedHighest } from "./odds.ts";
-import { rangeOf } from "./dice.ts";
+import { normalizeSpec, rangeOf } from "./dice.ts";
 import { chanceAtLeast, chanceExactly, distributionHolding, distributionOf, exactCounts, expectedTotal, luckOf, mostLikely, spreadOf } from "./odds.ts";
 import { seededSource } from "./random.ts";
 import { shareQuery } from "./share.ts";
@@ -498,7 +498,13 @@ describe("the README on formulas and many dice", () => {
 
   it("forty dice", () => {
     const volley = parseNotation("40d6", { maxDice: 100 });
-    expect(roll(volley).faces).toHaveLength(40);
+    expect(parseNotation("40d6")).toBeNull();
+    expect(normalizeSpec({ count: 40, sides: 6 }, { maxDice: 100 }).count).toBe(40);
+    expect(normalizeSpec({ count: 40, sides: 6 }).count).toBe(10);
+    expect(roll(volley, seededSource("table"), { maxDice: 100 }).faces).toHaveLength(40);
+    expect(roll(volley, seededSource("table")).faces).toHaveLength(10);
+    expect(readme).toContain("`roll({ count: 50, sides: 6 })`\nthrows ten dice");
+    expect(roll({ count: 50, sides: 6 }).faces).toHaveLength(10);
     expect(readme).toContain("expectedTotal(volley);            // 140");
     expect(expectedTotal(volley)).toBeCloseTo(140, 9);
     expect(readme).toContain("chanceAtLeast(volley, 150);       // 0.1902");

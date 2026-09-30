@@ -846,6 +846,7 @@ that counts for something other than its face.
 | --- | --- |
 | `-s`, `--seed <seed>` | The same seed throws the same dice. One seed serves the whole command, in the order the rolls are written |
 | `-t`, `--times <n>` | Throw each roll `n` times, 1 to 100. `6#4d6dl1` says the same in the notation |
+| `--max-dice <n>` | Allow up to `n` dice in a roll, from 10 (the default) to 100. Past ten, plain dice only |
 | `-o`, `--odds` | Show the exact odds and do not roll: the range, the average, the spread, and each total with its chance. Past forty totals, the forty likeliest |
 | `-g`, `--game <name>` | Roll a game's dice and read them as the game does. Any of its names |
 | `--games` | List the games |
@@ -996,7 +997,7 @@ type MathNode =
   | { kind: "op"; op: "+" | "-" | "*" | "/"; left: MathNode; right: MathNode }
   | { kind: "call"; name: "floor" | "ceil" | "round" | "abs" | "max" | "min"; args: MathNode[] };
 
-roll(spec: Partial<RollSpec>, source?: RandomSource, at?: number): Roll
+roll(spec: Partial<RollSpec>, source?: RandomSource, at?: number | { at?: number; maxDice?: number }): Roll
 rollHeld(previous: Roll, held: boolean[], source?: RandomSource, at?: number): Roll
 canHold(spec: RollSpec): boolean                    // plain dice only
 groupsOf(spec: RollSpec): DiceGroup[]               // the kinds of dice, in order
@@ -1005,7 +1006,7 @@ diceCount(spec: RollSpec): number                   // dice asked for, over all 
 sidesOf(spec: RollSpec, die: DieRoll): Sides        // the kind of die one die is
 diceOf(roll: Roll): DieRoll[]                       // roll.dice, or worked out from the faces
 readDice(spec: RollSpec, faces: number[]): DieRoll[] | null  // null if the dice could not show them
-rollMany(spec, times?, source?, at?): RollSet        // { rolls, sum, highest, lowest }; times from the spec unless given
+rollMany(spec, times?, source?, at?): RollSet        // { rolls, sum, highest, lowest }; times from the spec unless given; `at` as for roll
 setOf(rolls: Roll[]): RollSet                       // the same summary of rolls already made
 normalizeSpec(spec: Partial<RollSpec>, limits?: { maxDice?: number }): RollSpec  // brings a spec into range
 groupTotals(roll: Roll): number[]                   // what each kind came to: what a formula puts together
@@ -1285,18 +1286,22 @@ The tray and typed notation stop at ten dice: that is what fits a felt, and
 what a table throws. Code may ask for up to a hundred:
 
 ```ts
-const volley = parseNotation("40d6", { maxDice: 100 })!;
-roll(volley).faces.length;        // 40
+const volley = parseNotation("40d6", { maxDice: 100 })!;         // null without the option
+normalizeSpec({ count: 40, sides: 6 }, { maxDice: 100 }).count;  // 40; 10 without it
+roll(volley, seededSource("table"), { maxDice: 100 }).faces.length;  // 40; 10 without it
 expectedTotal(volley);            // 140
 chanceAtLeast(volley, 150);       // 0.1902
 exactCounts(volley)!.outcomes;    // 6 to the 40th, a whole number of 32 digits
 ```
 
+The one option, `maxDice`, is the same on all three, and on `rollMany`. Each
+stops at ten without it, as it always has: `roll({ count: 50, sides: 6 })`
+throws ten dice. `roll`'s third argument is the time of the roll, as before,
+or `{ at, maxDice }`. On the command line it is `--max-dice 100`.
+
 Past ten, every kind has to be plain dice: fair numbered or Fate dice, all
 added or one kept (`100d20kh1`), which is where the odds stay exact and quick
 however many there are. Anything else past ten is refused by name.
-`normalizeSpec(spec, { maxDice: 100 })` does the same for a spec made by hand,
-and `roll` throws what it is given.
 
 ## Browser support
 

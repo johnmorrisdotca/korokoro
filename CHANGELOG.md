@@ -19,9 +19,13 @@ All notable changes to this project are written here. The format follows
   `max(4d6,3d8)` and `min(…)`.
 - **Dice that all differ**: `4d6u`. Each die is thrown from the faces not yet
   showing. Exact odds, counted in whole numbers.
-- **More than ten dice, from code**: `parseNotation("40d6", { maxDice: 100 })`
-  and `normalizeSpec(spec, { maxDice: 100 })`, up to a hundred plain dice, all
-  added or one kept. The tray and typed notation stay at ten.
+- **More than ten dice, for a caller that asks**: the one option `maxDice`, on
+  `parseNotation(text, { maxDice: 100 })`, `normalizeSpec(spec, { maxDice })`,
+  `roll(spec, source, { maxDice })` and `rollMany`, takes a roll up to a
+  hundred plain dice, all added or one kept, and `--max-dice` does the same on
+  the command line. Without it each stops at ten, as it always has:
+  `roll({ count: 50, sides: 6 })` still throws ten dice. `roll`'s third
+  argument is the time of the roll, as before, or `{ at, maxDice }`.
 - `MathNode`, `evaluateMath`, `checkMath`, `mathText`, `mathRange`,
   `spreadMath`, `groupTotals`, `groupRange`, `isPlainDice`, `formulaText`,
   `MAX_DICE_BY_CODE`, `MAX_UNIQUE_SIDES` and the `MAX_MATH_…` limits.
@@ -34,10 +38,8 @@ All notable changes to this project are written here. The format follows
 - Four spellings that were refused are now read: `1d20-1d4` (dice taken away),
   and `2d6+3+1d4`, `3+2d6` and `2d6+1+1`, which are the plain rolls
   `2d6+1d4+3`, `2d6+3` and `2d6+2`. `checkNotation` no longer gives the
-  `"minus"` problem.
-- `roll` and `rollMany` throw up to a hundred plain dice when handed a spec
-  that asks for them. They brought it back to ten before. Nothing else about
-  them changes, and every seeded roll replays as it did.
+  `"minus"` problem. Nothing that was read before is read differently, and
+  every seeded roll replays as it did.
 
 
 ## [1.8.0] - 2026-09-30

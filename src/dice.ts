@@ -21,11 +21,13 @@ export const MIN_DICE = 1;
 /** The most dice in one roll: a fireball's 8d6, Farkle's six and a pool of ten all fit. */
 export const MAX_DICE = 10;
 /**
- * The most dice in one roll made from code: `normalizeSpec(spec, { maxDice })`
- * and `parseNotation(text, { maxDice })` take a roll past `MAX_DICE` up to
- * this, and `roll` throws it. Only plain dice go past ten: fair numbered or
- * Fate dice, all added or one kept, with no other rule, which is where the
- * odds stay exact and quick however many there are. The tray stays at ten.
+ * The most dice in one roll made from code, for a caller that asks:
+ * `parseNotation(text, { maxDice })`, `normalizeSpec(spec, { maxDice })` and
+ * `roll(spec, source, { maxDice })` each take a roll past `MAX_DICE` up to
+ * this. Without the option each stops at ten, as it always has. Only plain
+ * dice go past ten: fair numbered or Fate dice, all added or one kept, with
+ * no other rule, which is where the odds stay exact and quick however many
+ * there are. The tray stays at ten.
  */
 export const MAX_DICE_BY_CODE = 100;
 /** The largest die whose dice may be asked to all differ (`u`). */
@@ -962,6 +964,19 @@ function made(fair: RollSpec, dice: DieRoll[], source: RandomSource, at: number)
   return thrown;
 }
 
+/** What `roll` and `rollMany` may be told beside the dice and the source. */
+export type RollOptions = {
+  /** When the roll is made, in epoch milliseconds. Now, unless given. */
+  at?: number;
+  /** The most dice the roll may have, from 10 (the default) to `MAX_DICE_BY_CODE`. Past ten, every kind has to be plain dice. */
+  maxDice?: number;
+};
+
+function rollOptions(when: number | RollOptions): { at: number; limits: { maxDice?: number } } {
+  if (typeof when === "number") return { at: when, limits: {} };
+  return { at: when.at ?? Date.now(), limits: when.maxDice === undefined ? {} : { maxDice: when.maxDice } };
+}
+
 /** What a set of rolls comes to: their sum, the highest and the lowest. */
 export function setOf(rolls: Roll[]): RollSet {
   const totals = rolls.map((r) => r.total);
@@ -975,8 +990,9 @@ export function setOf(rolls: Roll[]): RollSet {
  * says which set it belongs to. `times` is the spec's own unless given, from
  * 1 to `MAX_TIMES`.
  */
-export function rollMany(spec: Partial<RollSpec>, times?: number, source: RandomSource = cryptoSource(), at: number = Date.now()): RollSet {
-  const fair = normalizeSpec(spec, { maxDice: MAX_DICE_BY_CODE });
+export function rollMany(spec: Partial<RollSpec>, times?: number, source: RandomSource = cryptoSource(), when: number | RollOptions = Date.now()): RollSet {
+  const { at, limits } = rollOptions(when);
+  const fair = normalizeSpec(spec, limits);
   const many = Math.min(MAX_TIMES, Math.max(1, Math.trunc(Number(times ?? fair.times) || 1)));
   const rolls: Roll[] = [];
   for (let index = 0; index < many; index++) rolls.push(made(fair, play(fair, draws(source)) as DieRoll[], source, at));
@@ -999,9 +1015,15 @@ export function rollFrom(spec: RollSpec, faces: readonly unknown[], id: string, 
   return read;
 }
 
-/** Throw the dice. The source is crypto unless a seeded one is given. */
-export function roll(spec: Partial<RollSpec>, source: RandomSource = cryptoSource(), at: number = Date.now()): Roll {
-  const fair = normalizeSpec(spec, { maxDice: MAX_DICE_BY_CODE });
+/**
+ * Throw the dice. The source is crypto unless a seeded one is given. The
+ * third argument is when the roll is made, in epoch milliseconds (now, unless
+ * given), or options: `{ at, maxDice }`. A spec asking for more than ten dice
+ * is brought to ten unless `maxDice` says otherwise, up to `MAX_DICE_BY_CODE`.
+ */
+export function roll(spec: Partial<RollSpec>, source: RandomSource = cryptoSource(), when: number | RollOptions = Date.now()): Roll {
+  const { at, limits } = rollOptions(when);
+  const fair = normalizeSpec(spec, limits);
   return made(fair, play(fair, draws(source)) as DieRoll[], source, at);
 }
 

@@ -61,12 +61,35 @@ describe("the command line rolls dice", () => {
   it("helps, and says its version", () => {
     const help = run("--help");
     expect(help.code).toBe(0);
-    for (const flag of ["--seed", "--times", "--odds", "--game", "--games", "--test", "--sides", "--json", "--csv", "--stdin", "--lang", "--no-color", "--help", "--version"]) expect(help.out, flag).toContain(flag);
+    for (const flag of ["--seed", "--times", "--max-dice", "--odds", "--game", "--games", "--test", "--sides", "--json", "--csv", "--stdin", "--lang", "--no-color", "--help", "--version"]) expect(help.out, flag).toContain(flag);
     expect(run("-h").out).toBe(help.out);
     expect(run("--version")).toEqual({ code: 0, out: `${VERSION}\n`, err: "" });
     expect(run("-v").out).toBe(`${VERSION}\n`);
     // Nothing in the help is wider than a terminal.
     for (const line of help.out.split("\n")) expect(line.length, line).toBeLessThanOrEqual(80);
+  });
+});
+
+describe("more than ten dice", () => {
+  it("is refused unless --max-dice allows it", () => {
+    expect(run("40d6 -s table")).toMatchObject({ code: 1, out: "", err: "korokoro: 40d6: “40”: roll 1 to 10 dice at a time\n" });
+    const many = run("40d6 -s table --max-dice 100");
+    expect(many.code).toBe(0);
+    expect(many.out).toMatch(/^40d6: \d+ {2}\[(\d ){39}\d\]\n$/);
+    expect(run("--max-dice=40 40d6 -s table").out).toBe(many.out);
+    expect(JSON.parse(run("40d6 -s table --max-dice 100 --json").out).rolls[0].faces).toHaveLength(40);
+    expect(run("-o 40d6 --max-dice 40").out).toContain("range 40 to 240 · expected 140");
+    expect(run("3#12d6 --max-dice 12 -s table").out.split("\n")).toHaveLength(5);
+  });
+
+  it("stops at the number given, and at a hundred, and says so", () => {
+    expect(run("40d6 --max-dice 20")).toMatchObject({ code: 1, err: "korokoro: 40d6: “40”: roll 1 to 20 dice at a time, and past 10 only plain dice, all added or one kept\n" });
+    expect(run("20d6! --max-dice 100").err).toContain("past 10 only plain dice");
+    expect(run("40d6 --max-dice 20 --lang ja").err).toContain("一度に振れるのは1〜20個です");
+    for (const bad of ["101", "9", "0", "many", "12.5"]) expect(run(`2d6 --max-dice ${bad}`), bad).toMatchObject({ code: 2, err: "korokoro: --max-dice takes a whole number from 10 to 100\nTry `koro --help`.\n" });
+    expect(run("2d6 --max-dice").code).toBe(2);
+    // Ten, the default, changes nothing.
+    expect(run("2d6 -s table --max-dice 10").out).toBe(run("2d6 -s table").out);
   });
 });
 
