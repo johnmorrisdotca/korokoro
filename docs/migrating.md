@@ -43,6 +43,20 @@ where `2d8ro<3` averages 10.5.
 (`1d6r<4` is the most for a d6), and stops after 10 rerolls, so that it always
 ends. `ro` has no such limit.
 
+## 1.4.0: a die button adds a die
+
+In the tray, a die button used to change the kind of every die: with `3d6`
+showing, a tap on d8 made it `3d8`. It now adds a die, so the same tap makes
+`3d6+1d8`. Two things keep the simple rolls as short as they were:
+
+- The dice the tray opens with are a suggestion. The first die tapped replaces
+  them, so a fresh tray and one tap on d20 is `1d20`, as it always was.
+- *Clear* empties the roll, and the number row sets how many of the kind last
+  touched: *Clear*, d8, 3 is `3d8`.
+
+A page that mounts the tray with a `spec` of its own and wants the first tap
+to add to it passes `placeholder: false`.
+
 ## 1.4.0: a tap on a rolled die holds it
 
 In the tray, a tap on a die that has been rolled now holds it for the next

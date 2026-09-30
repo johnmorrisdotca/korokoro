@@ -32,6 +32,7 @@ export type RollerStrings = {
   pool: string;
   poolSays: string;
   add: string;
+  choose: string;
   addToRoll: string;
   limitDice: string;
   limitKinds: string;
@@ -126,6 +127,7 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     pool: "Rolling",
     poolSays: "Rolling {notation}",
     add: "Add a die",
+    choose: "Choose a die",
     addToRoll: "Tap a die below to add it",
     limitDice: "{n} dice is the most in one roll",
     limitKinds: "{n} kinds of dice is the most in one roll",
@@ -217,6 +219,7 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     pool: "振るダイス",
     poolSays: "{notation} を振ります",
     add: "ダイスを追加",
+    choose: "ダイスを選ぶ",
     addToRoll: "下のダイスをタップして追加",
     limitDice: "一度に振れるのは{n}個までです",
     limitKinds: "一度に振れるのは{n}種類までです",

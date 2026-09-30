@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/korokoro",
   "version": "1.4.0",
-  "description": "Dice roller and dice notation parser with exact odds for every roll. A ready-made dice tray with real dice sounds, history and stats; any die from d2 to d1000, mixed dice, hold and reroll, Fate dice, keep and drop, exploding dice and rerolls; seeded rolls anyone can verify. Zero dependencies, TypeScript, React.",
+  "description": "Dice roller and dice notation parser with exact odds for every roll: d4, d6, d8, d10, d12, d20, d30, d100 and any die up to d1000, mixed, held and rerolled. For D&D and tabletop RPGs, board games and dice games, teaching probability, or just rolling. A ready-made dice tray with real dice sounds and seeded rolls anyone can verify. Zero dependencies.",
   "keywords": [
     "dice",
     "dice-roller",
@@ -37,6 +37,13 @@
     "seeded",
     "fair-dice",
     "board-game",
+    "dice-game",
+    "d4",
+    "d8",
+    "d10",
+    "d12",
+    "statistics",
+    "education",
     "typescript",
     "react"
   ],

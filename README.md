@@ -33,7 +33,20 @@ games, with the exact odds of every roll.
   checked by anybody, die for die.
 - **What it costs a project.** Nothing: no dependencies, and one import.
 
-Three things in one small package, each usable without the others:
+### Who it is for
+
+- **Roleplaying games.** A d20 with advantage (`2d20kh1+5`), ability scores
+  (`4d6dl1`), a fireball's damage (`8d6`), a d20 and a d4 together
+  (`1d20+1d4`).
+- **Board games and dice games.** `2d6` for the table; five dice with holds
+  for Yacht (`5d6`); six for Farkle (`6d6`).
+- **Fun.** Tap the felt.
+- **Teaching and research.** The exact odds and a chart for any roll: `2d6`
+  makes 7 one time in 6. A seed makes a classroom's rolls repeatable.
+
+### What is in the package
+
+Three things, each usable without the others:
 
 - **A tray** you put on any page: tap dice to add them, tap the felt to roll,
   read the total, the odds, the history and the stats. Plain DOM, no framework.
@@ -493,6 +506,7 @@ mountRoller(element: HTMLElement, options?: RollerOptions): RollerHandle
 | `sound` | `true` | `false` makes the tray silent and takes the mute button away |
 | `playSound` | the recorded dice | Your own sound for each throw: `({ dice, ms, landings }) => void` |
 | `hold` | `true` | `false` stops dice being held: a tap anywhere on the felt rolls, a die included |
+| `placeholder` | `true` | `false` makes the opening dice the user's own roll, so the first die tapped adds to them |
 
 ```ts
 type RollerHandle = {
@@ -510,8 +524,11 @@ such as `parseNotation("4d6dl1")`, all of them.
 
 One idea runs it: **the roll is a pool of dice.**
 
-1. **Tap a die to add it.** The tray opens with `2d6`. Tap d20 and the roll is
-   `2d6+1d20`; tap d20 again and it is `2d6+2d20`.
+1. **Tap a die to add it.** The tray opens showing `2d6`, as a suggestion:
+   its chip is dashed and the row reads *Choose a die*. The first die you tap
+   takes its place, so one tap on d20 is `1d20`. After that every tap adds:
+   d20, d4, d4 is `1d20+2d4`. (A tap on d6 while `2d6` is showing is simply a
+   third d6.)
 2. **A chip takes one away.** The row marked *Rolling* has a chip for each
    kind of dice (`2d6 −`). Tap it and there is one die fewer; the last die
    takes the kind with it. *Clear* empties the roll, bonus and all.
@@ -521,6 +538,14 @@ One idea runs it: **the roll is a pool of dice.**
 5. **Tap a die on the felt to hold it**, once it has been rolled. The next
    tap on the felt rolls the others. *Release all* lets every die go. Only
    plain dice can be held; with `hold: false`, none can.
+
+**When the opening dice stop being a suggestion.** As soon as you build
+anything: a die tapped, a chip, a number, notation typed, a spec set from
+code, or a roll opened from a shared link. Rolling them does not, nor does the
+bonus or the keep row: open the tray, roll `2d6` twice, tap d20, and you have
+`1d20`. A page that mounts the tray with its own `spec` gets the same
+treatment; `placeholder: false` makes those dice the user's own from the
+start, so the first tap adds to them.
 
 At ten dice or four kinds the buttons that would go past the limit dim, and
 the row's label says why. The notation box says the same roll in writing as

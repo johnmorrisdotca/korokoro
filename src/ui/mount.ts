@@ -73,6 +73,14 @@ export type RollerOptions = {
    * rolled. False, a tap anywhere on the felt rolls, a die included.
    */
   hold?: boolean;
+  /**
+   * Whether the dice the tray opens with are only a suggestion. Left out or
+   * true, they are: the first die button tapped replaces them with one of that
+   * die, so one tap gives a d20, and every tap after that adds. False, the
+   * opening dice are the user's own roll and the first tap adds to them. A
+   * roll that arrives by a shared link is always the user's.
+   */
+  placeholder?: boolean;
 };
 
 /** What `mountRoller` hands back: the tray, driven from code. */
@@ -130,10 +138,11 @@ function defaultStorage(): StorageLike | undefined {
  *
  * One model runs the whole tray: **the roll is a pool of dice**. Tapping a die
  * button adds one die of that kind to the pool; a chip in the pool takes one
- * away; the number row sets how many of the kind last touched. So `2d6` is
- * two taps or one number, and `1d20+2d4` is three taps. The notation box says
- * the same pool in writing and can be typed into for anything the buttons do
- * not reach.
+ * away; the number row sets how many of the kind last touched. The dice the
+ * tray opens with are a suggestion, not yet anybody's roll, so the first die
+ * tapped takes their place: one tap gives a d20, and d20, d4, d4 gives
+ * `1d20+2d4`. The notation box says the same pool in writing and can be typed
+ * into for anything the buttons do not reach.
  *
  * A tap on the felt throws the pool. Once plain dice have been thrown, a tap
  * on a die holds it and the next throw rolls the rest.
@@ -160,6 +169,13 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   let empty = false;
   /** Which kind of dice the number row and the keep row are about: the one last touched. */
   let lit = 0;
+  /**
+   * Whether the dice showing are still the ones the tray opened with, which
+   * nobody has chosen: then the first die tapped replaces them. Building
+   * anything makes the roll the user's: a die tapped, a chip, a number, typed
+   * notation, a spec set from code. Rolling, the bonus and the keep row do not.
+   */
+  let suggested = options.placeholder !== false && shared === null;
   let history = loadHistory(storage, storageKey);
   let current: Roll | null = shared;
   let showingShared = shared !== null;
@@ -269,6 +285,8 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   function changeSpec(next: Partial<RollSpec>) {
     const before = notation();
     const whole = next.count !== undefined && next.sides !== undefined && next.modifier !== undefined && next.keep !== undefined;
+    // The dice set from outside (typed, or by the page) are a choice; the bonus alone is not.
+    if (whole || next.count !== undefined || next.sides !== undefined || next.more !== undefined) suggested = false;
     spec = normalizeSpec(whole ? next : { ...spec, ...next });
     empty = false;
     lit = whole ? 0 : Math.min(lit, groupsOf(spec).length - 1);
@@ -280,13 +298,19 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const all = kinds();
     const mine = all[lit];
     if (mine === undefined) return;
+    if (next.count !== undefined) suggested = false;
     all[lit] = { ...mine, ...next };
     setKinds(all, mine.sides);
   }
 
-  /** One more die of a kind: on the kind already in the pool, or as a new kind. */
+  /**
+   * One more die of a kind: on the kind already in the pool, or as a new kind.
+   * On the dice the tray opened with, a different kind takes their place, and
+   * the same kind is simply one more of them.
+   */
   function addDie(sides: Sides) {
-    const all = kinds();
+    const all = suggested && !kinds().some((g) => g.sides === sides) ? [] : kinds();
+    suggested = false;
     const at = all.findIndex((g) => g.sides === sides);
     if (at >= 0) all[at] = { ...(all[at] as DiceGroup), count: (all[at] as DiceGroup).count + 1 };
     else all.push({ count: 1, sides, keep: "all" });
@@ -298,6 +322,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const all = kinds();
     const mine = all[index];
     if (mine === undefined) return;
+    suggested = false;
     if (mine.count > 1) all[index] = { ...mine, count: mine.count - 1 };
     else all.splice(index, 1);
     setKinds(all, mine.count > 1 ? mine.sides : null);
@@ -356,7 +381,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       const text = formatNotation(specOf([group]));
       const chip = h(
         "button",
-        { type: "button", class: "kk-chip", "data-testid": "kk-chip", "data-value": String(group.sides), "data-lit": String(index === lit), "aria-label": fillIn(t.takeOne, { die: dieName(group.sides), n: group.count }), title: text },
+        { type: "button", class: "kk-chip", "data-testid": "kk-chip", "data-value": String(group.sides), "data-lit": String(index === lit), "data-suggested": String(suggested), "aria-label": fillIn(t.takeOne, { die: dieName(group.sides), n: group.count }), title: text },
         h("span", {}, text),
         h("i", { "aria-hidden": "true" }, "−"),
       );
@@ -366,6 +391,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const clear = h("button", { type: "button", class: "kk-clear", "data-testid": "kk-clear-pool", "aria-label": t.clearPoolLabel, disabled: empty }, t.clearPool);
     // Clear takes the bonus with the dice: nothing is left to roll.
     clear.addEventListener("click", () => {
+      suggested = false;
       spec = { ...spec, modifier: 0 };
       setKinds([], null);
     });
@@ -374,10 +400,11 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const full = room < 1;
     const allKinds = all.length >= MAX_GROUPS;
     const cannotAdd = (sides: Sides) => full || (allKinds && !all.some((g) => g.sides === sides));
-    const addLabel = full ? fillIn(t.limitDice, { n: MAX_DICE }) : allKinds ? fillIn(t.limitKinds, { n: MAX_GROUPS }) : t.add;
+    // While the dice are only suggested, a tap chooses; after that, it adds. The label says which.
+    const addLabel = full ? fillIn(t.limitDice, { n: MAX_DICE }) : allKinds ? fillIn(t.limitKinds, { n: MAX_GROUPS }) : suggested ? t.choose : t.add;
 
     refill(controls,
-      h("div", { class: "kk-row" }, h("span", { class: "kk-label" }, t.pool), h("div", { class: "kk-pool", role: "group", "aria-label": t.pool, "data-testid": "kk-pool" }, ...chips)),
+      h("div", { class: "kk-row" }, h("span", { class: "kk-label" }, t.pool), h("div", { class: "kk-pool", role: "group", "aria-label": t.pool, "data-testid": "kk-pool", "data-suggested": String(suggested) }, ...chips)),
       segment(
         all.length > 1 && mine !== undefined ? dieName(mine.sides) : t.dice,
         counts,

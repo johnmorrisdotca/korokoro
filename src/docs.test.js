@@ -119,6 +119,26 @@ describe("the README's examples", () => {
   });
 });
 
+describe("the README's list of who it is for", () => {
+  const from = readme.indexOf("### Who it is for");
+  const list = readme.slice(from, readme.indexOf("### What is in the package"));
+
+  it("names notation that rolls, every piece of it", () => {
+    const found = codes(list);
+    expect(found).toEqual(["2d20kh1+5", "4d6dl1", "8d6", "1d20+1d4", "2d6", "5d6", "6d6", "2d6"]);
+    for (const text of found) expect(roll(parseNotation(text), seededSource(text)).total, text).toBeGreaterThan(0);
+  });
+
+  it("and the dice do what it says of them", () => {
+    expect(chanceExactly(parseNotation("2d6"), 7)).toBeCloseTo(1 / 6, 14);
+    expect(list).toContain("makes 7 one time in 6");
+    const first = roll(parseNotation("5d6"), seededSource("class"), 1);
+    expect(rollHeld(first, [true, true, false, false, false], seededSource("again"), 2).faces.slice(0, 2)).toEqual(first.faces.slice(0, 2));
+    // A seed makes a classroom's rolls repeatable.
+    expect(roll(parseNotation("6d6"), seededSource("class"), 1).faces).toEqual(roll(parseNotation("6d6"), seededSource("class"), 1).faces);
+  });
+});
+
 describe("the migration note", () => {
   const note = readFileSync("docs/migrating.md", "utf8");
 

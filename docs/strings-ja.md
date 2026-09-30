@@ -35,6 +35,7 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `pool` | Rolling | 振るダイス |
 | `poolSays` | Rolling {notation} | {notation} を振ります |
 | `add` | Add a die | ダイスを追加 |
+| `choose` | Choose a die | ダイスを選ぶ |
 | `addToRoll` | Tap a die below to add it | 下のダイスをタップして追加 |
 | `limitDice` | {n} dice is the most in one roll | 一度に振れるのは{n}個までです |
 | `limitKinds` | {n} kinds of dice is the most in one roll | 一度に振れるのは{n}種類までです |

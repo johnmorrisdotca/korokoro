@@ -44,6 +44,8 @@ export const CSS = `
 .kk-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .kk-chip i { font-style: normal; font-weight: 800; color: var(--kk-muted); }
 .kk-chip[data-lit="true"] { border-color: var(--kk-ink); }
+/* The dice the tray opened with, before anybody has chosen: a dashed outline and quieter ink. */
+.kk-chip[data-suggested="true"] { border-style: dashed; border-color: var(--kk-muted); color: var(--kk-muted); background: transparent; }
 .kk-chip:hover { border-color: var(--kk-bad); }
 .kk-chip:hover i { color: var(--kk-bad); }
 .kk-seg .kk-clear { margin-left: auto; font-weight: 600; font-size: .85rem; color: var(--kk-muted); padding: 0 14px; }

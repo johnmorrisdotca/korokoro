@@ -22,7 +22,9 @@ All notable changes to this project are written here. The format follows
   keeps every tap a roll.
 - In the tray, tapping a die button adds a die of that kind to the roll, where
   it used to change the kind of every die. The number row sets how many of the
-  kind last touched.
+  kind last touched. The dice the tray opens with are a suggestion, which the
+  first die tapped replaces, so a fresh tray and one tap on d20 is still
+  `1d20`; `placeholder: false` makes them the user's own.
 - A dropped or rerolled die is struck through in the sum under the total,
   where it was in brackets; brackets now gather a kind of dice, as in
   `14 + (3 + 2) + 1`.
