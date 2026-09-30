@@ -30,13 +30,14 @@ import {
   type RollSpec,
   type Sides,
 } from "../dice.ts";
-import { addToHistory, loadHistory, saveHistory, type StorageLike } from "../history.ts";
-import { checkNotation, formatNotation, type NotationProblem } from "../notation.ts";
+import { HISTORY_LIMIT, addToHistory, loadHistory, saveHistory, type StorageLike } from "../history.ts";
+import { checkNotation, formatNotation } from "../notation.ts";
 import { chanceExactly, distributionHolding, expectedTotal, luckOf, type Distribution } from "../odds.ts";
 import { cryptoSource, newSeed, seededSource, type RandomSource } from "../random.ts";
 import { loadSets, makeSet, readSet, setQuery, storeSets, withSet, withoutSet, type DiceSet } from "../sets.ts";
 import { readShared, readSharedMany, shareQuery, shareQueryMany } from "../share.ts";
 import { getPreset, presetSpec, readPreset, type Preset } from "../games/presets.ts";
+import { fromJSON, toCSV, toJSON, toText } from "../export.ts";
 import { gamesPanel, type GamesState } from "./games.ts";
 import { h, refill, s } from "./dom.ts";
 import { dieFace, dieIcon, faceText } from "./faces.ts";
@@ -44,7 +45,7 @@ import { morePanel, type MoreState } from "./more.ts";
 import { historyPanel, oddsPanel, percent, statsPanel, type RealDie } from "./panels.ts";
 import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
 import { injectStyle } from "./style.ts";
-import { STRINGS, fillIn, type RollerStrings } from "./strings.ts";
+import { REFUSALS, STRINGS, fillIn, type RollerStrings } from "./strings.ts";
 
 /** Everything a tray can be told when it is mounted. All of it is optional. */
 export type RollerOptions = {
@@ -126,27 +127,6 @@ function speaker(on: boolean): SVGElement {
   );
 }
 
-/** Which of the tray's words refuses each kind of notation. */
-const REFUSALS: Record<NotationProblem, keyof RollerStrings> = {
-  shape: "notationBad",
-  count: "notationCount",
-  sides: "notationSides",
-  bonus: "notationBonus",
-  twice: "notationTwice",
-  keep: "notationKeep",
-  reroll: "notationReroll",
-  explode: "notationExplode",
-  kinds: "notationKinds",
-  minus: "notationMinus",
-  custom: "notationCustom",
-  weights: "notationWeights",
-  times: "notationTimes",
-  successes: "notationSuccesses",
-  clamp: "notationClamp",
-  marks: "notationMarks",
-  label: "notationLabel",
-};
-
 function defaultStorage(): StorageLike | undefined {
   try {
     return globalThis.localStorage ?? undefined;
@@ -217,6 +197,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   /** The set the roll showing is the last of, when the dice were thrown several times at once. */
   let currentSet: Roll[] | null = sharedSet;
   const gamesState: GamesState = { open: false, search: "" };
+  /** Whether the history's export is open, and what it last said. */
+  let exportOpen = false;
+  let exportSaid = "";
   const japanese = () => locale.toLowerCase().startsWith("ja");
   /** The most times the tray throws a roll as a set. */
   const TRAY_TIMES = 10;
@@ -918,6 +901,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         });
         body.append(h("div", { class: "kk-actions" }, clear));
       }
+      body.append(exportPanel());
       if (!storageWorks) body.append(h("p", { class: "kk-empty", style: "padding:0" }, t.savedNowhere));
     } else if (tab === "stats") {
       body.append(statsPanel(history, spec, kinds()[lit] ?? spec, t, locale, realDie));
@@ -929,6 +913,63 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       body.append(oddsPanel(spec, goal, current, t, locale, (value) => (goal = value), holding, game, japanese() ? "ja" : "en"));
     }
     panels.replaceChildren(strip, body);
+  }
+
+  /** Hand the person a file to keep: a link to the text, clicked for them. */
+  function save(name: string, type: string, text: string) {
+    const url = URL.createObjectURL(new Blob([text], { type }));
+    const link = h("a", { href: url, download: name, hidden: true });
+    doc.body.append(link);
+    link.click();
+    link.remove();
+    later(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  /** One level down in the history: the rolls as a file, and a JSON export brought back in. */
+  function exportPanel(): HTMLElement {
+    const day = new Date().toISOString().slice(0, 10);
+    const button = (words: string, id: string, act: () => void) => {
+      const made = h("button", { type: "button", class: "kk-link", "data-testid": id, disabled: history.length === 0 }, words);
+      made.addEventListener("click", act);
+      return made;
+    };
+    const file = h("input", { type: "file", accept: "application/json,.json", class: "kk-file", "data-testid": "kk-import", "aria-label": t.importJson });
+    const pick = h("label", { class: "kk-link kk-pick" }, t.importJson, file);
+    file.addEventListener("change", () => {
+      const chosen = file.files?.[0];
+      if (chosen === undefined) return;
+      void chosen.text().then((text) => {
+        const read = fromJSON(text);
+        if (read === null) exportSaid = t.importBad;
+        else {
+          // Rolls already here are not added twice; the rest join the history in the order they were thrown.
+          const have = new Set(history.map((r) => r.id));
+          const fresh = read.filter((r) => !have.has(r.id));
+          exportSaid = fresh.length === 0 ? t.importNothing : fillIn(t.imported, { n: fresh.length });
+          if (fresh.length > 0) {
+            history = [...history, ...fresh].sort((a, b) => a.at - b.at).slice(-HISTORY_LIMIT);
+            storageWorks = saveHistory(storage, storageKey, history);
+          }
+        }
+        renderPanels();
+      });
+    });
+    const details = h(
+      "details",
+      { class: "kk-settings", open: exportOpen, "data-testid": "kk-export" },
+      h("summary", {}, t.exportTitle),
+      h(
+        "div",
+        { class: "kk-actions" },
+        button(t.exportCsv, "kk-export-csv", () => save(`korokoro-${day}.csv`, "text/csv;charset=utf-8", toCSV(history))),
+        button(t.exportJson, "kk-export-json", () => save(`korokoro-${day}.json`, "application/json", toJSON(history, { stats: true }))),
+        button(t.exportText, "kk-export-text", () => save(`korokoro-${day}.txt`, "text/plain;charset=utf-8", toText(history))),
+        pick,
+      ),
+      h("p", { class: "kk-fine", role: "status", "data-testid": "kk-export-said" }, exportSaid === "" ? t.exportNote : exportSaid),
+    );
+    details.addEventListener("toggle", () => (exportOpen = details.open));
+    return details;
   }
 
   /** The dice still to roll while some are held, as notation: `3d6` of a `5d6` with two held. */

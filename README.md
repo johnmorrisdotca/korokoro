@@ -51,6 +51,12 @@ rollPreset("チンチロリン", { language: "ja" }).reading.text;  // "シゴ�
 crapsPass();                                // [244n, 495n]: the shooter's exact chance, 244 in 495
 ```
 
+And from a terminal, on Linux, macOS or Windows:
+
+```sh
+npx @johnmorrisdotca/korokoro 2d20kh1+5 --seed table   # 2d20kh1+5: 24  [19 (12)]
+```
+
 Or with nothing to install, [roll some dice in the demo](https://johnmorrisdotca.github.io/korokoro/).
 
 ## Who it is for
@@ -271,6 +277,11 @@ Korokoro has siblings, each made for the same site, each MIT, each at
   streaks, matching dice, natural 20s and 1s, each face's count with a
   fairness test, and your totals drawn against the odds.
 - **Shareable.** Any roll becomes a link that shows exactly what was thrown.
+- **A command line.** `koro 2d20kh1+5` in a terminal on Linux, macOS or
+  Windows, with the odds, the games, JSON and CSV. See
+  [The command line](#the-command-line).
+- **Export.** A history as CSV for a spreadsheet, JSON that reads back in, or
+  plain text.
 - **Made for a phone.** One thumb does everything: every control is at least
   44px, nothing needs a hover or a long press, and nothing moves when the dice
   land. English and Japanese.
@@ -733,6 +744,121 @@ tenth of a second the first time and nothing after: each spec's odds are
 remembered. Large mixed pools (`5d1000+5d999`) are put together as
 probabilities, and `exactCounts` returns `null` for them.
 
+## The command line
+
+Installing the package puts two commands on the path, `korokoro` and the
+shorter `koro`. They are the same. They need Node 20 or later and nothing
+else, and run the same on Linux, macOS and Windows.
+
+```sh
+npm install -g @johnmorrisdotca/korokoro    # or use npx, as above
+```
+
+```console
+$ koro 2d20kh1+5 --seed table
+2d20kh1+5: 24  [19 (12)]
+
+$ koro 6#4d6dl1 --seed table
+4d6kh3: 8  [1 2 (1) 5]
+4d6kh3: 12  [4 6 (1) 2]
+4d6kh3: 11  [5 (1) 2 4]
+4d6kh3: 9  [3 (2) 3 3]
+4d6kh3: 13  [6 4 3 (2)]
+4d6kh3: 12  [4 (1) 5 3]
+  sum 65 · highest 13 · lowest 8
+
+$ koro --odds 2d6
+2d6
+  range 2 to 12 · expected 7 · spread 2.42 · most likely 7
+   2    2.78%  #####
+   3    5.56%  ##########
+   …
+
+$ koro --game craps --seed table
+Craps (2d6): 3 · 3 on the come-out: craps  [1 2]
+
+$ koro --test "3 5 6 6 1 2"
+6 results on a d6: too few to say. The test wants 30.
+```
+
+In the brackets is each die as it fell: `(1)` was dropped, `[2]` was rerolled,
+`6!` exploded, `9*` is a success and `1x` takes one away, and `4→3` is a die
+that counts for something other than its face.
+
+| Option | What it does |
+| --- | --- |
+| `-s`, `--seed <seed>` | The same seed throws the same dice. One seed serves the whole command, in the order the rolls are written |
+| `-t`, `--times <n>` | Throw each roll `n` times, 1 to 100. `6#4d6dl1` says the same in the notation |
+| `-o`, `--odds` | Show the exact odds and do not roll: the range, the average, the spread, and each total with its chance. Past forty totals, the forty likeliest |
+| `-g`, `--game <name>` | Roll a game's dice and read them as the game does. Any of its names |
+| `--games` | List the games |
+| `--test <results>` | Test a real die's results for fairness. `--sides <n>` names the die when its highest face never came up |
+| `-j`, `--json` | Print JSON: `{ "format": 1, "generator": …, "rolls": [ … ] }`, the same shape `toJSON` writes and `fromJSON` reads |
+| `--csv` | Print CSV, with a header |
+| `--stdin` | Read dice from standard input, one roll to a line. Windows line endings are fine |
+| `--lang <en\|ja>` | English or Japanese. Otherwise `LC_ALL`, `LC_MESSAGES` or `LANG` decides, and where none is set (Windows), the system's language |
+| `--no-color` | No colour. `NO_COLOR` is honoured too, and output that is piped is never coloured |
+| `-h`, `--help`, `-v`, `--version` | |
+
+With no dice it rolls `2d6`. Dice that cannot be rolled are said on standard
+error, by name, and the rest are still rolled.
+
+| Exit code | Means |
+| --- | --- |
+| 0 | Done |
+| 1 | Something asked for could not be rolled: notation that was refused, a game that does not exist |
+| 2 | The command itself was wrong: an option it does not know, or one without its value |
+
+Your shell reads `<`, `>`, `!`, `#`, `[` and `{` before Korokoro does, so
+quote a roll that has them: `koro "6d10>=8f=1"`, `koro "d[Yes,No,Maybe]"`.
+
+**From another program or another language**, the JSON is the way in: run
+`koro --json`, read standard output, and check the exit code. The shape is
+versioned by `format`, which goes up only if a reader of the old shape would
+be wrong about the new one.
+
+```sh
+printf '2d6\n1d20+5\n' | koro --stdin --json --seed table
+```
+
+In JavaScript there is no need for a process: `runCli(args, surroundings)` is
+the whole command line as a pure function, returning `{ code, out, err }`.
+
+## Export
+
+A history, or any list of rolls, is written out three ways. Each is a pure
+function that returns a string; what is done with it is yours.
+
+```ts
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.8.0", "rolls": [ … ] }
+toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
+fromJSON(text);               // the rolls back again, or null if it is not an export
+toCSV(rolls);                 // for a spreadsheet
+toText(rolls);                // for a chat or a log
+```
+
+```
+2026-09-30T12:00:00.000Z  2d20kh1+5 # attack: 24  [19 (12)]
+2026-09-30T12:00:05.000Z  4d6kh3: 8  [1 2 (1) 5]
+```
+
+```csv
+time,notation,label,total,dice,faces,seed,held,loaded,set
+2026-09-30T12:00:00.000Z,2d20kh1+5,attack,24,19 (12),19 12,table,,,
+2026-09-30T12:00:05.000Z,4d6kh3,,8,1 2 (1) 5,1 2 1 5,table,,,
+```
+
+- **The JSON reads back in**, and nothing in it is trusted: `fromJSON` puts
+  each roll together again from its dice and its faces, works the total out
+  itself, and leaves out a roll that does not add up.
+- **The CSV is safe to open.** A cell that a spreadsheet would run as a
+  formula (one starting with `=`, `+`, `-` or `@`) is given a leading
+  apostrophe, unless it is simply a number. Lines end CRLF, as RFC 4180 has
+  them, and cells are quoted where they need to be.
+- **In the tray** it is *Export and import*, under the history: save as CSV,
+  JSON or text, and bring a JSON export back in, on this device or another.
+  Rolls already there are not added twice.
+
 ## Seeded and shared rolls
 
 Under **Randomness** the tray switches between **Fair**, your device's
@@ -909,6 +1035,22 @@ parseHistory(text): Roll[]                // drops any roll that does not add up
 serializeHistory(history): string
 statsOf(history, focus?: RollSpec): Stats // luck, streaks, matches, naturals, faces, totals
 chiSquareTail(statistic, degrees): number
+```
+
+### Export and the command line
+
+```ts
+toJSON(rolls, { stats?: boolean }): string
+fromJSON(text: string): Roll[] | null
+toCSV(rolls): string                      // CSV_COLUMNS names the columns
+toText(rolls): string
+rollText(roll): string                    // "2d20kh1+5: 24  [19 (12)]"
+diceText(roll): string                    // "19 (12)"
+csvCell(value: string | number): string   // one cell, quoted and made safe
+EXPORT_FORMAT: 1
+VERSION: string                           // this package's version
+runCli(args: string[], surroundings?: { env?, stdin?, colour?, locale?, now?, source? }): { code: 0 | 1 | 2; out: string; err: string }
+cliLanguage(flag?, env?, locale?): "en" | "ja"
 ```
 
 ### Sharing
@@ -1090,8 +1232,7 @@ for fixing one. Any other language is a table of your own passed as `strings`.
 
 - More notation: arithmetic and brackets, grouped rolls, and dice that must
   all differ ([Notation compared](./docs/notation-compared.md) keeps the list)
-- Export of a history as CSV, JSON and plain text, and import of the JSON
-- A command-line tool for Linux, macOS and Windows
+- Standalone executables of the command line, for machines without Node
 - A web component and a Vue wrapper, and a documentation site
 - More games: [suggest one](https://github.com/johnmorrisdotca/korokoro/issues/new?template=suggest-a-game.md)
 - BCDice's notation, which Japanese tables use, as a candidate

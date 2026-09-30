@@ -136,6 +136,15 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `noRolls` | No rolls yet. Tap the dice to throw the first. | まだ振っていません。ダイスをタップしてください。 |
 | `clear` | Clear history | 履歴を消す |
 | `clearSure` | Clear all {n} rolls? | {n} 回分をすべて消しますか？ |
+| `exportTitle` | Export and import | 書き出しと読み込み |
+| `exportNote` | CSV opens in a spreadsheet, and the JSON can be brought back in here or on another device. | CSV は表計算ソフトで開けます。JSON はここや別の端末で読み込み直せます。 |
+| `exportCsv` | Save as CSV | CSV で保存 |
+| `exportJson` | Save as JSON | JSON で保存 |
+| `exportText` | Save as text | テキストで保存 |
+| `importJson` | Import JSON | JSON を読み込む |
+| `imported` | Added {n} rolls | {n} 回分を追加しました |
+| `importNothing` | Every roll in that file is already here | このファイルのロールはすべて登録済みです |
+| `importBad` | That file is not a Korokoro export | このファイルは Korokoro の書き出しではありません |
 | `copyLink` | Copy link to this roll | この出目のリンクをコピー |
 | `copied` | Link copied | コピーしました |
 | `rolls` | Rolls | 振った回数 |

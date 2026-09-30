@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.7.0",
-  "description": "Dice roller and dice notation parser with exact odds: d4, d6, d8, d10, d12, d20, d100, any die up to d1000, custom and loaded dice. 44 game presets, from Yahtzee and Farkle to craps and backgammon. A typed API and a dice tray for React, Vue, Svelte, Angular or plain HTML. For D&D, tabletop RPGs, board and dice games and teaching odds. Zero dependencies.",
+  "version": "1.8.0",
+  "description": "Dice roller and dice notation parser with exact odds: d4, d6, d8, d10, d12, d20, d100, any die up to d1000, custom and loaded dice, dice pools. 44 game presets, from Yahtzee to craps. A typed API, a command line and a dice tray for React, Vue, Svelte, Angular or plain HTML. For D&D, tabletop RPGs, board and dice games and teaching odds. Zero dependencies.",
   "keywords": [
     "dice",
     "dice-roller",
@@ -67,6 +67,10 @@
     "cho-han",
     "chinchirorin",
     "success-counting",
+    "cli",
+    "command-line",
+    "csv",
+    "export",
     "penetrating-dice"
   ],
   "homepage": "https://johnmorrisdotca.github.io/korokoro/",
@@ -104,8 +108,13 @@
       "default": "./dist/ui/sounds.data.js"
     }
   },
+  "bin": {
+    "korokoro": "bin/korokoro.mjs",
+    "koro": "bin/korokoro.mjs"
+  },
   "files": [
     "dist",
+    "bin",
     "README.md",
     "LICENSE",
     "CHANGELOG.md",
@@ -121,6 +130,8 @@
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
     "test:tray": "pnpm site && playwright test",
+    "test:cli": "pnpm build && node scripts/check-cli.mjs",
+    "test:package": "pnpm build && node scripts/check-package.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "site": "pnpm build && node scripts/site.mjs",
     "sounds": "node scripts/sounds.mjs",

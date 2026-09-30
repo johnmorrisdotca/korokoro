@@ -129,6 +129,10 @@ button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: 
 .kk-die[data-counts="-1"]::after { content: "✗"; background: var(--kk-bad); color: #fff; }
 .kk-die[data-counts="1"] .kk-body { stroke: #e0b43b; stroke-width: 5; }
 .kk-sum b { color: var(--kk-ink); }
+/* Choosing a file: the input lies over its label, unseen, so the label is what is tapped and what takes the focus ring. */
+.kk-pick { position: relative; display: inline-flex; align-items: center; cursor: pointer; min-height: 44px; box-sizing: border-box; }
+.kk-pick .kk-file { position: absolute; inset: -1px; width: calc(100% + 2px); height: calc(100% + 2px); opacity: 0; cursor: pointer; }
+.kk-pick:focus-within { outline: 3px solid var(--kk-accent); outline-offset: 2px; }
 .kk-sum i { font-style: normal; color: var(--kk-bad); }
 .kk-history .kk-mini span[data-counts="1"] { border-color: #b98a12; box-shadow: inset 0 0 0 1px #b98a12; }
 .kk-history .kk-mini span[data-counts="-1"] { border-color: var(--kk-bad); color: var(--kk-bad); }

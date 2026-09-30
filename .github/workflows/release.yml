@@ -28,6 +28,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
       - run: pnpm build
+      - name: The package as npm packs it installs, imports and runs
+        run: node scripts/check-package.mjs
       - name: The tag is the version in package.json
         run: |
           VERSION="$(node -p "require('./package.json').version")"

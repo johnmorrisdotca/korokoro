@@ -1,3 +1,5 @@
+import type { NotationProblem } from "../notation.ts";
+
 /**
  * Every word the tray says, in English and Japanese. A page in another
  * language passes its own table: `{ ...STRINGS.en, roll: "Lanzar" }`.
@@ -136,6 +138,16 @@ export type RollerStrings = {
   noRolls: string;
   clear: string;
   clearSure: string;
+  /** Exporting the history, and bringing a JSON export back in. `{n}` is how many rolls were added. */
+  exportTitle: string;
+  exportNote: string;
+  exportCsv: string;
+  exportJson: string;
+  exportText: string;
+  importJson: string;
+  imported: string;
+  importNothing: string;
+  importBad: string;
   copyLink: string;
   copied: string;
   rolls: string;
@@ -302,6 +314,15 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     noRolls: "No rolls yet. Tap the dice to throw the first.",
     clear: "Clear history",
     clearSure: "Clear all {n} rolls?",
+    exportTitle: "Export and import",
+    exportNote: "CSV opens in a spreadsheet, and the JSON can be brought back in here or on another device.",
+    exportCsv: "Save as CSV",
+    exportJson: "Save as JSON",
+    exportText: "Save as text",
+    importJson: "Import JSON",
+    imported: "Added {n} rolls",
+    importNothing: "Every roll in that file is already here",
+    importBad: "That file is not a Korokoro export",
     copyLink: "Copy link to this roll",
     copied: "Link copied",
     rolls: "Rolls",
@@ -465,6 +486,15 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     noRolls: "まだ振っていません。ダイスをタップしてください。",
     clear: "履歴を消す",
     clearSure: "{n} 回分をすべて消しますか？",
+    exportTitle: "書き出しと読み込み",
+    exportNote: "CSV は表計算ソフトで開けます。JSON はここや別の端末で読み込み直せます。",
+    exportCsv: "CSV で保存",
+    exportJson: "JSON で保存",
+    exportText: "テキストで保存",
+    importJson: "JSON を読み込む",
+    imported: "{n} 回分を追加しました",
+    importNothing: "このファイルのロールはすべて登録済みです",
+    importBad: "このファイルは Korokoro の書き出しではありません",
     copyLink: "この出目のリンクをコピー",
     copied: "コピーしました",
     rolls: "振った回数",
@@ -504,3 +534,24 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
 export function fillIn(template: string, vars: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (whole, name: string) => (name in vars ? String(vars[name]) : whole));
 }
+
+/** Which of the tray's words refuses each kind of notation. */
+export const REFUSALS: Record<NotationProblem, keyof RollerStrings> = {
+  shape: "notationBad",
+  count: "notationCount",
+  sides: "notationSides",
+  bonus: "notationBonus",
+  twice: "notationTwice",
+  keep: "notationKeep",
+  reroll: "notationReroll",
+  explode: "notationExplode",
+  kinds: "notationKinds",
+  minus: "notationMinus",
+  custom: "notationCustom",
+  weights: "notationWeights",
+  times: "notationTimes",
+  successes: "notationSuccesses",
+  clamp: "notationClamp",
+  marks: "notationMarks",
+  label: "notationLabel",
+};

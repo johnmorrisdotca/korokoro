@@ -6,6 +6,8 @@ import process from "node:process";
 import { describe, expect, it } from "vitest";
 
 import { MAX_TIMES, chancesOf, groupsOf, hasTotal, isFair, roll, rollHeld, rollMany } from "./dice.ts";
+import { runCli } from "./cli.ts";
+import { toCSV, toJSON, toText } from "./export.ts";
 import { chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "./games/odds.ts";
 import { PRESETS, getPreset, presetOdds, presetSpec, rollPreset } from "./games/presets.ts";
 import { LOADED_PRESETS, faceChances, loadingOf } from "./loaded.ts";
@@ -429,5 +431,48 @@ describe("the page comparing notations", () => {
       const cells = row.split(/(?<!\\)\|/);
       for (const text of codes(cells[2])) expect(checkNotation(text).ok, text).toBe(cells[3].includes("**yes**"));
     }
+  });
+});
+
+describe("the version", () => {
+  it("is the same in the package and in the code", async () => {
+    const { VERSION } = await import("./version.ts");
+    expect(VERSION).toBe(JSON.parse(readFileSync("package.json", "utf8")).version);
+    expect(readFileSync("CHANGELOG.md", "utf8")).toContain(`## [${VERSION}]`);
+  });
+});
+
+describe("the README on the command line and export", () => {
+  /** Each command shown after a `$`, with what is printed under it up to the next blank line. */
+  const shown = [...readme.matchAll(/^\$ koro (.+)\n((?:.+\n)+)/gm)].map((m) => ({ args: m[1], printed: m[2] }));
+  const run = (args) => runCli(args.match(/"[^"]*"|\S+/g).map((a) => a.replace(/^"|"$/g, "")), { now: 0 });
+
+  it("prints what it shows being printed", () => {
+    expect(shown.length).toBeGreaterThanOrEqual(5);
+    for (const { args, printed } of shown) {
+      const { code, out } = run(args);
+      expect(code, args).toBe(0);
+      // A listing cut short with an ellipsis is checked as far as it goes.
+      const lines = printed.split("\n").filter((line) => line.trim() !== "…" && !line.startsWith("```"));
+      expect(out.startsWith(lines.join("\n")), `${args}\n${out}`).toBe(true);
+    }
+  });
+
+  it("the one-line roll at the top", () => {
+    expect(readme).toContain("npx @johnmorrisdotca/korokoro 2d20kh1+5 --seed table   # 2d20kh1+5: 24  [19 (12)]");
+    expect(run("2d20kh1+5 --seed table").out).toBe("2d20kh1+5: 24  [19 (12)]\n");
+  });
+
+  it("names every option the help does", () => {
+    const help = run("--help").out;
+    for (const flag of [...help.matchAll(/--[a-z-]+/g)].map((m) => m[0])) expect(readme, flag).toContain(flag);
+  });
+
+  it("the exports it prints", () => {
+    const rolls = [roll(parseNotation("2d20kh1+5 # attack"), seededSource("table"), Date.UTC(2026, 8, 30, 12)), roll(parseNotation("4d6dl1"), seededSource("table"), Date.UTC(2026, 8, 30, 12, 0, 5))];
+    for (const line of toText(rolls).trim().split("\n")) expect(readme).toContain(line);
+    for (const line of toCSV(rolls).trim().split("\r\n")) expect(readme).toContain(line);
+    expect(toJSON(rolls)).toContain('"generator": "korokoro ');
+    expect(run("--stdin --json --seed table").code).toBe(0);
   });
 });

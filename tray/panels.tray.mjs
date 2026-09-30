@@ -86,3 +86,43 @@ test("the mute button is there, and sound starts off under reduced motion", asyn
   await roll(page);
   await sound(page, errors);
 });
+
+test("the history is saved as CSV, JSON and text, and the JSON comes back in", async ({ page }) => {
+  const errors = await open(page);
+  await type(page, "4d6dl1 # strength");
+  for (let i = 0; i < 3; i++) await roll(page);
+  await tap(page, '[data-testid="kk-tab-history"]');
+  await tap(page, '[data-testid="kk-export"] summary');
+  await sound(page, errors);
+  const saved = async (button) => {
+    const [download] = await Promise.all([page.waitForEvent("download"), tap(page, `[data-testid="${button}"]`)]);
+    const stream = await download.createReadStream();
+    let text = "";
+    for await (const chunk of stream) text += chunk.toString("utf8");
+    return { name: download.suggestedFilename(), text };
+  };
+  const csv = await saved("kk-export-csv");
+  expect(csv.name).toMatch(/^korokoro-\d{4}-\d\d-\d\d\.csv$/);
+  expect(csv.text.split("\r\n")).toHaveLength(5);
+  expect(csv.text).toContain(",4d6kh3,strength,");
+  const text = await saved("kk-export-text");
+  expect(text.text.split("\n")).toHaveLength(4);
+  const json = await saved("kk-export-json");
+  const data = JSON.parse(json.text);
+  expect([data.format, data.rolls.length, data.stats.rolls]).toEqual([1, 3, 3]);
+
+  // Cleared, then brought back from the file.
+  await tap(page, '[data-testid="kk-clear"]');
+  await tap(page, '[data-testid="kk-clear"]');
+  await expect(page.locator('[data-testid="kk-history-row"]')).toHaveCount(0);
+  await page.locator('[data-testid="kk-import"]').setInputFiles({ name: "rolls.json", mimeType: "application/json", buffer: Buffer.from(json.text) });
+  await expect(page.locator('[data-testid="kk-history-row"]')).toHaveCount(3);
+  await expect(page.locator('[data-testid="kk-export-said"]')).toHaveText("Added 3 rolls");
+  // The same file again adds nothing, and a file that is not an export says so.
+  await page.locator('[data-testid="kk-import"]').setInputFiles({ name: "rolls.json", mimeType: "application/json", buffer: Buffer.from(json.text) });
+  await expect(page.locator('[data-testid="kk-export-said"]')).toHaveText("Every roll in that file is already here");
+  await page.locator('[data-testid="kk-import"]').setInputFiles({ name: "notes.json", mimeType: "application/json", buffer: Buffer.from("not an export") });
+  await expect(page.locator('[data-testid="kk-export-said"]')).toHaveText("That file is not a Korokoro export");
+  await expect(page.locator('[data-testid="kk-history-row"]')).toHaveCount(3);
+  await sound(page, errors);
+});

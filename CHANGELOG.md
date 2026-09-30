@@ -6,6 +6,35 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-09-30
+
+### Added
+
+- **A command line**: `korokoro`, and `koro` for short, on Linux, macOS and
+  Windows. It rolls any notation (`koro 2d20kh1+5`), several rolls at once,
+  a roll many times (`--times`, or `6#`), from a seed (`--seed`); shows the
+  exact odds without rolling (`--odds`); rolls and reads a game's dice
+  (`--game`, `--games`); tests a real die for fairness (`--test`); reads rolls
+  from standard input (`--stdin`); and prints JSON (`--json`, versioned by
+  `format`) or CSV (`--csv`) for other programs. English or Japanese, from
+  `--lang`, the environment or the system. `NO_COLOR` is honoured. Exit codes
+  0, 1 and 2.
+- `runCli(args, surroundings)`: the whole command line as a pure function.
+- **Export**: `toJSON`, `toCSV` and `toText` write rolls out, and `fromJSON`
+  reads the JSON back, trusting nothing in it. The CSV never hands a
+  spreadsheet a formula. `rollText`, `diceText`, `csvCell`, `CSV_COLUMNS`,
+  `EXPORT_FORMAT`.
+- **Export and import in the tray**, one level down under the history: save
+  as CSV, JSON or text, and bring a JSON export back in.
+- `VERSION`.
+- `pnpm test:cli` runs the built command line as a child process, and
+  `pnpm test:package` packs the package with npm, installs the tarball into an
+  empty project, imports every entry in `exports` by ESM and by `require`, and
+  runs both commands as installed. CI runs the two on Linux, macOS and Windows
+  with Node 22 and 24, and the release workflow runs the package check before
+  it publishes.
+
+
 ## [1.7.0] - 2026-09-30
 
 ### Added
@@ -308,7 +337,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.7.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.8.0...HEAD
+[1.8.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.8.0
 [1.7.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.7.0
 [1.6.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.6.0
 [1.5.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.5.0

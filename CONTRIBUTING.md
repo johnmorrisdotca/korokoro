@@ -16,6 +16,8 @@ cd korokoro
 pnpm install
 pnpm check    # lint, types and tests: the same as CI
 pnpm test:tray   # the tray in real browsers: builds the demo, then taps it
+pnpm test:cli    # the command line, run as a child process
+pnpm test:package   # npm pack, install the tarball, import every entry, run the commands
 pnpm site     # builds the demo into ./site
 pnpm dlx serve site   # or any static server
 ```
