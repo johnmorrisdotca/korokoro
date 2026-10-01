@@ -29,7 +29,7 @@ const FROM_README = [
   ["api", "API in brief", ["API"]],
   ["tray", "The tray", ["Sound", "Theming", "Browser support", "Languages"]],
   ["limits", "Limits", ["Limits"]],
-  ["about", "About Korokoro", ["The name", "Where it comes from, and where it is used", "Roadmap", "Contributing", "Licence"]],
+  ["about", "About Korokoro", ["Architecture", "The name", "Where it comes from, and where it is used", "Roadmap", "Contributing", "Licence"]],
 ];
 
 /** The documents in docs/, as they are: [file, address, title]. */
