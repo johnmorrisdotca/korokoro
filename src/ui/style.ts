@@ -37,15 +37,20 @@ export const CSS = `
 .kk-seg[data-testid="kk-count"] { display: inline-grid; grid-template-columns: repeat(10, auto); }
 @media (max-width: 540px) { .kk-seg[data-testid="kk-count"] { grid-template-columns: repeat(5, auto); } }
 .kk-seg { border-radius: 26px; }
-.kk-seg button { border: 0; background: transparent; border-radius: 999px; min-width: 44px; min-height: 44px; padding: 0 10px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; transition: background .15s, color .15s; }
+.kk-seg button { border: 0; background: transparent; border-radius: 999px; min-width: 44px; min-height: 44px; padding: 0 10px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 5px; transition: background .15s, color .15s; }
 .kk-seg button[aria-pressed="true"] { background: var(--kk-ink); color: var(--kk-surface); }
 .kk-seg button:hover:not([aria-pressed="true"]):not(:disabled) { background: color-mix(in srgb, var(--kk-ink) 8%, transparent); }
 .kk-root button:disabled { opacity: .32; cursor: default; }
 /* The pool: four places, one for each kind of dice a roll may hold, so it is one line however many are in it. */
 .kk-pool { flex: 1 1 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; min-height: 44px; }
-.kk-chip { min-width: 0; min-height: 44px; border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 999px; padding: 0 10px; font-weight: 700; font-size: .9rem; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.kk-chip { min-width: 0; min-height: 44px; border: 1px solid var(--kk-rule); background: var(--kk-surface); border-radius: 999px; padding: 0 8px; font-weight: 700; font-size: .9rem; font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
 .kk-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.kk-chip i { font-style: normal; font-weight: 800; color: var(--kk-muted); }
+.kk-chip i { display: inline-flex; font-style: normal; color: var(--kk-muted); }
+.kk-chip .kk-icon { width: 14px; height: 14px; }
+
+/* Two lines kept on a phone, so choosing the first die does not move the rows below. */
+.kk-pool-hint { flex: 1 1 100%; }
+@media (max-width: 540px) { .kk-pool-hint { min-height: 2.5em; } }
 .kk-chip[data-lit="true"] { border-color: var(--kk-ink); }
 /* The dice the tray opened with, before anybody has chosen: a dashed outline and quieter ink. */
 .kk-chip[data-suggested="true"] { border-style: dashed; border-color: var(--kk-muted); color: var(--kk-muted); background: transparent; }
@@ -57,7 +62,9 @@ export const CSS = `
 .kk-seg[data-testid="kk-sides"] button { padding: 0 8px; }
 .kk-seg[data-testid="kk-sides"] .kk-clear { padding: 0 10px; }
 .kk-seg button[data-in="true"]:not([aria-pressed="true"]) { box-shadow: inset 0 0 0 1px var(--kk-rule); }
-.kk-icon { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 9; stroke-linejoin: round; }
+/* Every mark of the die picker is the same square, centred in its button, and never squeezed or clipped. */
+.kk-icon { display: block; flex: none; width: 16px; height: 16px; overflow: visible; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.kk-die-pick { display: inline-flex; align-items: center; justify-content: center; gap: 4px; line-height: 1; }
 .kk-stepper { display: inline-flex; align-items: center; border: 1px solid var(--kk-rule); border-radius: 999px; background: var(--kk-surface); }
 .kk-stepper button { border: 0; background: transparent; width: 44px; height: 44px; font-size: 1.2rem; border-radius: 999px; }
 .kk-stepper output { min-width: 2.6rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }

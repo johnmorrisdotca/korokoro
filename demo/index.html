@@ -37,11 +37,11 @@
       <section class="more" aria-labelledby="solo-title" id="one-die">
         <h2 id="solo-title" data-say="soloTitle"></h2>
         <p data-say="soloText"></p>
-        <div class="fam-row">
+        <div class="fam-row" data-help-en="Pick the size of the two dice below: from a d4 to a d100." data-help-ja="下の2つのダイスの面数を選びます（d4からd100まで）。">
           <span class="fam-label" id="solo-kind-label" data-say="soloKind"></span>
           <div class="fam-seg" id="solo-kind" role="group" aria-labelledby="solo-kind-label" data-testid="solo-kind"></div>
         </div>
-        <div class="fam-row">
+        <div class="fam-row" data-help-en="Choose the colour of the one pip on a d6: red or black." data-help-ja="d6の1の目の色を、赤か黒から選びます。">
           <span class="fam-label" id="solo-pip-label" data-say="soloPip"></span>
           <div class="fam-seg" id="solo-pip" role="group" aria-labelledby="solo-pip-label" data-testid="solo-pip">
             <button type="button" data-pip="red" aria-pressed="true" data-say="soloRed"></button>
@@ -60,10 +60,12 @@
       <section class="more" aria-labelledby="embed-title" id="embed">
         <h2 id="embed-title" data-say="embedTitle"></h2>
         <p data-say="embedText"></p>
-        <div class="fam-seg embed-sizes" id="embed-size" role="group" data-say-label="embedSize" data-testid="embed-size">
-          <button type="button" data-size="small" data-say="embedSmall"></button>
-          <button type="button" data-size="medium" data-say="embedMedium"></button>
-          <button type="button" data-size="large" data-say="embedLarge"></button>
+        <div class="fam-row" data-help-en="How much of the tray the code below shows. The preview and the code change with it." data-help-ja="下のコードが表示するトレイの範囲です。プレビューとコードがそれに合わせて変わります。">
+          <div class="fam-seg embed-sizes" id="embed-size" role="group" data-say-label="embedSize" data-testid="embed-size">
+            <button type="button" data-size="small" data-say="embedSmall"></button>
+            <button type="button" data-size="medium" data-say="embedMedium"></button>
+            <button type="button" data-size="large" data-say="embedLarge"></button>
+          </div>
         </div>
         <p class="embed-says" id="embed-says" data-testid="embed-says"></p>
         <iframe class="embed-preview" id="embed-preview" title="Korokoro" loading="lazy" data-testid="embed-preview"></iframe>
@@ -233,6 +235,8 @@
         button.type = "button";
         button.dataset.sides = String(sides);
         button.textContent = "d" + sides;
+        button.dataset.tipEn = `Use a d${sides}`;
+        button.dataset.tipJa = `d${sides}にする`;
         button.setAttribute("aria-pressed", String(sides === soloSides));
         button.addEventListener("click", () => {
           soloSides = sides;

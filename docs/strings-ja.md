@@ -32,8 +32,10 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `chartTail` | Totals past {total} are off the chart: together they come up {percent} of the time. | {total} より上の合計は省略しています（合わせて {percent}）。 |
 | `soundOn` | Sound is on. Tap to mute | 音はオンです。タップで消音 |
 | `soundOff` | Sound is off. Tap to turn it on | 音はオフです。タップでオン |
-| `pool` | Rolling | 振るダイス |
+| `pool` | This roll | 振るダイス |
 | `poolSays` | Rolling {notation} | {notation} を振ります |
+| `poolHint` | These dice will be rolled. Tap a group to take one die away. | これから振るダイスです。タップすると、その種類のダイスが1個減ります。 |
+| `poolSuggested` | {notation} is only a suggestion. Tap a die below to choose your own. | {notation} は仮のダイスです。下のダイスをタップして、自分で選んでください。 |
 | `add` | Add a die | ダイスを追加 |
 | `choose` | Choose a die | ダイスを選ぶ |
 | `addToRoll` | Tap a die below to add it | 下のダイスをタップして追加 |

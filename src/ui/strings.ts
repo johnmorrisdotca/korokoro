@@ -33,6 +33,8 @@ export type RollerStrings = {
   soundOff: string;
   pool: string;
   poolSays: string;
+  poolHint: string;
+  poolSuggested: string;
   add: string;
   choose: string;
   addToRoll: string;
@@ -220,8 +222,10 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     chartTail: "Totals past {total} are off the chart: together they come up {percent} of the time.",
     soundOn: "Sound is on. Tap to mute",
     soundOff: "Sound is off. Tap to turn it on",
-    pool: "Rolling",
+    pool: "This roll",
     poolSays: "Rolling {notation}",
+    poolHint: "These dice will be rolled. Tap a group to take one die away.",
+    poolSuggested: "{notation} is only a suggestion. Tap a die below to choose your own.",
     add: "Add a die",
     choose: "Choose a die",
     addToRoll: "Tap a die below to add it",
@@ -402,6 +406,8 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     soundOff: "音はオフです。タップでオン",
     pool: "振るダイス",
     poolSays: "{notation} を振ります",
+    poolHint: "これから振るダイスです。タップすると、その種類のダイスが1個減ります。",
+    poolSuggested: "{notation} は仮のダイスです。下のダイスをタップして、自分で選んでください。",
     add: "ダイスを追加",
     choose: "ダイスを選ぶ",
     addToRoll: "下のダイスをタップして追加",

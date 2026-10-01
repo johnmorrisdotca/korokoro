@@ -6,6 +6,37 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.14.1] - 2026-10-01
+
+### Fixed
+
+- **The number buttons and the die chooser are centred.** A button of the
+  tray's choosers (the dice count, Keep, the games' shelves) kept its words at
+  its left edge, so the chosen one was a dark circle with its number off to one
+  side. They are centred now.
+- **The die marks on the "Choose a die" buttons are one set.** They were the
+  dice's own outlines scaled down to 15 pixels, with strokes clipped at the
+  edges and shapes of different sizes on different lines. Each is now one
+  outline in one 16-pixel square, centred by its own extent, with the same
+  stroke: a triangle, a square, a diamond, a kite, a pentagon, a hexagon, a
+  flat diamond for the d30 and a circle for the d100.
+- **The "Rolling" row says what it is.** It is now "This roll" (「振るダイス」
+  in Japanese), each chip shows its dice with a minus in a ring, and a line
+  under the row says what the chips are and that a tap on one takes a die away
+  (or, while the opening `2d6` is only a suggestion, that it is one and how to
+  choose your own). The chip's hover text says the same.
+
+### Added
+
+- **A line of help for each option row**, in both languages, marked on the row
+  as `data-help-en` and `data-help-ja`. The tray draws nothing from them; a page
+  with the family's Help switch, as the demo has, shows them under the rows.
+- **A Help switch in the demo**, beside the language chooser in the family
+  header and shared by every demo of the family. Off (the default) the page is
+  as it was; on, every option row says in one plain line what it does, in
+  English or Japanese, and every button in it has the same words as its hover
+  text. Kept on the device.
+
 ## [1.14.0] - 2026-10-01
 
 ### Added
@@ -490,7 +521,9 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.13.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.14.1...HEAD
+[1.14.1]: https://github.com/johnmorrisdotca/korokoro/compare/v1.14.0...v1.14.1
+[1.14.0]: https://github.com/johnmorrisdotca/korokoro/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/johnmorrisdotca/korokoro/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/johnmorrisdotca/korokoro/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.11.0

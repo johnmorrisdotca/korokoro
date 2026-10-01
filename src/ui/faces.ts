@@ -149,10 +149,35 @@ function drawFace(group: DiceGroup, face: number, label: string): SVGElement {
   return svg;
 }
 
-/** A small outline of a die, for the picker's chips. */
+/**
+ * The picker's marks, one for each die the buttons offer. They are drawn here and never typed as text glyphs
+ * (a triangle, a circle and a pentagon from a font are three different sizes, sit on three different lines and
+ * change with the font): each is an outline in one 24 by 24 box, centred on the box by its own extent, with
+ * the same stroke, so a row of them reads as one set and every one sits square in its button.
+ */
+const MARKS: Record<DieSides, string> = {
+  4: "M12 3.38 L21.96 20.63 L2.04 20.63 Z",
+  6: "",
+  8: "M12 2.5 L20.5 12 L12 21.5 L3.5 12 Z",
+  10: "M12 2 L20.5 9.2 L12 22 L3.5 9.2 Z",
+  12: "M12 2.5 L21.99 9.76 L18.17 21.5 L5.83 21.5 L2.01 9.76 Z",
+  20: "M12 1.8 L20.83 6.9 L20.83 17.1 L12 22.2 L3.17 17.1 L3.17 6.9 Z",
+  30: "M12 4.5 L22 12 L12 19.5 L2 12 Z",
+  100: "",
+};
+
+/** A small outline of a die, for the picker's buttons: one size for every die, drawn centred in its box. */
 export function dieIcon(sides: DieSides): SVGElement {
-  const svg = s("svg", { viewBox: "0 0 100 100", class: "kk-icon", "aria-hidden": "true" });
-  if (sides === 6) svg.append(s("rect", { x: 10, y: 10, width: 80, height: 80, rx: 16 }));
-  else svg.append(s("path", { d: OUTLINES[sides] }));
+  const svg = s("svg", { viewBox: "0 0 24 24", class: "kk-icon", "aria-hidden": "true", focusable: "false" });
+  if (sides === 6) svg.append(s("rect", { x: 3.5, y: 3.5, width: 17, height: 17, rx: 3.2 }));
+  else if (sides === 100) svg.append(s("circle", { cx: 12, cy: 12, r: 9.6 }));
+  else svg.append(s("path", { d: MARKS[sides] }));
+  return svg;
+}
+
+/** The mark on a chip that says a tap takes a die away: a minus in a ring, the same stroke as the die marks. */
+export function minusMark(): SVGElement {
+  const svg = s("svg", { viewBox: "0 0 24 24", class: "kk-icon kk-minus", "aria-hidden": "true", focusable: "false" });
+  svg.append(s("circle", { cx: 12, cy: 12, r: 9.6 }), s("path", { d: "M7.5 12 H16.5" }));
   return svg;
 }

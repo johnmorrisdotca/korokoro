@@ -40,12 +40,13 @@ import { getPreset, presetSpec, readPreset, type Preset } from "../games/presets
 import { formulaText, fromJSON, toCSV, toJSON, toText } from "../export.ts";
 import { gamesPanel, type GamesState } from "./games.ts";
 import { h, refill, s } from "./dom.ts";
-import { dieFace, dieIcon, faceText } from "./faces.ts";
+import { dieFace, dieIcon, faceText, minusMark } from "./faces.ts";
 import { morePanel, type MoreState } from "./more.ts";
 import { historyPanel, oddsPanel, percent, statsPanel, type RealDie } from "./panels.ts";
 import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
 import { clothVars, isCloth, type Cloth } from "./cloth.ts";
 import { injectStyle } from "./style.ts";
+import { helpMarks } from "./help.ts";
 import { REFUSALS, STRINGS, fillIn, type RollerStrings } from "./strings.ts";
 
 /** Everything a tray can be told when it is mounted. All of it is optional. */
@@ -309,10 +310,11 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     dimmed: (v: T) => boolean = () => false,
     last: HTMLElement | null = null,
     inPool: (v: T) => boolean = () => false,
+    help: Record<string, string> = {},
   ) {
     return h(
       "div",
-      { class: "kk-row" },
+      { class: "kk-row", ...help },
       h("span", { class: "kk-label", "data-testid": `${testId}-label` }, label),
       h(
         "div",
@@ -468,9 +470,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       const text = formatNotation(specOf([group]));
       const chip = h(
         "button",
-        { type: "button", class: "kk-chip", "data-testid": "kk-chip", "data-value": dieName(group).slice(1), "data-lit": String(index === lit), "data-suggested": String(suggested), "aria-label": formula ? text : fillIn(t.takeOne, { die: dieName(group), n: group.count }), title: text, disabled: formula },
+        { type: "button", class: "kk-chip", "data-testid": "kk-chip", "data-value": dieName(group).slice(1), "data-lit": String(index === lit), "data-suggested": String(suggested), "aria-label": formula ? text : fillIn(t.takeOne, { die: dieName(group), n: group.count }), title: formula ? text : fillIn(t.takeOne, { die: dieName(group), n: group.count }), disabled: formula },
         h("span", {}, text),
-        h("i", { "aria-hidden": "true" }, "−"),
+        h("i", { "aria-hidden": "true", class: "kk-chip-x" }, minusMark()),
       );
       chip.addEventListener("click", () => takeOne(index));
       return chip;
@@ -492,7 +494,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const addLabel = formula ? t.choose : full ? fillIn(t.limitDice, { n: MAX_DICE }) : allKinds ? fillIn(t.limitKinds, { n: MAX_GROUPS }) : suggested ? t.choose : t.add;
 
     refill(controls,
-      h("div", { class: "kk-row" }, h("span", { class: "kk-label" }, t.pool), h("div", { class: "kk-pool", role: "group", "aria-label": t.pool, "data-testid": "kk-pool", "data-suggested": String(suggested) }, ...chips)),
+      h(
+        "div",
+        { class: "kk-row" },
+        h("span", { class: "kk-label" }, t.pool),
+        h("div", { class: "kk-pool", role: "group", "aria-label": t.pool, "data-testid": "kk-pool", "data-suggested": String(suggested) }, ...chips),
+        // What the chips are and what a tap on one does, said in the row itself, in whichever state the roll is in.
+        h("p", { class: "kk-fine kk-pool-hint", "data-testid": "kk-pool-hint" }, formula ? t.formula : empty ? t.addToRoll : suggested ? fillIn(t.poolSuggested, { notation: notation() }) : t.poolHint),
+      ),
       segment(
         all.length > 1 && mine !== undefined ? dieName(mine) : t.dice,
         counts,
@@ -501,6 +510,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         (n) => changeLit({ count: n }),
         "kk-count",
         (n) => formula || mine === undefined || n > mine.count + room,
+        undefined,
+        undefined,
+        helpMarks("count"),
       ),
       // The buttons are the dice a table owns; any other die is typed as notation, and then no button is lit.
       segment<Sides>(
@@ -508,16 +520,17 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         DIE_SIDES,
         // A loaded or custom die lights no button: the buttons are the fair dice.
         mine !== undefined && mine.weights === undefined && mine.faces === undefined ? mine.sides : null,
-        (n) => h("span", { style: "display:inline-flex;align-items:center;gap:4px" }, dieIcon(n as DieSides), `d${n}`),
+        (n) => h("span", { class: "kk-die-pick" }, dieIcon(n as DieSides), `d${n}`),
         (n) => void addDie(plainDie(n)),
         "kk-sides",
         cannotAdd,
         clear,
         inRoll,
+        helpMarks("sides"),
       ),
       h(
         "div",
-        { class: "kk-row" },
+        { class: "kk-row", ...helpMarks("bonus") },
         h("span", { class: "kk-label" }, t.modifier),
         h("div", { class: "kk-stepper" }, minus, h("output", { "data-testid": "kk-mod" }, mod), plus),
         h("span", { class: "kk-notation" }, input),
@@ -533,6 +546,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         (k) => changeLit({ keep: k, keepCount: 1 }),
         "kk-keep",
         (k) => formula || mine === undefined || (mine.count < 2 && k !== "all"),
+        undefined,
+        undefined,
+        helpMarks("keep"),
       ),
       h(
         "details",

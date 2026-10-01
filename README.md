@@ -385,6 +385,7 @@ src/
     ├── dom.ts          a few lines of DOM building, so the tray needs no framework
     ├── faces.ts        each die drawn as its own shape
     ├── games.ts        the control for games: a search box and the games on their shelves
+    ├── help.ts         one plain line for each option row, in both languages, for a page's Help switch
     ├── more.ts         everything one level down from the default tray: custom dice, loaded dice and saved sets
     ├── mount.ts        the tray itself: mounting it on a page, and the options it takes
     ├── panels.ts       the panels under the tray, drawn fresh from the state they are handed
@@ -1103,7 +1104,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.14.0", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.14.1", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet
@@ -1404,12 +1405,13 @@ such as `parseNotation("4d6dl1")`, all of them.
 One idea runs it: **the roll is a pool of dice.**
 
 1. **Tap a die to add it.** The tray opens showing `2d6`, as a suggestion:
-   its chip is dashed and the row reads *Choose a die*. The first die you tap
+   its chip is dashed, the row says it is only a suggestion, and the buttons read *Choose a die*. The first die you tap
    takes its place, so one tap on d20 is `1d20`. After that every tap adds:
    d20, d4, d4 is `1d20+2d4`. (A tap on d6 while `2d6` is showing is simply a
    third d6.)
-2. **A chip takes one away.** The row marked *Rolling* has a chip for each
-   kind of dice (`2d6 −`). Tap it and there is one die fewer; the last die
+2. **A chip takes one away.** The row marked *This roll* has a chip for each
+   kind of dice (`2d6`, with a minus beside it), and says under it that a tap
+   takes one die away. Tap it and there is one die fewer; the last die
    takes the kind with it. *Clear* empties the roll, bonus and all.
 3. **The numbers set how many** of the kind you touched last, so three d8 is
    *d8*, *3*.

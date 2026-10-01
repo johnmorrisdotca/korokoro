@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.14.0",
+  "version": "1.14.1",
   "description": "Dice roller and dice notation parser with exact odds: d4, d6, d8, d10, d12, d20, d100, any die up to d1000, custom and loaded dice, dice pools. 44 game presets, from Yahtzee to craps. A typed API, a command line and a dice tray for React, Vue, Svelte, Angular or as a web component. For D&D, RPGs, board and dice games, and teaching odds. Zero dependencies.",
   "keywords": [
     "dice",
