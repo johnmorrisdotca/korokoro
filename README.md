@@ -14,8 +14,8 @@ Tap dice to build a roll, up to ten in any mix from a d4 to a d100, or type any 
 <p align="center"><a href="https://johnmorrisdotca.github.io/korokoro/"><strong>Roll some dice →</strong></a> · <a href="https://johnmorrisdotca.github.io/korokoro/docs/"><strong>Read the documentation →</strong></a></p>
 
 <p align="center">
-  <img src="docs/desktop.jpg" alt="Eight d6 on the felt, their total with a luck meter, and the stats panel with face counts and totals against the odds" width="720">
-  <img src="docs/phone.jpg" alt="Four d6 with the lowest dropped, on a phone in dark mode: the dropped die struck through" width="220">
+  <img src="docs/desktop.jpg" alt="Eight d6 on the felt after twelve rolls, under the demo's header with its language chooser and five cloth patches: their total with a luck meter, and the Stats tab with rolls, luck and streaks and the face counts and totals against the odds" width="720">
+  <img src="docs/phone.jpg" alt="Four d6 with the lowest dropped, on a phone in dark mode, in Japanese: the dropped die faded on the felt and struck through in the sum, with a luck meter" width="220">
 </p>
 
 A dice roller and a dice notation parser for tabletop games, RPGs and board
@@ -892,7 +892,7 @@ presetOdds(getPreset("craps")!);
 // a natural (7 or 11) 8 of 36, craps (2, 3 or 12) 4 of 36, a point 24 of 36
 ```
 
-<p align="center"><img src="docs/games.jpg" alt="Yahtzee chosen on a phone: five d6 on the felt, read as a large straight, on roll 1 of 3" width="260"></p>
+<p align="center"><img src="docs/games.jpg" alt="Yahtzee chosen on a phone: five d6 on the felt, on roll 1 of 3, read as Chance for 20" width="260"></p>
 
 | Shelf | Games |
 | --- | --- |

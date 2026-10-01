@@ -8,4 +8,5 @@ export default tseslint.config(
   { files: ["tray/**/*.mjs", "playwright.config.mjs"], languageOptions: { globals: { process: "readonly", Buffer: "readonly", Image: "readonly", OffscreenCanvas: "readonly", getComputedStyle: "readonly", customElements: "readonly", console: "readonly", URL: "readonly", document: "readonly", window: "readonly", localStorage: "readonly" } } },
   { files: ["website/**/*.mjs"], languageOptions: { globals: { URL: "readonly" } } },
   { files: ["scripts/**/*.mjs"], languageOptions: { globals: { console: "readonly", URL: "readonly", document: "readonly", location: "readonly", localStorage: "readonly", navigator: "readonly", URLSearchParams: "readonly" } } },
+  { files: ["scripts/readme-pictures.mjs"], languageOptions: { globals: { console: "readonly", process: "readonly", URL: "readonly", document: "readonly", window: "readonly", getComputedStyle: "readonly" } } },
 );
