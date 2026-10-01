@@ -166,7 +166,7 @@ rmSync(join(out, "public"), { recursive: true, force: true });
 mkdirSync(join(out, "guide"), { recursive: true });
 mkdirSync(join(out, "public"), { recursive: true });
 for (const page of pages) writeFileSync(join(out, "guide", `${page.address}.md`), ready(page));
-for (const picture of ["desktop.jpg", "phone.jpg", "games.jpg"]) cpSync(join(root, "docs", picture), join(out, "public", picture));
+for (const picture of ["desktop.jpg", "phone.jpg", "games.jpg", "dice-war.jpg"]) cpSync(join(root, "docs", picture), join(out, "public", picture));
 
 // 3. The sidebar, in the order a reader would want the pages.
 const entry = (address) => ({ text: pages.find((page) => page.address === address).title, link: `/guide/${address}` });
