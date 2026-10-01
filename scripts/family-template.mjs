@@ -27,6 +27,7 @@ export const FAMILY = [
   { id: "tenka", name: "Tenka", kana: "天下" },
   { id: "kumimoji", name: "Kumimoji", kana: "組み文字" },
   { id: "tsunagi", name: "Tsunagi", kana: "繋ぎ" },
+  { id: "jarajara", name: "Jarajara", kana: "ジャラジャラ" },
 ];
 
 /**
