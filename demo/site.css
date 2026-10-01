@@ -11,4 +11,10 @@
 .embed-sizes { max-width: 22rem; }
 .embed-says { margin: 8px 0; color: var(--muted); font-size: .9rem; min-height: 1.4em; }
 .embed-preview { display: block; width: 360px; max-width: 100%; border: 1px dashed var(--rule); border-radius: var(--radius); background: var(--surface); }
-#embed pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+#embed pre, #one-die pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* One die on its own: two dice on the felt, each in the one square it keeps. */
+.solo-dice { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px 40px; padding: 18px 12px; margin: 12px 0; border-radius: var(--radius); background: var(--felt); color: var(--felt-ink); }
+.solo-dice figure { margin: 0; display: grid; gap: 10px; justify-items: center; }
+.solo-dice figcaption { font-size: .85rem; opacity: .9; }
+.solo-dice .kk-die { filter: drop-shadow(0 7px 6px rgba(0,0,0,.35)); }

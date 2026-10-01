@@ -21,7 +21,7 @@ you need and ignore the rest.
 ```json
 {
   "format": 1,
-  "generator": "korokoro 1.13.0",
+  "generator": "korokoro 1.14.0",
   "rolls": [
     {
       "id": "…",

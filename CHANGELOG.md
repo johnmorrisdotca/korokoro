@@ -6,6 +6,24 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-01
+
+### Added
+
+- **One die on its own.** `mountDie(element, options)` draws a single die with
+  nothing round it, of two kinds: one that rolls (a button; a tap, Enter or
+  Space throws it, and it lands on the face the generator chose before
+  anything moved) and one that does not roll and only shows a face
+  (`rollable: false`, `show(face)`). `<korokoro-die>` is the same as a tag,
+  with a `korokoro-die-roll` event. Any die the tray draws, in `small`,
+  `medium` or `large` or any width, one steady square that nothing moves in,
+  not selectable, with no tumble for reduced motion and no sound unless asked.
+  Shown in the demo (`#one-die`) and live on the documentation's "Use it in
+  your project" page.
+- **A d6's one pip in black as well as red.** `onePip: "red" | "black"` on the
+  tray and the die, `one-pip` on the elements, `setOnePip()` in place, and
+  `?onepip=black` on the embed page. Red stays the default.
+
 ## [1.13.0] - 2026-10-01
 
 ### Added

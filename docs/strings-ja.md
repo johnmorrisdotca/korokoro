@@ -129,6 +129,9 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `tapAgain` | Tap to roll again | タップしてもう一度 |
 | `rollLabel` | Roll {notation} | {notation} を振る |
 | `rolling` | Rolling… | コロコロ… |
+| `dieAlone` | {die} showing {face} | {die}、出目は {face} |
+| `dieAloneRollable` | {die} showing {face}. Tap to roll | {die}、出目は {face}。タップで振る |
+| `dieAloneRolled` | {die}: {face} | {die}: {face} |
 | `total` | Total | 合計 |
 | `critical` | Natural 20! | クリティカル！ |
 | `fumble` | Natural 1 | ファンブル |

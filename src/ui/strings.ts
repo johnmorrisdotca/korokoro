@@ -133,6 +133,9 @@ export type RollerStrings = {
   tapAgain: string;
   rollLabel: string;
   rolling: string;
+  dieAlone: string;
+  dieAloneRollable: string;
+  dieAloneRolled: string;
   total: string;
   critical: string;
   fumble: string;
@@ -314,6 +317,9 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     tapAgain: "Tap to roll again",
     rollLabel: "Roll {notation}",
     rolling: "Rolling…",
+    dieAlone: "{die} showing {face}",
+    dieAloneRollable: "{die} showing {face}. Tap to roll",
+    dieAloneRolled: "{die}: {face}",
     total: "Total",
     critical: "Natural 20!",
     fumble: "Natural 1",
@@ -491,6 +497,9 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     tapAgain: "タップしてもう一度",
     rollLabel: "{notation} を振る",
     rolling: "コロコロ…",
+    dieAlone: "{die}、出目は {face}",
+    dieAloneRollable: "{die}、出目は {face}。タップで振る",
+    dieAloneRolled: "{die}: {face}",
     total: "合計",
     critical: "クリティカル！",
     fumble: "ファンブル",

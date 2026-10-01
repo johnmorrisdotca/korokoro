@@ -23,6 +23,7 @@ export { asChance, chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "./ga
 export { patternsOf, readDiceAs, waysToShut, type Outcome, type ReadingId } from "./games/readings.ts";
 export { READING_WORDS } from "./games/words.ts";
 export { mountRoller, type RollerHandle, type RollerOptions, type RollerSize } from "./ui/mount.ts";
+export { DIE_SIZE_PX, mountDie, type DieHandle, type DieOptions, type DieSize } from "./ui/die.ts";
 export { KOROKORO_CLOTHS, clothVars, isCloth, type Cloth } from "./ui/cloth.ts";
 export { STRINGS, type RollerStrings } from "./ui/strings.ts";
 export { createRollSound, type PlaySound, type RollSound, type SoundThrow } from "./ui/sound.ts";

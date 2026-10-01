@@ -34,6 +34,29 @@
           <li><button type="button" data-roll="2d20kh1+5"><code>2d20kh1+5</code><span data-say="ex9"></span></button></li>
         </ul>
       </section>
+      <section class="more" aria-labelledby="solo-title" id="one-die">
+        <h2 id="solo-title" data-say="soloTitle"></h2>
+        <p data-say="soloText"></p>
+        <div class="fam-row">
+          <span class="fam-label" id="solo-kind-label" data-say="soloKind"></span>
+          <div class="fam-seg" id="solo-kind" role="group" aria-labelledby="solo-kind-label" data-testid="solo-kind"></div>
+        </div>
+        <div class="fam-row">
+          <span class="fam-label" id="solo-pip-label" data-say="soloPip"></span>
+          <div class="fam-seg" id="solo-pip" role="group" aria-labelledby="solo-pip-label" data-testid="solo-pip">
+            <button type="button" data-pip="red" aria-pressed="true" data-say="soloRed"></button>
+            <button type="button" data-pip="black" aria-pressed="false" data-say="soloBlack"></button>
+          </div>
+        </div>
+        <div class="solo-dice" data-testid="solo-dice">
+          <figure><div id="solo-rolls" data-testid="solo-rolls"></div><figcaption data-say="soloRolls"></figcaption></figure>
+          <figure><div id="solo-shows" data-testid="solo-shows"></div><figcaption data-say="soloShows"></figcaption><button class="fam-button" type="button" id="solo-next" data-say="soloNext" data-testid="solo-next"></button></figure>
+        </div>
+        <p class="embed-says" id="solo-said" aria-live="polite" data-testid="solo-said"></p>
+        <pre><code>&lt;script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"&gt;&lt;/script&gt;
+&lt;korokoro-die sides="20" size="large"&gt;&lt;/korokoro-die&gt;                    &lt;!-- a die a tap rolls --&gt;
+&lt;korokoro-die sides="6" face="5" rollable="off"&gt;&lt;/korokoro-die&gt;        &lt;!-- a die that shows a 5 --&gt;</code></pre>
+      </section>
       <section class="more" aria-labelledby="embed-title" id="embed">
         <h2 id="embed-title" data-say="embedTitle"></h2>
         <p data-say="embedText"></p>
@@ -58,7 +81,7 @@
       /* family:script */
     </script>
     <script type="module">
-      import { formatNotation, mountRoller, parseNotation } from "./dist/index.js";
+      import { formatNotation, mountDie, mountRoller, parseNotation } from "./dist/index.js";
 
       // The page's own words, in the two languages the tray speaks. Set as text, never as HTML.
       const WORDS = {
@@ -94,6 +117,16 @@
           embedCopy: "Copy",
           embedCopied: "Copied.",
           embedNotCopied: "Select the code and copy it.",
+          soloTitle: "One die on its own",
+          soloText: "A single die with nothing round it, for a page of your own. One rolls when you tap it. The other only shows a face you give it, and never rolls.",
+          soloKind: "Die",
+          soloPip: "A d6's one pip",
+          soloRed: "Red",
+          soloBlack: "Black",
+          soloRolls: "Rolls: tap it",
+          soloShows: "Shows a face",
+          soloNext: "Next face",
+          soloLanded: "Rolled {face}.",
           foot: "Rolls use your device's cryptographic generator unless you choose a seed. Your history stays on this device. Dice sounds from Kenney's Casino Audio, CC0.",
         },
         ja: {
@@ -128,13 +161,25 @@
           embedCopy: "コピー",
           embedCopied: "コピーしました。",
           embedNotCopied: "コードを選択してコピーしてください。",
+          soloTitle: "ダイス1個だけ",
+          soloText: "まわりに何もない、ダイス1個だけの表示です。自分のページに置けます。ひとつはタップで振れます。もうひとつは、指定した出目を見せるだけで、振れません。",
+          soloKind: "ダイス",
+          soloPip: "d6の1の目",
+          soloRed: "赤",
+          soloBlack: "黒",
+          soloRolls: "振れる: タップ",
+          soloShows: "出目を見せるだけ",
+          soloNext: "次の出目",
+          soloLanded: "出目は {face} です。",
           foot: "シードを選ばないかぎり、この端末の暗号論的乱数で振ります。履歴はこの端末にだけ保存されます。ダイスの音は Kenney の Casino Audio（CC0）です。",
         },
       };
 
       // The header, the footer and the language chooser are the family's (scripts/family-template.mjs): the address first, then what this device chose, then the browser's language.
       let roller;
-      const language = familyLanguage({ id: "korokoro", words: WORDS, onChange: (lang) => { roller.setLocale(lang); embed(); } });
+      let rollDie;
+      let showDie;
+      const language = familyLanguage({ id: "korokoro", words: WORDS, onChange: (lang) => { roller.setLocale(lang); rollDie.setLocale(lang); showDie.setLocale(lang); embed(); } });
 
       // The code to put the tray on another page: the dice rolled last here, at the size chosen.
       const HEIGHTS = { small: 540, medium: 1320, large: 1600 };
@@ -175,6 +220,41 @@
         roller?.setCloth(event.detail.cloth);
         embed();
       });
+
+      // One die on its own: one that rolls on a tap, and one that only shows a face.
+      let soloSides = 20;
+      let soloFace = 20;
+      const kinds = [4, 6, 8, 10, 12, 20, 30, 100];
+      const soloOptions = () => ({ locale: language.lang, size: "large", sound: false, onePip: document.querySelector("#solo-pip [aria-pressed=true]").dataset.pip });
+      rollDie = mountDie(document.getElementById("solo-rolls"), { ...soloOptions(), sides: soloSides, onRoll: (face) => { document.getElementById("solo-said").textContent = language.word("soloLanded").replace("{face}", String(face)); } });
+      showDie = mountDie(document.getElementById("solo-shows"), { ...soloOptions(), sides: soloSides, face: soloFace, rollable: false });
+      for (const sides of kinds) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.dataset.sides = String(sides);
+        button.textContent = "d" + sides;
+        button.setAttribute("aria-pressed", String(sides === soloSides));
+        button.addEventListener("click", () => {
+          soloSides = sides;
+          soloFace = sides;
+          rollDie.setSides(sides);
+          showDie.setSides(sides, soloFace);
+          for (const other of document.getElementById("solo-kind").children) other.setAttribute("aria-pressed", String(other === button));
+        });
+        document.getElementById("solo-kind").append(button);
+      }
+      document.getElementById("solo-next").addEventListener("click", () => {
+        soloFace = soloFace >= soloSides ? 1 : soloFace + 1;
+        showDie.show(soloFace);
+      });
+      for (const button of document.getElementById("solo-pip").children) {
+        button.addEventListener("click", () => {
+          for (const other of document.getElementById("solo-pip").children) other.setAttribute("aria-pressed", String(other === button));
+          rollDie.setOnePip(button.dataset.pip);
+          showDie.setOnePip(button.dataset.pip);
+          roller.setOnePip(button.dataset.pip);
+        });
+      }
 
       embed();
 

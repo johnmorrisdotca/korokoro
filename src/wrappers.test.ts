@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createSSRApp, h } from "vue";
 import { renderToString } from "vue/server-renderer";
 
-import { KorokoroRoller, ROLLER_TAG, defineRoller } from "./element.ts";
+import { DIE_TAG, KorokoroDie, KorokoroRoller, ROLLER_TAG, defineDie, defineRoller } from "./element.ts";
 import { DiceRoller } from "./vue.ts";
 
 describe("the custom element, where there is no browser", () => {
@@ -15,7 +15,14 @@ describe("the custom element, where there is no browser", () => {
   });
 
   it("watches the attributes it documents", () => {
-    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth"]);
+    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth", "one-pip"]);
+  });
+
+  it("has a die of its own, under its own tag, that is safe where there is no browser", () => {
+    expect(KorokoroDie.observedAttributes).toEqual(["sides", "face", "rollable", "size", "width", "one-pip", "lang", "seed", "sound", "animation-ms", "cloth"]);
+    expect(DIE_TAG).toBe("korokoro-die");
+    expect(() => defineDie()).not.toThrow();
+    expect(() => defineDie("my-die")).not.toThrow();
   });
 });
 

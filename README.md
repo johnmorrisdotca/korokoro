@@ -188,11 +188,77 @@ from your own bundle:
 | `storage="none"`, `storage-key` | Keep no history; or the key it is kept under |
 | `animation-ms`, `share-base`, `query` | As the options of the same names |
 | `cloth` | The felt's cloth: `green` (unless said), `blue`, `red`, `black` or `wood`, the family's five; changed in place, keeping the dice and the rolls |
+| `one-pip` | The colour of a d6's one pip: `red` (unless said) or `black`; changed in place |
 
 What an attribute cannot carry (a theme, your own words, your own sound) goes
 on the element's `options` property. `roll()`, `setSpec()` and `history` are
 on the element. The tray is drawn in the element's own light DOM, so the
 page's `--kk-…` variables theme it as they do a mounted tray.
+
+### One die on its own
+
+A single die with nothing round it: no felt, no total, no panels. For a page
+that wants a die to look at, or one to tap. There are two kinds, chosen by one
+option.
+
+- **A die that rolls** (`rollable`, the default) is a button. A tap, Enter or
+  Space throws it; it tumbles, lands on the face the generator chose before
+  anything moved, and says so to a screen reader.
+- **A die that does not roll** (`rollable: false`) is a picture of one face,
+  the one you give it, changed from code with `show()`.
+
+```ts
+import { mountDie } from "@johnmorrisdotca/korokoro";
+
+const die = mountDie(document.getElementById("die"), { sides: 20, size: "large", onRoll: (face) => console.log(face) });
+die.roll();                                            // as a tap does
+
+mountDie(document.getElementById("shown"), { sides: 6, face: 5, rollable: false, onePip: "black" });
+```
+
+It keeps one steady square (`small` 48 pixels, `medium` 96, `large` 150, or
+`width`): the tumble moves only the picture inside it, so nothing on the page
+moves. Nothing on it can be selected, and a device that asks for reduced motion
+gets no tumble. It is silent unless you say `sound: true`, because a die on
+somebody's page has not been asked to make noise.
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `sides` | `6` | 2 to 1000, or `"F"` for a Fate die |
+| `faces` | none | A die of your own, as in notation's `d[Yes,No]`: `[{ label: "Yes" }, { label: "No" }]` |
+| `face` | the top face | The face showing at first |
+| `rollable` | `true` | `false` is a die that only shows a face |
+| `size`, `width` | `"medium"` | `"small"`, `"medium"` or `"large"`; or a width in pixels, which wins |
+| `onePip` | `"red"` | The colour of a d6's one pip: `"red"` or `"black"` |
+| `source` | cryptographic | `seededSource("table")` throws the same faces for everyone |
+| `animationMs` | `600` | The tumble; reduced motion always skips it |
+| `sound`, `playSound` | `false` | Whether a throw makes the sound of dice, and a sound of your own |
+| `onRoll` | none | Called with the face once it has landed |
+| `cloth`, `theme`, `locale`, `strings` | | As on the tray |
+
+The handle has `roll()`, `show(face)`, `setSides(sides, face?, faces?)`,
+`setOnePip(colour)`, `setLocale(locale)`, `setRollable(on)`, `destroy()`, and
+`face`, `rolling` and `element`.
+
+As a tag, from the same script as `<korokoro-roller>`:
+
+```html
+<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></script>
+<korokoro-die sides="20" size="large"></korokoro-die>
+<korokoro-die sides="6" face="5" rollable="off"></korokoro-die>
+```
+
+| Attribute | What it does |
+| --- | --- |
+| `sides`, `face` | The kind of die, and the face showing |
+| `rollable="off"` | A die that shows and does not roll; `rollable="on"` makes it roll again |
+| `size`, `width` | `small`, `medium`, `large`, or pixels |
+| `one-pip` | `red` (unless said) or `black` |
+| `lang`, `seed`, `sound`, `animation-ms`, `cloth` | As the options of the same names; `sound="on"` for dice sounds |
+
+Each throw is a `korokoro-die-roll` event with the face as its `detail`;
+changing `face` shows that face at once. The [demo](https://johnmorrisdotca.github.io/korokoro/#one-die)
+has one of each.
 
 ### Embed it on any site
 
@@ -1036,7 +1102,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.13.0", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.14.0", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet
@@ -1309,6 +1375,7 @@ mountRoller(element: HTMLElement, options?: RollerOptions): RollerHandle
 | `query` | the page's own | A query string that may hold a shared roll or a seed |
 | `shareBase` | the page's address | Where shared links point |
 | `cloth` | `"green"` | The felt's cloth: `"green"`, `"blue"`, `"red"`, `"black"` or `"wood"`; `theme` is laid over it, and `setCloth()` changes it in place |
+| `onePip` | `"red"` | The colour of a d6's one pip, on the felt and in the history: `"red"` or `"black"`, the colour of the other pips. `setOnePip()` changes it in place |
 | `theme` | none | CSS variables for the tray, such as `{ "--kk-felt": "#234" }` |
 | `animationMs` | `650` | From the throw to the last die landing; reduced motion always skips it |
 | `sound` | `true` | `false` makes the tray silent and takes the mute button away |

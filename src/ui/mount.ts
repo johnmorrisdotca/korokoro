@@ -66,6 +66,8 @@ export type RollerOptions = {
   shareBase?: string;
   /** The cloth the felt is laid in: "green" (unless said), "blue", "red", "black" or "wood", the family's five. `theme` is laid over it. */
   cloth?: Cloth;
+  /** The colour of a d6's one pip, on the felt and in the history: `"red"` (unless said) or `"black"`, the colour of the other pips. */
+  onePip?: "red" | "black";
   /** CSS variables for the tray, such as `{ "--kk-felt": "#234" }`: set on the tray itself, so they win over its defaults in both themes. */
   theme?: Record<`--kk-${string}`, string>;
   /** Tray and panels side by side on a wide screen. */
@@ -130,6 +132,8 @@ export type RollerHandle = {
   setLocale(locale: string): void;
   /** Lay the felt in another cloth, at once, keeping every die and roll: "green", "blue", "red", "black" or "wood". */
   setCloth(cloth: Cloth): void;
+  /** Change the colour of a d6's one pip at once: "red" or "black". */
+  setOnePip(colour: "red" | "black"): void;
   /** Take the tray out of the page and stop its timers and its sound. */
   destroy(): void;
 };
@@ -270,6 +274,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     root.dataset.cloth = isCloth(cloth) ? cloth : "green";
   };
   wear(options.cloth);
+  root.dataset.onePip = options.onePip === "black" ? "black" : "red";
   const controls = h("div", { class: "kk-controls" });
   // The felt is the picture; the tray is the button that fills it. The dice sit over the button, so one that can be held is a button of its own.
   const tray = h("button", { type: "button", class: "kk-tray", "data-testid": "kk-tray" });
@@ -1169,6 +1174,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       // The theme's own --kk-felt, where given, still wins; otherwise the old cloth's colours are taken off first.
       for (const name of ["--kk-felt", "--kk-felt-deep", "--kk-felt-ink"]) root.style.removeProperty(name);
       wear(next);
+    },
+    setOnePip: (colour) => {
+      root.dataset.onePip = colour === "black" ? "black" : "red";
     },
     destroy() {
       for (const id of timers) clearTimeout(id);

@@ -102,6 +102,8 @@ export const CSS = `
 .kk-facet { fill: none; stroke: var(--kk-die-edge); stroke-width: 2; opacity: .8; }
 .kk-pip { fill: var(--kk-die-ink); }
 .kk-pip-one { fill: var(--kk-pip-one); }
+/* A d6's one pip is red unless the tray is told black: it then takes the ink of the other pips. */
+.kk-root[data-one-pip="black"] .kk-pip-one { fill: var(--kk-die-ink); }
 .kk-number { fill: var(--kk-die-ink); paint-order: stroke; stroke: var(--kk-die); stroke-width: 7px; stroke-linejoin: round; font-weight: 800; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
 .kk-underline { fill: var(--kk-die-ink); }
 .kk-word { fill: var(--kk-die-ink); font-weight: 800; font-family: ui-rounded, "SF Pro Rounded", system-ui, sans-serif; }
@@ -267,6 +269,15 @@ button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: 
   .kk-root[data-wide="true"] { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; }
   .kk-root[data-wide="true"] > .kk-panels { grid-column: 2; grid-row: 1 / span 3; }
 }
+/* One die on its own: a square that never changes size, with nothing round it. Nothing on it can be selected. */
+.kk-solo { position: relative; display: inline-block; vertical-align: top; width: var(--kk-solo, 96px); max-width: 100%; aspect-ratio: 1; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; touch-action: manipulation; }
+.kk-solo[data-die-size="small"] { --kk-solo: 48px; }
+.kk-solo[data-die-size="medium"] { --kk-solo: 96px; }
+.kk-solo[data-die-size="large"] { --kk-solo: 150px; }
+.kk-solo .kk-die { width: 100%; height: 100%; max-width: none; }
+.kk-solo button.kk-die { cursor: pointer; }
+.kk-solo[data-rollable="false"] .kk-die { cursor: default; }
+.kk-solo button.kk-die:focus-visible { outline: 3px solid var(--kk-accent); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .kk-tumble, .kk-land { animation: none; } }
 `;
 

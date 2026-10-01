@@ -62,3 +62,9 @@
 .vp-doc .kk-root summary { margin: 0; }
 .vp-doc .kk-root h4 { margin: 0; }
 .vp-doc .kk-root button, .vp-doc .kk-root input { font-family: inherit; }
+
+/* One die on a page: two dice on the felt, each in the one square it keeps. */
+.live-die { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px 40px; margin: 20px 0 28px; padding: 18px 12px; border-radius: 16px; background: var(--felt); color: var(--felt-ink); }
+.live-die figure { margin: 0; display: grid; gap: 10px; justify-items: center; }
+.live-die figcaption, .live-die-said { font-size: .85rem; margin: 0; }
+.live-die-said { flex: 1 1 100%; text-align: center; min-height: 1.4em; }

@@ -1,6 +1,7 @@
 <!doctype html>
 <!-- The dice and nothing else, for another site's iframe. What it shows comes from its own address:
      embed/?dice=2d6%2B3&size=small&lang=ja&sound=off&seed=table&felt=%23234
+     onepip=black draws a d6's one pip in black.
      size is small (the felt and the result), medium (those and the choice of dice) or large (everything).
      It tracks nothing and loads nothing from anywhere else; a large tray keeps its history on the visitor's device. -->
 <html lang="en">
@@ -50,6 +51,8 @@
         shareBase: "https://johnmorrisdotca.github.io/korokoro/",
         // A cloth by its name (?cloth=red); a ?felt= colour, where given, is laid over it.
         cloth: ["green", "blue", "red", "black", "wood"].includes(q.get("cloth")) ? q.get("cloth") : undefined,
+        // A d6's one pip in black (?onepip=black); red unless said.
+        onePip: q.get("onepip") === "black" ? "black" : undefined,
         theme,
         onRoll: told,
       });

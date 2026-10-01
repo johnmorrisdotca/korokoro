@@ -154,6 +154,7 @@ function ready(page) {
       made.push(`${heading[1]} ${heading[2]} {#${address(heading[2])}}`);
       const live = page.source === "README.md" ? LIVE[heading[2]] : undefined;
       if (live !== undefined) made.push("", `<LiveDice ${live} />`);
+      if (page.source === "README.md" && heading[2] === "One die on its own") made.push("", "<LiveDie />");
     } else made.push(text);
   }
   const first = page.source === "README.md" && LIVE[page.title] !== undefined && !page.body.includes(`## ${page.title}`) ? `\n<LiveDice ${LIVE[page.title]} />\n` : "";
