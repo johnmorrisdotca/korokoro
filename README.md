@@ -381,6 +381,7 @@ src/
 │   └── words.ts     the words for every outcome of every reading, in English and Japanese
 └── ui/  the tray that draws and rolls the dice
     ├── cloth.ts        the cloths a tray may be laid in
+    ├── die.ts          one die on its own, rolling or only showing a face
     ├── dom.ts          a few lines of DOM building, so the tray needs no framework
     ├── faces.ts        each die drawn as its own shape
     ├── games.ts        the control for games: a search box and the games on their shelves
