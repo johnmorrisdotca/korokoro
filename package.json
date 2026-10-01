@@ -163,6 +163,7 @@
     "test:languages": "pnpm build && node scripts/check-languages.mjs",
     "test:cli": "pnpm build && node scripts/check-cli.mjs",
     "test:package": "pnpm build && node scripts/check-package.mjs",
+    "family:readme": "node scripts/family-readme.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "site": "pnpm build && node scripts/site.mjs",
     "pictures": "pnpm site && node scripts/readme-pictures.mjs",

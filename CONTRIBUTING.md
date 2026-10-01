@@ -43,6 +43,10 @@ pnpm dlx serve site   # or any static server
   `node tray/look.mjs before` on the old build and
   `node tray/look.mjs before after` on the new compare 56 pictures of the
   page, pixel for pixel.
+- **The list of the family in the README is made, not written.** `pnpm family:readme` writes it between its
+  markers from `scripts/family-template.mjs` (the names, the Japanese names and a line on each), and
+  `scripts/family-readme.mjs` is the same file in every package. To add a package or change a line, change the
+  template in every repository, bump `FAMILY_TEMPLATE_VERSION` and record the new hash in `src/family.test.js`.
 - **A change to a seeded roll or to the notation changes the conformance
   suite**, and the test that holds it fails until `pnpm docs:make` rewrites
   it. That is the moment to ask whether the change was meant: ports check
