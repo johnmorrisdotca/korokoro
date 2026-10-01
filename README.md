@@ -187,6 +187,7 @@ from your own bundle:
 | `language-chooser` | The tray's own choice of English or 日本語 |
 | `storage="none"`, `storage-key` | Keep no history; or the key it is kept under |
 | `animation-ms`, `share-base`, `query` | As the options of the same names |
+| `cloth` | The felt's cloth: `green` (unless said), `blue`, `red`, `black` or `wood`, the family's five; changed in place, keeping the dice and the rolls |
 
 What an attribute cannot carry (a theme, your own words, your own sound) goes
 on the element's `options` property. `roll()`, `setSpec()` and `history` are
@@ -978,7 +979,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.12.0", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.13.0", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet
@@ -1248,6 +1249,7 @@ mountRoller(element: HTMLElement, options?: RollerOptions): RollerHandle
 | `storageKey` | `"korokoro.history"` | The key for the history; the mute choice is kept under this key plus `.muted` |
 | `query` | the page's own | A query string that may hold a shared roll or a seed |
 | `shareBase` | the page's address | Where shared links point |
+| `cloth` | `"green"` | The felt's cloth: `"green"`, `"blue"`, `"red"`, `"black"` or `"wood"`; `theme` is laid over it, and `setCloth()` changes it in place |
 | `theme` | none | CSS variables for the tray, such as `{ "--kk-felt": "#234" }` |
 | `animationMs` | `650` | From the throw to the last die landing; reduced motion always skips it |
 | `sound` | `true` | `false` makes the tray silent and takes the mute button away |

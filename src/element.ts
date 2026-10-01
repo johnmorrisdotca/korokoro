@@ -1,5 +1,6 @@
 import type { Roll, RollSpec } from "./dice.ts";
 import { parseNotation } from "./notation.ts";
+import { isCloth, type Cloth } from "./ui/cloth.ts";
 import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
 
 /**
@@ -16,6 +17,7 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
  *   notation         the dice showing at first, and again whenever it changes
  *   lang             "ja" for Japanese; anything else English. The page's own language when left out
  *   wide             tray and panels side by side on a wide screen
+ *   cloth            the felt's cloth: "green" (unless said), "blue", "red", "black" or "wood"
  *   size             "small" is the felt and the result alone; "medium" adds the choice of dice; "large", or left out, is everything
  *   sound="off"      no sound and no mute button
  *   hold="off"       dice are not held
@@ -37,7 +39,7 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
 export const ROLLER_TAG = "korokoro-roller";
 
 /** The attributes the element watches. */
-const WATCHED = ["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query"] as const;
+const WATCHED = ["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth"] as const;
 
 // On a server there is no HTMLElement to extend: the class is still defined, so that importing this module never throws, and is simply never used.
 const Base: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
@@ -87,11 +89,12 @@ export class KorokoroRoller extends Base {
 
   attributeChangedCallback(name: string, before: string | null, now: string | null): void {
     if (this.#roller === null || before === now) return;
-    // The dice and the language change in place; anything else is a tray mounted afresh.
+    // The dice, the language and the cloth change in place; anything else is a tray mounted afresh.
     if (name === "notation") {
       const spec = now === null ? null : parseNotation(now);
       if (spec !== null) this.#roller.setSpec(spec);
     } else if (name === "lang") this.#roller.setLocale(now ?? this.ownerDocument.documentElement.lang ?? "en");
+    else if (name === "cloth") this.#roller.setCloth(isCloth(now) ? now : "green");
     else this.#remount();
   }
 
@@ -115,6 +118,7 @@ export class KorokoroRoller extends Base {
     if (text("storage-key") !== null) made.storageKey = text("storage-key") as string;
     if (text("share-base") !== null) made.shareBase = text("share-base") as string;
     if (text("query") !== null) made.query = text("query") as string;
+    if (isCloth(text("cloth"))) made.cloth = text("cloth") as Cloth;
     const ms = Number(text("animation-ms"));
     if (text("animation-ms") !== null && Number.isFinite(ms) && ms >= 0) made.animationMs = ms;
     const told = made.onRoll;

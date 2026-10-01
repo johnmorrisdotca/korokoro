@@ -26,12 +26,27 @@ export const FAMILY = [
   { id: "narabe", name: "Narabe", kana: "並べ" },
   { id: "tenka", name: "Tenka", kana: "天下" },
   { id: "kumimoji", name: "Kumimoji", kana: "組み文字" },
+  { id: "tsunagi", name: "Tsunagi", kana: "繋ぎ" },
 ];
+
+/**
+ * THE CLOTHS A TABLE MAY BE LAID IN, the same five itsutsu.com's boards offer: green (the family's own,
+ * and the default), blue, red, black, and wood. Each is the felt's colour, its deep edge, and the ink
+ * written on it. Chosen on the patches in every demo's header (`familyCloth`), kept in the address
+ * (`?cloth=`) and on this device for every demo of the family, since they are one site.
+ */
+export const FAMILY_CLOTHS = {
+  green: { felt: "#2f5d4a", deep: "#1f4135", ink: "#f3efe4" },
+  blue: { felt: "#2865a6", deep: "#1a4677", ink: "#f3efe4" },
+  red: { felt: "#a3342e", deep: "#7a231f", ink: "#f3efe4" },
+  black: { felt: "#2f3236", deep: "#1b1d20", ink: "#ece8dc" },
+  wood: { felt: "#e2ba7a", deep: "#c4954f", ink: "#2b1d0e" },
+};
 
 /** The words the shared header and footer say themselves, in both languages. A page's own table is laid over these. */
 export const FAMILY_WORDS = {
-  en: { family: "The family:", licence: "MIT" },
-  ja: { family: "姉妹パッケージ:", licence: "MIT" },
+  en: { family: "The family:", licence: "MIT", cloth: "Table cloth", cloth_green: "Green", cloth_blue: "Blue", cloth_red: "Red", cloth_black: "Black", cloth_wood: "Wood" },
+  ja: { family: "姉妹パッケージ:", licence: "MIT", cloth: "テーブルの色", cloth_green: "緑", cloth_blue: "青", cloth_red: "赤", cloth_black: "黒", cloth_wood: "木目" },
 };
 
 const escape = (text) => String(text).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
@@ -77,6 +92,9 @@ export function familyHeader({ id, links = [] }) {
             <button type="button" data-lang="en" lang="en">English</button>
             <button type="button" data-lang="ja" lang="ja">日本語</button>
           </div>${links.map((link) => `\n          <a href="${escape(link.href)}" data-say="${escape(link.say)}"></a>`).join("")}
+          <div class="cloth" role="radiogroup" data-say-label="cloth" style="display:inline-flex;gap:0;align-items:center">${Object.entries(FAMILY_CLOTHS)
+            .map(([name, cloth]) => `<button type="button" role="radio" data-cloth="${name}" data-say-label="cloth_${name}" style="width:44px;height:44px;min-width:44px;padding:8px;border:0;border-radius:12px;cursor:pointer;background:radial-gradient(120% 90% at 30% 20%, ${cloth.felt} 0%, ${cloth.deep} 100%) content-box;box-shadow:inset 0 0 0 8px transparent"></button>`)
+            .join("")}</div>
           <a href="${repo(id)}">GitHub</a>
           <a href="${npm(id)}">npm</a>
         </nav>
@@ -108,7 +126,43 @@ export function familyFooter({ id }) {
  * { lang, asked, say(), set(lang) }. `onChange(lang)` runs after each switch, not on the first fill.
  * [data-say-label] sets aria-label and [data-say-placeholder] sets placeholder, the same way.
  */
-export const FAMILY_SCRIPT = `function familyLanguage(options) {
+export const FAMILY_SCRIPT = `(function familyCloth() {
+  var CLOTHS = ${JSON.stringify(FAMILY_CLOTHS)};
+  var KEY = "johnmorrisdotca.cloth";
+  var asked = new URLSearchParams(location.search).get("cloth");
+  var kept = null;
+  try { kept = localStorage.getItem(KEY); } catch (error) { /* A browser that keeps nothing starts on green. */ }
+  var wear = function (name, keep) {
+    if (!(name in CLOTHS)) name = "green";
+    var cloth = CLOTHS[name];
+    var root = document.documentElement.style;
+    root.setProperty("--felt", cloth.felt);
+    root.setProperty("--felt-deep", cloth.deep);
+    root.setProperty("--felt-ink", cloth.ink);
+    document.documentElement.dataset.cloth = name;
+    document.querySelectorAll("[data-cloth]").forEach(function (patch) {
+      if (patch === document.documentElement) return;
+      var chosen = patch.dataset.cloth === name;
+      patch.setAttribute("aria-checked", String(chosen));
+      // The patch is the middle 28 pixels of a 44-pixel button: the chosen one is ringed close round it.
+      patch.style.outline = chosen ? "2px solid currentColor" : "none";
+      patch.style.outlineOffset = "-5px";
+    });
+    if (keep) {
+      try { localStorage.setItem(KEY, name); } catch (error) { /* Not remembered; still worn. */ }
+      var query = new URLSearchParams(location.search);
+      if (name === "green") query.delete("cloth"); else query.set("cloth", name);
+      var search = query.toString();
+      history.replaceState(history.state, "", location.pathname + (search ? "?" + search : "") + location.hash);
+    }
+    document.dispatchEvent(new CustomEvent("family-cloth", { detail: { cloth: name, colours: cloth } }));
+  };
+  document.querySelectorAll("button[data-cloth]").forEach(function (patch) {
+    patch.addEventListener("click", function () { wear(patch.dataset.cloth, true); });
+  });
+  wear(asked !== null ? asked : kept !== null ? kept : "green", false);
+})();
+function familyLanguage(options) {
   var SHARED = ${JSON.stringify(FAMILY_WORDS)};
   var KEY = options.id + ".page.lang";
   var asked = new URLSearchParams(location.search).get("lang");

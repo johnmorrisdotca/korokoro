@@ -44,6 +44,7 @@ import { dieFace, dieIcon, faceText } from "./faces.ts";
 import { morePanel, type MoreState } from "./more.ts";
 import { historyPanel, oddsPanel, percent, statsPanel, type RealDie } from "./panels.ts";
 import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
+import { clothVars, isCloth, type Cloth } from "./cloth.ts";
 import { injectStyle } from "./style.ts";
 import { REFUSALS, STRINGS, fillIn, type RollerStrings } from "./strings.ts";
 
@@ -63,6 +64,8 @@ export type RollerOptions = {
   query?: string;
   /** The address a shared link points at. Defaults to the page's own, without its query. */
   shareBase?: string;
+  /** The cloth the felt is laid in: "green" (unless said), "blue", "red", "black" or "wood", the family's five. `theme` is laid over it. */
+  cloth?: Cloth;
   /** CSS variables for the tray, such as `{ "--kk-felt": "#234" }`: set on the tray itself, so they win over its defaults in both themes. */
   theme?: Record<`--kk-${string}`, string>;
   /** Tray and panels side by side on a wide screen. */
@@ -125,6 +128,8 @@ export type RollerHandle = {
   setSpec(spec: Partial<RollSpec>): void;
   /** Change the tray's language: "ja…" for Japanese, anything else for English, with `strings` still laid over it. */
   setLocale(locale: string): void;
+  /** Lay the felt in another cloth, at once, keeping every die and roll: "green", "blue", "red", "black" or "wood". */
+  setCloth(cloth: Cloth): void;
   /** Take the tray out of the page and stop its timers and its sound. */
   destroy(): void;
 };
@@ -260,7 +265,11 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   const timers = new Set<ReturnType<typeof setTimeout>>();
 
   const root = h("div", { class: "kk-root", "data-wide": String(options.wide === true && (options.size ?? "large") === "large"), "data-size": options.size === "small" || options.size === "medium" ? options.size : "large", "data-testid": "korokoro" });
-  for (const [name, value] of Object.entries(options.theme ?? {})) root.style.setProperty(name, value);
+  const wear = (cloth: string | undefined) => {
+    for (const [name, value] of Object.entries({ ...clothVars(cloth), ...(options.theme ?? {}) })) root.style.setProperty(name, value);
+    root.dataset.cloth = isCloth(cloth) ? cloth : "green";
+  };
+  wear(options.cloth);
   const controls = h("div", { class: "kk-controls" });
   // The felt is the picture; the tray is the button that fills it. The dice sit over the button, so one that can be held is a button of its own.
   const tray = h("button", { type: "button", class: "kk-tray", "data-testid": "kk-tray" });
@@ -1156,6 +1165,11 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       changeSpec(next);
     },
     setLocale: (next) => setLocale(next, false),
+    setCloth: (next) => {
+      // The theme's own --kk-felt, where given, still wins; otherwise the old cloth's colours are taken off first.
+      for (const name of ["--kk-felt", "--kk-felt-deep", "--kk-felt-ink"]) root.style.removeProperty(name);
+      wear(next);
+    },
     destroy() {
       for (const id of timers) clearTimeout(id);
       doc.removeEventListener("keydown", onKey);

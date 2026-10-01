@@ -48,6 +48,8 @@
         storageKey: "korokoro.embed",
         query: q.has("seed") ? `?seed=${encodeURIComponent(q.get("seed"))}` : "",
         shareBase: "https://johnmorrisdotca.github.io/korokoro/",
+        // A cloth by its name (?cloth=red); a ?felt= colour, where given, is laid over it.
+        cloth: ["green", "blue", "red", "black", "wood"].includes(q.get("cloth")) ? q.get("cloth") : undefined,
         theme,
         onRoll: told,
       });

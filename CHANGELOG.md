@@ -6,6 +6,18 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-10-01
+
+### Added
+
+- **The tray's cloth.** Lay the felt in green (its own), blue, red, black or
+  wood, the five the whole family and itsutsu.com's boards offer: the
+  `cloth` option, the `cloth` attribute on `<korokoro-roller>` (changed in
+  place, keeping the dice and the rolls), `setCloth()` on the tray, and
+  `?cloth=` on the embed page. `KOROKORO_CLOTHS` holds the colours.
+- The demo's header has the family's cloth patches; the tray and the page
+  follow them, and the embed code carries the cloth chosen.
+
 ## [1.12.0] - 2026-09-30
 
 ### Added
@@ -460,7 +472,8 @@ All notable changes to this project are written here. The format follows
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.12.0...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.13.0...HEAD
+[1.13.0]: https://github.com/johnmorrisdotca/korokoro/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/johnmorrisdotca/korokoro/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.11.0
 [1.10.0]: https://github.com/johnmorrisdotca/korokoro/releases/tag/v1.10.0

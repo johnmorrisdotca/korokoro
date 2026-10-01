@@ -144,12 +144,15 @@
       function embed() {
         const q = new URLSearchParams({ dice: embedDice, size: embedSize });
         if (language.lang === "ja") q.set("lang", "ja");
+        // The cloth chosen on the header's patches goes with the code, green being the tray's own.
+        const cloth = document.documentElement.dataset.cloth ?? "green";
+        if (cloth !== "green") q.set("cloth", cloth);
         const src = new URL("embed/", location.href.split(/[?#]/)[0]).href + "?" + q;
         const frame = document.getElementById("embed-preview");
         if (frame.getAttribute("src") !== src) frame.setAttribute("src", src);
         frame.style.height = HEIGHTS[embedSize] + "px";
         document.getElementById("embed-frame").textContent = `<iframe src="${escaped(src)}" title="Korokoro" width="360" height="${HEIGHTS[embedSize]}" style="border:0;max-width:100%" loading="lazy"></iframe>`;
-        document.getElementById("embed-tag").textContent = `<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></` + `script>\n<korokoro-roller notation="${escaped(embedDice)}" size="${embedSize}"${language.lang === "ja" ? ' lang="ja"' : ""}></korokoro-roller>`;
+        document.getElementById("embed-tag").textContent = `<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></` + `script>\n<korokoro-roller notation="${escaped(embedDice)}" size="${embedSize}"${cloth !== "green" ? ` cloth="${cloth}"` : ""}${language.lang === "ja" ? ' lang="ja"' : ""}></korokoro-roller>`;
         document.getElementById("embed-says").textContent = language.word("says" + embedSize[0].toUpperCase() + embedSize.slice(1));
         for (const button of document.getElementById("embed-size").children) button.setAttribute("aria-pressed", String(button.dataset.size === embedSize));
       }
@@ -166,7 +169,12 @@
         });
       }
       // A shared link keeps the language it was made in.
-      roller = mountRoller(document.getElementById("roller"), { onRoll: (roll) => { embedDice = formatNotation(roll.spec); embed(); }, wide: true, locale: language.lang, shareBase: location.origin + location.pathname + (language.asked !== null ? "?lang=" + language.asked : "") });
+      roller = mountRoller(document.getElementById("roller"), { onRoll: (roll) => { embedDice = formatNotation(roll.spec); embed(); }, wide: true, locale: language.lang, cloth: document.documentElement.dataset.cloth, shareBase: location.origin + location.pathname + (language.asked !== null ? "?lang=" + language.asked : "") });
+      // The tray wears the cloth chosen on the header's patches, as the page's own felt does.
+      document.addEventListener("family-cloth", (event) => {
+        roller?.setCloth(event.detail.cloth);
+        embed();
+      });
 
       embed();
 
