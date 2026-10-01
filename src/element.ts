@@ -28,6 +28,7 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
  *   placeholder="off"   the opening dice are the user's own roll
  *   keyboard="off"   Space rolls only when the focus is inside the tray, and the page keeps it otherwise
  *   language-chooser    the tray's own choice of English or 日本語
+ *   dice-war         Dice War among the games: a table of the person at the tray and computers (`diceWar` in the options)
  *   storage="none"   keep no history
  *   storage-key      the key the history is kept under
  *   animation-ms     the length of the tumble
@@ -43,7 +44,7 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
 export const ROLLER_TAG = "korokoro-roller";
 
 /** The attributes the element watches. */
-const WATCHED = ["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth", "one-pip"] as const;
+const WATCHED = ["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth", "one-pip", "dice-war"] as const;
 
 // On a server there is no HTMLElement to extend: the class is still defined, so that importing this module never throws, and is simply never used.
 const Base: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
@@ -119,6 +120,7 @@ export class KorokoroRoller extends Base {
     if (this.hasAttribute("placeholder")) made.placeholder = !off("placeholder");
     if (this.hasAttribute("keyboard")) made.keyboard = !off("keyboard");
     if (this.hasAttribute("language-chooser")) made.languageChooser = !off("language-chooser");
+    if (this.hasAttribute("dice-war")) made.diceWar = !off("dice-war");
     if (this.hasAttribute("storage") && off("storage")) made.storage = null;
     if (text("storage-key") !== null) made.storageKey = text("storage-key") as string;
     if (text("share-base") !== null) made.shareBase = text("share-base") as string;
@@ -199,9 +201,13 @@ export class KorokoroDie extends Base {
     this.#die?.roll();
   }
 
-  /** The face showing. */
+  /** The face showing. Setting it shows that face at once, as the `face` attribute does, and is how a framework that sets properties sets it. */
   get face(): number | null {
     return this.#die?.face ?? null;
+  }
+  set face(face: number | string | null) {
+    if (face === null || face === undefined) this.removeAttribute("face");
+    else this.setAttribute("face", String(face));
   }
 
   connectedCallback(): void {

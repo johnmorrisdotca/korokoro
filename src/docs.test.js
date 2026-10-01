@@ -1,7 +1,7 @@
 // The documents that are made from the source, or that quote it, checked against it.
 // Plain JavaScript, so that reading files needs no Node types. `pnpm docs:make` rewrites what is made.
 import { createHash } from "node:crypto";
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 
 import { describe, expect, it } from "vitest";
@@ -615,5 +615,75 @@ describe("the page on plain output", () => {
     expect(tried).toContain('import { chanceAtLeast, parseNotation, roll } from "https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/index.js";');
     expect(page).toContain('import { chanceAtLeast, parseNotation, roll } from "https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/index.js";');
     expect(readme).toContain('<script type="module" src="https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/dist/element-define.js"></script>');
+  });
+});
+
+describe("the README on Dice War", () => {
+  it("shows what the example prints, and the limits the code holds", async () => {
+    const dw = await import("./diceWar.ts");
+    let game = dw.startDiceWar({ players: ["You", "Aiko", "Ben"], computers: [false, true, true], seed: "table", to: 5 });
+    game = dw.playDiceWar(game, { faces: { "0": [4] } });
+    expect(readme).toContain("game.scores;                                          // [0, 1, 0]: Aiko took the round");
+    expect(game.scores).toEqual([0, 1, 0]);
+    expect(readme).toContain("diceWarPeopleToRoll(game);                            // [0]: only you have dice to hand in");
+    expect(dw.diceWarPeopleToRoll(game)).toEqual([0]);
+    expect(dw.decodeDiceWar(dw.encodeDiceWar(game))).toEqual(game);
+    expect(readme).toContain("diceWarOdds({ players: 3 }).war;                      // 0.2361…: one throw in 4.2 ties for highest");
+    expect(dw.diceWarOdds({ players: 3 }).war).toBeCloseTo(0.2361, 4);
+    expect(1 / dw.diceWarOdds({ players: 3 }).war).toBeCloseTo(4.2, 1);
+    expect(readme).toContain("diceWarOdds({ players: 3 }, 4).beats;                 // 0.25: a 4 beats both of the others a quarter of the time");
+    expect(dw.diceWarOdds({ players: 3 }, 4).beats).toBeCloseTo(0.25, 12);
+    expect(dw.DICE_WAR_LIMITS).toMatchObject({ fewestPlayers: 2, mostPlayers: 8, mostDice: 10, mostPoints: 100, mostRounds: 200, mostWars: 100 });
+    for (const text of ["| Players | 2 to 8 |", "| Dice each | 1 to 10, of 2 to 1000 sides |", "| A game to a score | 1 to 100 points |", "| A game for rounds | 1 to 200 |", "| Wars in one round | 100, then it is called off with nobody scoring |"]) expect(readme, text).toContain(text);
+  });
+
+  it("names every export of Dice War in the API, and the option and attribute that turn it on", async () => {
+    const dw = await import("./diceWar.ts");
+    for (const name of Object.keys(dw)) expect(readme, name).toContain(name);
+    expect(readme).toContain("| `diceWar` | `false` |");
+    expect(readme).toContain("| `dice-war` |");
+    const { KorokoroRoller } = await import("./element.ts");
+    expect(KorokoroRoller.observedAttributes).toContain("dice-war");
+  });
+});
+
+describe("the README's promises about the repository", () => {
+  const section = (heading) => {
+    const from = readme.indexOf(`\n## ${heading}\n`);
+    if (from < 0) throw new Error(`no section “${heading}”`);
+    const next = readme.indexOf("\n## ", from + 4);
+    return readme.slice(from, next < 0 ? undefined : next);
+  };
+
+  it("has an Accessibility section with something in it", () => {
+    expect(section("Accessibility").length).toBeGreaterThan(200);
+  });
+
+  it("lists every package of the family, with its kana, as the demo's footer does", () => {
+    const template = readFileSync("scripts/family-template.mjs", "utf8");
+    const family = [...template.matchAll(/\{ id: "([\w-]+)", name: "(\w+)", kana: "([^"]+)" \}/g)].map((match) => ({ id: match[1], name: match[2], kana: match[3] }));
+    expect(family.length).toBeGreaterThanOrEqual(16);
+    const block = readme.slice(readme.indexOf("### The family"), readme.indexOf("\n## ", readme.indexOf("### The family")));
+    for (const { id, name, kana } of family) expect(block, id).toContain(`- [${name}](https://github.com/johnmorrisdotca/${id}) (${kana}`);
+    const words = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"];
+    expect(block).toContain(`one of ${words[family.length]} packages`);
+    expect([...block.matchAll(/^- \[/gm)]).toHaveLength(family.length);
+  });
+
+  it("says Node 22 or later wherever it names a Node, and `engines` agrees", () => {
+    expect(JSON.parse(readFileSync("package.json", "utf8")).engines.node).toBe(">=22");
+    for (const file of ["README.md", "docs/other-languages.md", "CONTRIBUTING.md"]) expect(readFileSync(file, "utf8"), file).not.toMatch(/Node 20/);
+    expect(readFileSync("CONTRIBUTING.md", "utf8")).toContain("Needs Node 22 or later.");
+  });
+
+  it("keeps SECURITY.md and CODE_OF_CONDUCT.md equal to the family's master text, a copy of which is kept in scripts/community", () => {
+    for (const file of ["SECURITY.md", "CODE_OF_CONDUCT.md"]) {
+      expect(existsSync(`scripts/community/${file}`), file).toBe(true);
+      expect(readFileSync(file, "utf8"), file).toBe(readFileSync(`scripts/community/${file}`, "utf8"));
+    }
+  });
+
+  it("tells a contributor the family's house rules", () => {
+    expect(readFileSync("CONTRIBUTING.md", "utf8")).toContain("## House rules, shared by every package of the family");
   });
 });

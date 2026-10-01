@@ -16,6 +16,7 @@ export * from "./share.ts";
 export * from "./sets.ts";
 export * from "./loaded.ts";
 export * from "./export.ts";
+export * from "./diceWar.ts";
 export { VERSION } from "./version.ts";
 export { cliLanguage, runCli, type CliResult, type CliSurroundings } from "./cli.ts";
 export { PRESETS, PRESETS as presets, findPresets, getPreset, presetOdds, presetSpec, readPreset, rollPreset, type GameFamily, type OutcomeOdds, type Preset, type PresetReading, type PresetRoll } from "./games/presets.ts";

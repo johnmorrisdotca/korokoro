@@ -23,11 +23,11 @@ const FROM_README = [
   ["notation", "Dice notation", ["Dice notation"]],
   ["rolls", "Rolls", ["What a roll returns", "Several rolls in one go", "Holding dice", "Seeded and shared rolls"]],
   ["dice", "Dice of your own", ["Custom dice", "Loaded dice, and testing a die", "Sets of dice"]],
-  ["games", "Games", ["Games"]],
+  ["games", "Games and Dice War", ["Games", "Dice War"]],
   ["odds", "Odds", ["Odds"]],
   ["cli", "The command line and export", ["The command line", "Export", "Dice from an address"]],
   ["api", "API in brief", ["API"]],
-  ["tray", "The tray", ["Sound", "Theming", "Browser support", "Languages"]],
+  ["tray", "The tray", ["Sound", "Theming", "Browser support", "Accessibility", "Languages"]],
   ["limits", "Limits", ["Limits"]],
   ["about", "About Korokoro", ["Architecture", "The name", "Where it comes from, and where it is used", "Roadmap", "Contributing", "Licence"]],
 ];

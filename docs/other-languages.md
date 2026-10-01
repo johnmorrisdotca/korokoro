@@ -7,7 +7,7 @@ exit code. No JavaScript is written, and nothing is kept running between
 rolls.
 
 ```sh
-npm install -g @johnmorrisdotca/korokoro     # puts koro on the path; needs Node 20 or later
+npm install -g @johnmorrisdotca/korokoro     # puts koro on the path; needs Node 22 or later
 koro 2d20kh1+5 --seed table --json
 ```
 
@@ -21,7 +21,7 @@ you need and ignore the rest.
 ```json
 {
   "format": 1,
-  "generator": "korokoro 1.14.1",
+  "generator": "korokoro 1.15.0",
   "rolls": [
     {
       "id": "…",

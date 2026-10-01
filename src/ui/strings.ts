@@ -125,6 +125,30 @@ export type RollerStrings = {
   familyCards: string;
   familyRoleplaying: string;
   familyHandy: string;
+  warFamily: string;
+  warName: string;
+  warSays: string;
+  warYou: string;
+  warPlayers: string;
+  warDice: string;
+  warPlayTo: string;
+  warPoints: string;
+  warRounds: string;
+  warNew: string;
+  warRoundLine: string;
+  warRoundOf: string;
+  warAtStake: string;
+  warYourThrow: string;
+  warLast: string;
+  warTakes: string;
+  warWar: string;
+  warCalledOff: string;
+  warWon: string;
+  warOdds: string;
+  warYourOdds: string;
+  warBeats: string;
+  warScores: string;
+  warKeep: string;
   outcomes: string;
   turnRoll: string;
   turnOver: string;
@@ -311,6 +335,30 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     familyCards: "Beside a card table",
     familyRoleplaying: "Roleplaying games",
     familyHandy: "Handy",
+    warFamily: "Play with the tray",
+    warName: "Dice War",
+    warSays: "Everyone rolls and the highest total scores a point. A tie for highest is war: only the tied roll again, for every point at stake.",
+    warYou: "You",
+    warPlayers: "Players",
+    warDice: "Dice each",
+    warPlayTo: "Play to",
+    warPoints: "{n} points",
+    warRounds: "{n} rounds",
+    warNew: "New game",
+    warRoundLine: "Round {n}",
+    warRoundOf: "Round {n} of {of}",
+    warAtStake: "At stake: {n}",
+    warYourThrow: "Tap the tray to roll your dice.",
+    warLast: "The last throw",
+    warTakes: "{name} takes {n}",
+    warWar: "War: {names} tied on {total}",
+    warCalledOff: "The war was called off: nobody scores",
+    warWon: "Game over: {names} won.",
+    warOdds: "A tie for highest comes up about one throw in {odds}.",
+    warYourOdds: "A {total} beats everyone {beats} of the time, ties for highest {ties} and loses {loses}.",
+    warBeats: "{name} {total}",
+    warScores: "Scores",
+    warKeep: "The game as text",
     outcomes: "How a roll comes out",
     turnRoll: "Roll {a} of {n}. Tap the felt to roll again, or a die to hold it",
     turnOver: "That was roll {n} of {n}. Tap the felt for a new turn",
@@ -493,6 +541,30 @@ export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
     familyCards: "カードゲームのお供",
     familyRoleplaying: "ロールプレイングゲーム",
     familyHandy: "便利なダイス",
+    warFamily: "トレイで遊ぶ",
+    warName: "ダイスウォー",
+    warSays: "全員がダイスを振り、合計がいちばん大きい人が1点です。同点なら戦争で、並んだ人だけがもう一度振り、かかっている点をすべて取ります。",
+    warYou: "あなた",
+    warPlayers: "人数",
+    warDice: "1人のダイス数",
+    warPlayTo: "終わり",
+    warPoints: "{n}点",
+    warRounds: "{n}ラウンド",
+    warNew: "新しいゲーム",
+    warRoundLine: "ラウンド{n}",
+    warRoundOf: "ラウンド{n}／{of}",
+    warAtStake: "かかっている点: {n}",
+    warYourThrow: "トレイをタップしてダイスを振ってください。",
+    warLast: "直前の1投",
+    warTakes: "{name}が{n}点を取りました",
+    warWar: "戦争: {names}が{total}で並びました",
+    warCalledOff: "戦争は打ち切りです。誰にも点は入りません",
+    warWon: "ゲーム終了: {names}の勝ちです。",
+    warOdds: "同点でいちばん大きくなるのは、約{odds}回に1回です。",
+    warYourOdds: "{total}は、{beats}の確率で全員に勝ち、{ties}で最高点が並び、{loses}で負けます。",
+    warBeats: "{name} {total}",
+    warScores: "得点",
+    warKeep: "このゲームをテキストで",
     outcomes: "出目の内訳",
     turnRoll: "{n} 回中 {a} 回目。フェルトをタップで振り直し、ダイスをタップでホールド",
     turnOver: "{n} 回振りました。フェルトをタップすると新しい手番です",

@@ -286,6 +286,21 @@ button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: 
 .kk-solo[data-rollable="false"] .kk-die { cursor: default; }
 .kk-solo button.kk-die:focus-visible { outline: 3px solid var(--kk-accent); outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .kk-tumble, .kk-land { animation: none; } }
+/* Dice War, under the felt. */
+.kk-war-box[hidden] { display: none; }
+.kk-war { border: 1px solid var(--kk-rule); border-radius: 14px; padding: 12px 14px; display: grid; gap: 8px; background: var(--kk-surface); text-align: left; }
+.kk-war h4, .kk-war h5 { margin: 0; font-size: .95rem; }
+.kk-war h5 { font-size: .8rem; color: var(--kk-muted); font-weight: 600; }
+.kk-war-settings { gap: 8px 14px; }
+.kk-war-field { display: grid; gap: 2px; }
+.kk-war-status { margin: 0; font-weight: 600; font-size: .9rem; }
+.kk-war-scores { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px; }
+.kk-war-scores li { border: 1px solid var(--kk-rule); border-radius: 12px; padding: 8px 12px; min-height: 44px; display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.kk-war-scores li[data-leader="true"] { border-color: var(--kk-ink); }
+.kk-war-scores b { font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.kk-war-keep summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font-size: .85rem; }
+.kk-war-text { margin: 0; padding: 8px 10px; border: 1px solid var(--kk-rule); border-radius: 10px; font-size: .75rem; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9rem; overflow-y: auto; }
+.kk-war-last ol { margin: 4px 0 0; padding-left: 1.2rem; font-size: .85rem; font-variant-numeric: tabular-nums; display: grid; gap: 2px; }
 `;
 
 /** Add the tray's stylesheet to a document, once. */

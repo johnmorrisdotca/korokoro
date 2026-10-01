@@ -6,6 +6,40 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-10-01
+
+### Added
+
+- **Dice War**, a game to play with dice: two to eight players, any of them a
+  computer; each round everybody rolls (one die unless said, up to ten) and the
+  highest total scores a point; a tie for highest is war, the tied roll again
+  and the stake grows a point for each war, the winner taking all; played to a
+  score or for a number of rounds. Pure and seeded (`startDiceWar`,
+  `playDiceWar`, `diceWarWinners`, `diceWarPeopleToRoll`), kept as text
+  (`encodeDiceWar`, `decodeDiceWar`, every move played again on the way back),
+  with its exact odds from the package's own (`diceWarOdds`). In the tray with
+  `diceWar: true` (the `dice-war` attribute, the `diceWar` prop): a shelf of its
+  own in Games, a scoreboard, the last throw, the odds of your roll and the game
+  as text, the tray's roll being your throw and the computers answering at once.
+  Off unless asked for, so a tray that does not want it is as it was.
+- An Accessibility section in the README, and the sixteen packages of the family
+  listed.
+
+### Changed
+
+- `die.face = 5` on `<korokoro-die>` sets the `face` attribute, as the attribute
+  does. React 19, Vue 3 and Svelte 5 set a property rather than an attribute on
+  a custom element that has one of the name, and `face` was a read-only value,
+  so the assignment threw. Reading it still gives the face showing.
+- Node 22 or later (`engines`), as the CI matrix has always tested. Node 20 is
+  end of life.
+- The family's SECURITY.md and CODE_OF_CONDUCT.md, with a copy of the master text
+  kept in `scripts/community` and held by a test; CONTRIBUTING.md carries the
+  family's house rules.
+- The GitHub release's notes are the version's section of this changelog.
+- Nothing that was exported before has changed: every roll, seed, odds figure,
+  preset and export is as it was.
+
 ## [1.14.1] - 2026-10-01
 
 ### Fixed

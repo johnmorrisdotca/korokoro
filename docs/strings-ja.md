@@ -121,6 +121,30 @@ open a *Fix a translation* issue with the string's name. `{n}` and the other bra
 | `familyCards` | Beside a card table | カードゲームのお供 |
 | `familyRoleplaying` | Roleplaying games | ロールプレイングゲーム |
 | `familyHandy` | Handy | 便利なダイス |
+| `warFamily` | Play with the tray | トレイで遊ぶ |
+| `warName` | Dice War | ダイスウォー |
+| `warSays` | Everyone rolls and the highest total scores a point. A tie for highest is war: only the tied roll again, for every point at stake. | 全員がダイスを振り、合計がいちばん大きい人が1点です。同点なら戦争で、並んだ人だけがもう一度振り、かかっている点をすべて取ります。 |
+| `warYou` | You | あなた |
+| `warPlayers` | Players | 人数 |
+| `warDice` | Dice each | 1人のダイス数 |
+| `warPlayTo` | Play to | 終わり |
+| `warPoints` | {n} points | {n}点 |
+| `warRounds` | {n} rounds | {n}ラウンド |
+| `warNew` | New game | 新しいゲーム |
+| `warRoundLine` | Round {n} | ラウンド{n} |
+| `warRoundOf` | Round {n} of {of} | ラウンド{n}／{of} |
+| `warAtStake` | At stake: {n} | かかっている点: {n} |
+| `warYourThrow` | Tap the tray to roll your dice. | トレイをタップしてダイスを振ってください。 |
+| `warLast` | The last throw | 直前の1投 |
+| `warTakes` | {name} takes {n} | {name}が{n}点を取りました |
+| `warWar` | War: {names} tied on {total} | 戦争: {names}が{total}で並びました |
+| `warCalledOff` | The war was called off: nobody scores | 戦争は打ち切りです。誰にも点は入りません |
+| `warWon` | Game over: {names} won. | ゲーム終了: {names}の勝ちです。 |
+| `warOdds` | A tie for highest comes up about one throw in {odds}. | 同点でいちばん大きくなるのは、約{odds}回に1回です。 |
+| `warYourOdds` | A {total} beats everyone {beats} of the time, ties for highest {ties} and loses {loses}. | {total}は、{beats}の確率で全員に勝ち、{ties}で最高点が並び、{loses}で負けます。 |
+| `warBeats` | {name} {total} | {name} {total} |
+| `warScores` | Scores | 得点 |
+| `warKeep` | The game as text | このゲームをテキストで |
 | `outcomes` | How a roll comes out | 出目の内訳 |
 | `turnRoll` | Roll {a} of {n}. Tap the felt to roll again, or a die to hold it | {n} 回中 {a} 回目。フェルトをタップで振り直し、ダイスをタップでホールド |
 | `turnOver` | That was roll {n} of {n}. Tap the felt for a new turn | {n} 回振りました。フェルトをタップすると新しい手番です |

@@ -14,7 +14,7 @@ Tap dice to build a roll, up to ten in any mix from a d4 to a d100, or type any 
 <p align="center"><a href="https://johnmorrisdotca.github.io/korokoro/"><strong>Roll some dice →</strong></a> · <a href="https://johnmorrisdotca.github.io/korokoro/docs/"><strong>Read the documentation →</strong></a></p>
 
 <p align="center">
-  <img src="docs/desktop.jpg" alt="Eight d6 on the felt after twelve rolls, under the demo's header with its language chooser and five cloth patches: their total with a luck meter, and the Stats tab with rolls, luck and streaks and the face counts and totals against the odds" width="720">
+  <img src="docs/desktop.jpg" alt="Eight d6 on the felt after twelve rolls, under the demo's header with its language chooser, five cloth patches and Help switch: their total with a luck meter, and the Stats tab with rolls, luck and streaks and the face counts and totals against the odds" width="720">
   <img src="docs/phone.jpg" alt="Four d6 with the lowest dropped, on a phone in dark mode, in Japanese: the dropped die faded on the felt and struck through in the sum, with a luck meter" width="220">
 </p>
 
@@ -185,13 +185,17 @@ from your own bundle:
 | `placeholder="off"` | The opening dice are the user's own roll |
 | `keyboard="off"` | Space rolls only when the focus is inside the tray |
 | `language-chooser` | The tray's own choice of English or 日本語 |
+| `dice-war` | [Dice War](#dice-war) among the games |
 | `storage="none"`, `storage-key` | Keep no history; or the key it is kept under |
 | `animation-ms`, `share-base`, `query` | As the options of the same names |
 | `cloth` | The felt's cloth: `green` (unless said), `blue`, `red`, `black` or `wood`, the family's five; changed in place, keeping the dice and the rolls |
 | `one-pip` | The colour of a d6's one pip: `red` (unless said) or `black`; changed in place |
 
 What an attribute cannot carry (a theme, your own words, your own sound) goes
-on the element's `options` property. `roll()`, `setSpec()` and `history` are
+on the element's `options` property. React 19, Vue 3 and Svelte 5 set a
+property rather than an attribute on a custom element that has one of the
+name; the only name here that is also a property is the die's `face`, and
+`die.face = 5` sets the `face` attribute, as the attribute does. `roll()`, `setSpec()` and `history` are
 on the element. The tray is drawn in the element's own light DOM, so the
 page's `--kk-…` variables theme it as they do a mounted tray.
 
@@ -342,7 +346,7 @@ page) is built from the packed tarball and rolled in Chromium and WebKit by
   98 kB (35 kB gzipped). The recorded sounds are another 36 kB (23 kB
   gzipped), fetched only when a roll first needs them.
 - **Where it runs.** Browsers from Chrome and Edge 111, Firefox 113 and Safari
-  16.2. The core runs in Node 20 and later, Deno and Bun.
+  16.2. The core runs in Node 22 and later, Deno and Bun.
 
 ## Architecture
 
@@ -358,6 +362,7 @@ of dice and a named reading, rarely new code.
 src/
 ├── cli.ts             the command line as a pure function: arguments in, text and an exit code out
 ├── dice.ts            the dice the tray offers as buttons: the polyhedral set, the d30 and the percentile die
+├── diceWar.ts         Dice War: players, rounds, wars and scores, seeded and kept as text
 ├── element-define.ts  the "/element/define" entry: registers the custom element by being imported
 ├── element.ts         the "/element" entry: the tray as a custom element for any page
 ├── export.ts          rolls written out as JSON, CSV or plain text, and read back
@@ -392,7 +397,8 @@ src/
     ├── sound.ts        the sound of a roll
     ├── sounds-data.ts  the tray's recorded dice, as base64 AAC audio, for the "/sounds" entry
     ├── strings.ts      every word the tray says, in English and Japanese
-    └── style.ts        the tray's look, injected once per document
+    ├── style.ts        the tray's look, injected once per document
+    └── war.ts          the Dice War panel under the felt: the table, the scores, the last throw and the choices
 ```
 
 Tests sit beside the code they test (`*.test.ts`), and `src/docs.test.js`
@@ -432,24 +438,27 @@ project* issue and we will add you.
 
 ### The family
 
-Korokoro has siblings, each made for the same site, each MIT, each at
+Korokoro is one of sixteen packages, each made for the same site, each MIT, each at
 [github.com/johnmorrisdotca](https://github.com/johnmorrisdotca):
 
-- [Kyuubu](https://github.com/johnmorrisdotca/kyuubu) (キューブ, how Japanese
-  says "cube"): a turning cube for the browser, 2×2 to 7×7, drawn in CSS 3D.
-- [Toranpu](https://github.com/johnmorrisdotca/toranpu) (トランプ, the everyday
-  Japanese word for a deck of playing cards): ten card games as pure rules.
-- [Tane](https://github.com/johnmorrisdotca/tane) (種, a seed, the kind you
-  plant): seeded random numbers and daily seeds. Korokoro's seeded rolls are
-  the same idea.
-- [Hitotsu](https://github.com/johnmorrisdotca/hitotsu) (一つ, "one"): a
-  colour-card game, named for the call a player makes with one card left.
-- [Narabe](https://github.com/johnmorrisdotca/narabe) (並べ, "line them up"):
-  a rules engine for gomoku, Reversi, Go, checkers and many more.
-- [Tenka](https://github.com/johnmorrisdotca/tenka) (天下, "under heaven"):
-  a world-conquest game for two to six.
-- [Kumimoji](https://github.com/johnmorrisdotca/kumimoji) (組み文字, "letters
-  put together"): a crossword tile race in English and Japanese.
+- [Korokoro](https://github.com/johnmorrisdotca/korokoro) (コロコロ, the sound of something small rolling): dice, with notation, exact odds and games.
+- [Kyuubu](https://github.com/johnmorrisdotca/kyuubu) (キューブ, how Japanese says "cube"): a turning cube for the browser, 2×2 to 7×7.
+- [Hitotsu](https://github.com/johnmorrisdotca/hitotsu) (一つ, "one"): a colour-card game, named for the call a player makes with one card left.
+- [Toranpu](https://github.com/johnmorrisdotca/toranpu) (トランプ, the everyday Japanese word for a deck of playing cards): card games as pure rules.
+- [Tane](https://github.com/johnmorrisdotca/tane) (種, a seed, the kind you plant): seeded random numbers and daily seeds. Korokoro's seeded rolls are the same idea.
+- [Narabe](https://github.com/johnmorrisdotca/narabe) (並べ, "line them up"): a rules engine for gomoku, Reversi, Go, checkers and many more.
+- [Tenka](https://github.com/johnmorrisdotca/tenka) (天下, "under heaven"): a world-conquest game for two to six.
+- [Kumimoji](https://github.com/johnmorrisdotca/kumimoji) (組み文字, "letters put together"): a crossword tile race in English and Japanese.
+- [Tsunagi](https://github.com/johnmorrisdotca/tsunagi) (繋ぎ, "joining"): a line-joining puzzle.
+- [Jarajara](https://github.com/johnmorrisdotca/jarajara) (ジャラジャラ, the rattle of mahjong tiles being shuffled): mahjong tiles and a matching solitaire.
+- [Suido](https://github.com/johnmorrisdotca/suido) (水道, "waterworks"): a pipe puzzle.
+- [Domino](https://github.com/johnmorrisdotca/domino) (ドミノ, the Japanese word for dominoes): dominoes and Mexican Train.
+- [Kotoba](https://github.com/johnmorrisdotca/kotoba) (言葉, "words"): word lists and word-game rules.
+- [Sugoroku](https://github.com/johnmorrisdotca/sugoroku) (双六, backgammon's Japanese name): backgammon and its variants.
+- [Kazu](https://github.com/johnmorrisdotca/kazu) (数, "number"): grid number puzzles, Sudoku and five more.
+- [Meikyuu](https://github.com/johnmorrisdotca/meikyuu) (迷宮, "labyrinth"): mazes to draw a line through.
+
+**This package is Korokoro.** The demos of all sixteen share one header and footer, so each links the rest.
 
 ## Features
 
@@ -472,6 +481,10 @@ Korokoro has siblings, each made for the same site, each MIT, each at
   backgammon, Catan, Farkle, chō-han (丁半), chinchirorin (チンチロリン) and
   more: 44 games in one searchable list, each read the way the game reads
   it, with the exact odds of each outcome. See [Games](#games).
+- **A game to play: Dice War.** Everyone rolls, the highest total scores, and a
+  tie is war. Two to eight players, any of them a computer, seeded and saved
+  as text, with its exact odds, and in the tray's Games. See
+  [Dice War](#dice-war).
 - **Several rolls in one tap.** `6#4d6dl1` is six ability scores at once, with
   the highest, the lowest and the sum.
 - **Dice of your own.** A die with any faces you like, words or numbers
@@ -908,7 +921,9 @@ the exact odds of each outcome and a link to the rules.
 
 - **A game is read, not run.** Korokoro throws the dice and says what the game
   makes of them: "a small straight", "8 is the point", "the defender loses 2".
-  Whose turn it is, the board and the score sheet stay on your table.
+  Whose turn it is, the board and the score sheet stay on your table. The one
+  exception is [Dice War](#dice-war), which is run: it is a game with players
+  and a score, and nothing else.
 - **Turns of several rolls hold dice.** Yahtzee and Ship, captain and crew give
   three rolls: tap dice to hold them between rolls, and the tray counts.
 - **A roll is read in the light of the ones before it** where the game does:
@@ -926,6 +941,58 @@ or add it: a game is one line of data and a test, and
 
 Game names are trademarks of their owners, used here only to say which game's
 dice these are. Korokoro is not affiliated with or endorsed by any of them.
+
+## Dice War
+
+The simplest game there is for dice, and the one game here that is played and
+not only read. Two to eight players, any of them a computer. Each round
+everybody rolls the same dice, one die unless you say more, and the highest
+total scores a point. If two or more tie for highest it is **war**: only the
+tied players roll again, the stake grows by a point for each war, and whoever
+wins takes everything at stake. The game is played to a score (first to reach
+it) or for a number of rounds (the most points when they are up; level, the
+win is shared). The points are only points: nothing is staked.
+
+<p align="center"><img src="docs/dice-war.jpg" alt="Dice War in the tray on a phone: you and two computers, the scores, the last throws with a war in them, and the odds of your roll" width="260"></p>
+
+```ts
+import { decodeDiceWar, diceWarOdds, diceWarPeopleToRoll, encodeDiceWar, playDiceWar, startDiceWar } from "@johnmorrisdotca/korokoro";
+
+let game = startDiceWar({ players: ["You", "Aiko", "Ben"], computers: [false, true, true], seed: "table", to: 5 })!;
+game = playDiceWar(game, { faces: { "0": [4] } })!;   // you rolled a 4 at the table; Aiko and Ben's dice are the seed's
+game.scores;                                          // [0, 1, 0]: Aiko took the round
+diceWarPeopleToRoll(game);                            // [0]: only you have dice to hand in
+decodeDiceWar(encodeDiceWar(game));                   // the same game, read back from its text
+diceWarOdds({ players: 3 }).war;                      // 0.2361…: one throw in 4.2 ties for highest
+diceWarOdds({ players: 3 }, 4).beats;                 // 0.25: a 4 beats both of the others a quarter of the time
+```
+
+- **Pure and seeded.** A computer's dice come from the game's seed, the round,
+  the war and the seat, so the same seed and the same dice handed in for the
+  people make the same game on any device. A person's dice are what the tray
+  (or a real die) showed, handed in as the move. A table of computers needs no
+  dice at all: `playDiceWar(game, {})`.
+- **Kept as text.** `encodeDiceWar` writes the table, the seed and the moves,
+  never a score; `decodeDiceWar` plays every move again and refuses anything
+  the rules would not allow, so a changed save is not a game.
+- **Exact odds.** `diceWarOdds` works the chance of a war, and how a total
+  fares against everybody else's, from the exact odds of the dice
+  ([Odds](#odds)), never by simulation.
+- **In the tray.** `mountRoller(el, { diceWar: true })` (or `diceWar` on the
+  component, `dice-war` on the element) puts it on a shelf of its own in
+  **Games**: you and up to seven computers, a scoreboard, the last throw, the odds
+  of your roll, and the game as text. The tray's roll is your throw, and the
+  computers answer at once, wars included. The tray's dice are the table's, so
+  changing them ends the game. It is off unless asked for, so a tray that does not
+  want a game is as it was.
+
+| Limit | Value | Constant |
+| --- | --- | --- |
+| Players | 2 to 8 | `DICE_WAR_LIMITS.fewestPlayers`, `mostPlayers` |
+| Dice each | 1 to 10, of 2 to 1000 sides | `DICE_WAR_LIMITS.mostDice`, `MAX_SIDES` |
+| A game to a score | 1 to 100 points | `DICE_WAR_LIMITS.mostPoints` |
+| A game for rounds | 1 to 200 | `DICE_WAR_LIMITS.mostRounds` |
+| Wars in one round | 100, then it is called off with nobody scoring | `DICE_WAR_LIMITS.mostWars` |
 
 ## Holding dice
 
@@ -1015,7 +1082,7 @@ probabilities, and `exactCounts` returns `null` for them.
 
 Installing the package puts three commands on the path: `korokoro`, the
 shorter `koro`, and `roll`, which is the plain English for it (`roll 2d6+3`).
-They are the same. They need Node 20 or later and nothing
+They are the same. They need Node 22 or later and nothing
 else, and run the same on Linux, macOS and Windows.
 
 ```sh
@@ -1104,7 +1171,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.14.1", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.15.0", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet
@@ -1321,6 +1388,24 @@ chinchirorinHandWithin(throws): [bigint, bigint]
 waysToShut(total): number[][]             // the tiles a total may shut, in Shut the box
 ```
 
+### Dice War
+
+```ts
+startDiceWar({ players, computers?, dice?, sides?, goal?, to?, seed? }): DiceWarGame | null   // null for a table it is not played at
+playDiceWar(game, { faces? }): DiceWarGame | null     // people's dice by seat; null for a move the rules refuse
+diceWarPeopleToRoll(game): number[]                   // the seats whose dice the next move must hand in
+diceWarComputerFaces(game, round, war, seat): number[] // a computer's dice, from the seed
+diceWarOver(game): boolean
+diceWarWinners(game): number[]                        // the most points, shared where level; none while it goes on
+diceWarSpec(game): RollSpec                           // the dice each player rolls, for the rest of the package
+diceWarOdds({ players, dice?, sides? }, total?): DiceWarChances  // outright, war, and how a total fares
+encodeDiceWar(game): string                           // the table, seed and moves, as text
+decodeDiceWar(text): DiceWarGame | null               // every move played again; null for anything else
+DICE_WAR_LIMITS                                       // the most and the fewest of everything
+```
+
+Types: `DiceWarOptions`, `DiceWarGame`, `DiceWarMove`, `DiceWarThrow`, `DiceWarRoll`, `DiceWarChances`, `DiceWarGoal`.
+
 ### History and stats
 
 ```ts
@@ -1386,6 +1471,7 @@ mountRoller(element: HTMLElement, options?: RollerOptions): RollerHandle
 | `placeholder` | `true` | `false` makes the opening dice the user's own roll, so the first die tapped adds to them |
 | `keyboard` | `true` | `false` leaves the page its Space key: the tray then rolls from the keyboard only when the focus is inside it. For a tray that is one thing among many on a page |
 | `languageChooser` | `false` | `true` adds a small choice of English or 日本語 to the tray, remembered on the device |
+| `diceWar` | `false` | `true` puts [Dice War](#dice-war) among the games, on a shelf of its own: a table of the person at the tray and computers, played with the tray's dice |
 
 ```ts
 type RollerHandle = {
@@ -1543,7 +1629,18 @@ Any browser from the last few years: it needs ES2020 with `BigInt`,
 113, Safari 16.2). The sound needs the Web Audio API and AAC decoding, which
 those browsers have; without them the tray is silent or plays its own knock.
 It is tested in Chromium and in WebKit, Safari's engine, at phone size with
-touch. The core also runs in Node 20 and later, Deno and Bun.
+touch. The core also runs in Node 22 and later, Deno and Bun.
+
+## Accessibility
+
+Every control in the tray is a real button, field or summary, at least 44px
+square, and nothing needs a hover or a long press. Space rolls (or the tap of
+the felt), a die on the felt can be held from the keyboard, and each result is
+announced politely as it lands, with the dice that will be rolled said aloud
+as they change. A die is named by its face and what became of it ("d6: 6,
+exploded"). Motion (the tumble, the landing) is skipped on a device that asks
+for less, and the sound starts off there too. Dice War says its status in a
+`polite` line and lists the scores as a list.
 
 ## Languages
 

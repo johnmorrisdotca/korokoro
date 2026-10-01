@@ -46,6 +46,8 @@ export const DiceRoller = defineComponent({
     placeholder: flag,
     keyboard: flag,
     languageChooser: flag,
+    /** Dice War among the games: a table of the person at the tray and computers. */
+    diceWar: flag,
   },
   emits: {
     /** Once each roll has landed. */
@@ -61,7 +63,7 @@ export const DiceRoller = defineComponent({
       const options: RollerOptions = { onRoll: (roll) => emit("roll", roll) };
       // Only what was given is passed on, so that everything left out keeps the tray's default.
       const given = props as unknown as Record<string, unknown>;
-      for (const name of ["locale", "strings", "storage", "storageKey", "query", "shareBase", "theme", "wide", "size", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser"] as const) {
+      for (const name of ["locale", "strings", "storage", "storageKey", "query", "shareBase", "theme", "wide", "size", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser", "diceWar"] as const) {
         if (given[name] !== undefined) (options as Record<string, unknown>)[name] = given[name];
       }
       const spec = dice();

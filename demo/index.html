@@ -216,7 +216,7 @@
         });
       }
       // A shared link keeps the language it was made in.
-      roller = mountRoller(document.getElementById("roller"), { onRoll: (roll) => { embedDice = formatNotation(roll.spec); embed(); }, wide: true, locale: language.lang, cloth: document.documentElement.dataset.cloth, shareBase: location.origin + location.pathname + (language.asked !== null ? "?lang=" + language.asked : "") });
+      roller = mountRoller(document.getElementById("roller"), { diceWar: true, onRoll: (roll) => { embedDice = formatNotation(roll.spec); embed(); }, wide: true, locale: language.lang, cloth: document.documentElement.dataset.cloth, shareBase: location.origin + location.pathname + (language.asked !== null ? "?lang=" + language.asked : "") });
       // The tray wears the cloth chosen on the header's patches, as the page's own felt does.
       document.addEventListener("family-cloth", (event) => {
         roller?.setCloth(event.detail.cloth);

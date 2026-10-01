@@ -37,8 +37,10 @@ import { cryptoSource, newSeed, seededSource, type RandomSource } from "../rando
 import { loadSets, makeSet, readSet, setQuery, storeSets, withSet, withoutSet, type DiceSet } from "../sets.ts";
 import { readShared, readSharedMany, shareQuery, shareQueryMany } from "../share.ts";
 import { getPreset, presetSpec, readPreset, type Preset } from "../games/presets.ts";
+import { diceWarOver } from "../diceWar.ts";
 import { formulaText, fromJSON, toCSV, toJSON, toText } from "../export.ts";
 import { gamesPanel, type GamesState } from "./games.ts";
+import { WAR_DEFAULTS, newWar, throwWar, warNames, warPanel, type WarSession, type WarSettings } from "./war.ts";
 import { h, refill, s } from "./dom.ts";
 import { dieFace, dieIcon, faceText, minusMark } from "./faces.ts";
 import { morePanel, type MoreState } from "./more.ts";
@@ -106,6 +108,11 @@ export type RollerOptions = {
    * the focus is inside it: for a tray that is one thing among many on a page.
    */
   keyboard?: boolean;
+  /**
+   * Whether Dice War is among the games: a table of the person at the tray and computers, played with the tray's own dice
+   * (`diceWar.ts` has the rules). Off unless asked for, so a tray that does not want a game in it is as it was.
+   */
+  diceWar?: boolean;
   /** Whether the tray offers its own small choice of language, English or 日本語, remembered on the device. Off unless asked for, so the tray stays as plain as it was. */
   languageChooser?: boolean;
   /**
@@ -218,6 +225,10 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   let spec = normalizeSpec(shared?.spec ?? (linkedSpec?.ok === true ? linkedSpec.spec : null) ?? (linkedGame === undefined ? null : presetSpec(linkedGame)) ?? options.spec ?? DEFAULT_SPEC);
   /** The game the rolls are being read as, when one is chosen. */
   let game: Preset | null = linkedGame ?? null;
+  /** The game of Dice War being played with the tray, when one is chosen: it takes the place of reading the rolls as a game's. */
+  let war: WarSession | null = null;
+  /** The settings the next game of Dice War is made from: the last chosen. */
+  let warSettings: WarSettings = { ...WAR_DEFAULTS };
   /** The rolls made since the game was chosen, for a game that reads a roll in the light of the ones before. */
   let gameRolls: Roll[] = [];
   /** Which roll of a turn the dice showing are, where a game's turn is several rolls with dice held between them. */
@@ -285,11 +296,12 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   const release = h("button", { type: "button", class: "kk-release", "data-testid": "kk-release", hidden: true }, t.releaseAll);
   const felt = h("div", { class: "kk-felt", "data-testid": "kk-felt" }, tray, diceBox, hint, release, hasSound ? mute : null);
   const result = h("div", { class: "kk-result", "aria-live": "polite", "data-testid": "kk-result" });
+  const warBox = h("div", { class: "kk-war-box", hidden: true });
   const panels = h("div", { class: "kk-panels" });
   // What is about to be rolled, said aloud as it changes.
   const said = h("div", { class: "kk-sr", "aria-live": "polite", "data-testid": "kk-said" });
   // The felt first: on a phone it sits under the thumb, and the choices wait below it.
-  root.append(felt, result, controls, panels, said);
+  root.append(felt, result, warBox, controls, panels, said);
   target.replaceChildren(root);
 
   function later(fn: () => void, ms: number) {
@@ -562,10 +574,19 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       options.languageChooser === true
         ? segment(t.language, ["en", "ja"] as const, locale.toLowerCase().startsWith("ja") ? "ja" : "en", (l) => (l === "en" ? "English" : "日本語"), (l) => setLocale(l, true), "kk-language")
         : null,
-      gamesPanel(gamesState, game, japanese(), t, chooseGame, () => {
-        game = null;
-        render();
-      }),
+      gamesPanel(
+        gamesState,
+        game,
+        japanese(),
+        t,
+        chooseGame,
+        () => {
+          game = null;
+          war = null;
+          render();
+        },
+        options.diceWar === true ? { name: t.warName, says: t.warSays, chosen: war !== null, choose: chooseWar, value: "dice-war" } : null,
+      ),
       morePanel(more, sets, !empty, spec.times ?? 1, TRAY_TIMES, t, {
         times(n) {
           changeSpec({ times: n });
@@ -586,6 +607,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
         use(set) {
           const read = checkNotation(set.notation);
           game = null;
+          war = null;
           if (read.ok) changeSpec(read.spec);
         },
         remove(set) {
@@ -619,8 +641,52 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     render();
   }
 
+  /** Sit down to Dice War: the tray's dice become the person's, and each roll is their throw. */
+  function chooseWar() {
+    game = null;
+    gameRolls = [];
+    turn = 0;
+    gamesState.open = false;
+    startWar();
+    changeSpec({ count: warSettings.dice, sides: 6, modifier: 0, keep: "all", times: 1 });
+  }
+
+  /** A fresh table from the settings last chosen. */
+  function startWar() {
+    war = newWar(warSettings, warNames(warSettings.players, t.warYou));
+  }
+
+  /** The panel under the felt, while a game of Dice War is on. */
+  function renderWar() {
+    if (war === null) {
+      warBox.hidden = true;
+      warBox.replaceChildren();
+      return;
+    }
+    warBox.hidden = false;
+    warBox.replaceChildren(
+      warPanel(
+        war,
+        warNames(war.settings.players, t.warYou),
+        t,
+        locale,
+        (next) => {
+          warSettings = { ...warSettings, ...next };
+          startWar();
+          if (next.dice !== undefined) changeSpec({ count: warSettings.dice, sides: 6, modifier: 0, keep: "all", times: 1 });
+          else render();
+        },
+        () => {
+          startWar();
+          render();
+        },
+      ),
+    );
+  }
+
   /** Take up a game: its dice become the roll, and each roll is read the way the game reads it. */
   function chooseGame(preset: Preset) {
+    war = null;
     game = preset;
     gameRolls = [];
     turn = 0;
@@ -708,7 +774,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   /** Whether the dice on the felt can be held: plain dice that have been thrown. */
   /** A game's turn of several rolls is over: the dice showing are its last. */
   const turnOver = () => game?.rolls !== undefined && turn >= game.rolls;
-  const holdable = () => mayHold && !rolling && !showingShared && showing() !== null && canHold(spec) && (spec.times ?? 1) === 1 && !turnOver() && game?.hold !== false;
+  const holdable = () => mayHold && war === null && !rolling && !showingShared && showing() !== null && canHold(spec) && (spec.times ?? 1) === 1 && !turnOver() && game?.hold !== false;
   const heldCount = () => held.filter(Boolean).length;
 
   function toggleHold(index: number) {
@@ -1064,6 +1130,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     renderControls();
     renderTray();
     renderResult();
+    renderWar();
     renderPanels();
   }
 
@@ -1135,6 +1202,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     for (const one of many ?? [thrown]) history = addToHistory(history, one);
     storageWorks = saveHistory(storage, storageKey, history);
     goal = Math.round(expectedTotal(oddsNow()));
+    // A throw at a game of Dice War: the tray's dice are the person's, if they are the table's dice and nothing else.
+    if (war !== null) {
+      const plain = thrown.spec.count === war.settings.dice && thrown.spec.sides === 6 && thrown.spec.modifier === 0 && thrown.spec.more === undefined && (thrown.spec.times ?? 1) === 1 && thrown.faces.length === war.settings.dice;
+      const played = plain && !diceWarOver(war.game) ? throwWar(war, thrown.faces) : null;
+      // Dice that are not the table's end the game; a game that is over simply waits for a new one.
+      if (!plain) war = null;
+      else if (played !== null) war = played;
+    }
     render();
     diceBox.querySelectorAll(".kk-die").forEach((el, i) => {
       if (thrown.held?.[i] !== true) el.classList.add("kk-land");
@@ -1183,6 +1258,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     setSpec: (next) => {
       // Dice set from outside are their own roll, not a game's.
       game = null;
+      war = null;
       changeSpec(next);
     },
     setLocale: (next) => setLocale(next, false),

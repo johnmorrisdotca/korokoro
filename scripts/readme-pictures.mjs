@@ -1,7 +1,7 @@
 // Takes the pictures the README shows, from the built demo in `site/`: `pnpm pictures` (builds the demo, then runs this).
 // The page is served to a browser without a port, never fetched from the live site, and the same each run:
 // the rolls come from a seed (`?seed=`) and motion is reduced.
-// Output: docs/desktop.jpg (1280 wide, light, English), docs/phone.jpg (390 by 844, dark, Japanese) and docs/games.jpg (390 by 844, light, English).
+// Output: docs/desktop.jpg (1280 wide, light, English), docs/phone.jpg (390 by 844, dark, Japanese) and docs/games.jpg (390 by 844, light, English) and docs/dice-war.jpg (390 by 844, light, English).
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -60,4 +60,6 @@ await shot({ width: 1280, height: 900, colorScheme: "light", lang: "en", seed: "
 await shot({ width: 390, height: 844, colorScheme: "dark", lang: "ja", seed: "readme", notation: "4d6dl1", rolls: 1, path: join(docs, "phone.jpg"), scrollTo: '[data-testid="kk-tray"]' });
 // Yahtzee chosen: five d6 and its three rolls.
 await shot({ width: 390, height: 844, colorScheme: "light", lang: "en", seed: "readme", game: "yahtzee", rolls: 1, path: join(docs, "games.jpg"), scrollTo: '[data-testid="kk-tray"]' });
+// Dice War chosen: three players, a few throws in, with the scores and the last throw under the felt.
+await shot({ width: 390, height: 844, colorScheme: "light", lang: "en", seed: "readme", game: "dice-war", rolls: 4, path: join(docs, "dice-war.jpg"), scrollTo: '[data-testid="kk-war"]' });
 await browser.close();
