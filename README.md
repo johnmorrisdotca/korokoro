@@ -439,7 +439,7 @@ project* issue and we will add you.
 ### The family
 
 <!-- family:start (made by scripts/family-readme.mjs from scripts/family-template.mjs; change those, not this) -->
-Korokoro is one of twenty-two packages, each made for the same site, each at
+Korokoro is one of twenty-four packages, each made for the same site, each at
 [github.com/johnmorrisdotca](https://github.com/johnmorrisdotca). The code of every one is MIT.
 
 - [Korokoro](https://github.com/johnmorrisdotca/korokoro) (コロコロ): dice, with notation, exact odds, real sounds and the dice of many games. [Demo](https://johnmorrisdotca.github.io/korokoro/).
@@ -464,8 +464,10 @@ Korokoro is one of twenty-two packages, each made for the same site, each at
 - [Tobiishi](https://github.com/johnmorrisdotca/tobiishi) (飛び石): peg solitaire with nine boards and seeded solvable challenges. [Demo](https://johnmorrisdotca.github.io/tobiishi/).
 - [Jirai](https://github.com/johnmorrisdotca/jirai) (地雷): minesweeper on shaped grids with verified no-guess boards. [Demo](https://johnmorrisdotca.github.io/jirai/).
 - [Gunjin](https://github.com/johnmorrisdotca/gunjin) (軍人): five hidden-rank strategy games with pass-the-device play. [Demo](https://johnmorrisdotca.github.io/gunjin/).
+- [Karakuri](https://github.com/johnmorrisdotca/karakuri) (からくり): eight hyper-casual puzzle games, some of them physics: draw a shield, pull pins, cut ropes, slide blocks, pour tubes. [Demo](https://johnmorrisdotca.github.io/karakuri/).
+- [Houseki](https://github.com/johnmorrisdotca/houseki) (宝石): gem and stone matching puzzles: falling triplets, stone collapse, colour chains and gem swap. [Demo](https://johnmorrisdotca.github.io/houseki/).
 
-**This package is Korokoro.** The demos of all twenty-two share one header and footer, so each links the rest.
+**This package is Korokoro.** The demos of all twenty-four share one header and footer, so each links the rest.
 <!-- family:end -->
 
 ## Features
@@ -1179,7 +1181,7 @@ A history, or any list of rolls, is written out three ways. Each is a pure
 function that returns a string; what is done with it is yours.
 
 ```ts
-toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.15.0", "rolls": [ … ] }
+toJSON(rolls);                // { "format": 1, "generator": "korokoro 1.15.1", "rolls": [ … ] }
 toJSON(rolls, { stats: true });  // with statsOf(rolls) beside them
 fromJSON(text);               // the rolls back again, or null if it is not an export
 toCSV(rolls);                 // for a spreadsheet

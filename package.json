@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.15.0",
-  "description": "Dice roller and dice notation parser with exact odds: d4, d6, d8, d10, d12, d20, d100, any die up to d1000, custom and loaded dice, dice pools. 44 game presets, from Yahtzee to craps, and Dice War to play. A typed API, a command line and a dice tray for React, Vue, Svelte, Angular or as a web component. For D&D, RPGs, board and dice games, and teaching odds. Zero dependencies.",
+  "version": "1.15.1",
+  "description": "Dice roller and dice notation parser with exact odds: any die from d4 to d1000, custom and loaded dice, pools, and game presets from Yahtzee to craps. A typed API, a command line and a dice tray for any framework. Zero dependencies.",
   "keywords": [
     "dice",
     "dice-roller",
@@ -92,11 +92,7 @@
     "url": "git+https://github.com/johnmorrisdotca/korokoro.git"
   },
   "license": "MIT",
-  "author": {
-    "name": "John Morris",
-    "email": "john@johnmorris.ca",
-    "url": "https://johnmorris.ca"
-  },
+  "author": "John Morris",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
