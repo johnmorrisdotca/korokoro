@@ -63,18 +63,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: The generator, written in Python from the specification alone, matches the conformance suite
         run: python3 conformance/port_check.py
-  conformance:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - name: The generator, written in Python from the specification alone, matches the conformance suite
-        run: python3 conformance/port_check.py
   languages:
     runs-on: ubuntu-latest
     steps:
