@@ -565,7 +565,7 @@ describe("the family's shared stylesheet", () => {
   it("is what the demo loads, before the page's own", () => {
     const page = readFileSync("demo/index.html", "utf8");
     expect(page.indexOf('href="family.css"')).toBeGreaterThan(0);
-    expect(page.indexOf('href="site.css"')).toBeGreaterThan(page.indexOf('href="family.css"'));
+    expect(page.indexOf('href="korokoro.css"')).toBeGreaterThan(page.indexOf('href="family.css"'));
     expect(page).not.toContain("<style>");
   });
 });
@@ -588,6 +588,16 @@ describe("the page on other languages", () => {
     expect(shown.format).toBe(1);
     expect(made.total).toBe(24);
     expect(runCli(["--stdin", "--json", "--seed", "table"], { stdin: "2d6\n1d20+5\n4d6dl1\n" }).code).toBe(0);
+  });
+});
+
+describe("the family's address for the API reference", () => {
+  it("/api.html leads on to the reference in the documentation site, and /api/ stays the page that rolls dice from an address", () => {
+    const page = readFileSync("demo/api.html", "utf8");
+    expect(page).toContain('<meta http-equiv="refresh" content="0; url=docs/reference/" />');
+    expect(page).toContain('<a href="docs/reference/">');
+    expect(readFileSync("scripts/docs-site.mjs", "utf8")).toContain('link: "/reference/"');
+    expect(readFileSync("demo/api/index.html", "utf8")).toContain("params.get");
   });
 });
 

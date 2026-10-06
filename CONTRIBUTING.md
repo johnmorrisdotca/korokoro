@@ -1,19 +1,93 @@
-# Contributing to Korokoro
+# Contributing
 
-Thank you for helping. Bug reports, ideas and pull requests are all welcome.
+Thank you for helping. Bug reports, ideas, corrections to the Japanese and pull
+requests are all welcome.
 
-## Reporting a bug
+This first part is the same in every package of the family. It is the master
+text kept in
+[johnmorrisdotca/.github](https://github.com/johnmorrisdotca/.github/blob/main/CONTRIBUTING.md),
+copied unchanged into `scripts/community/CONTRIBUTING.md`, and a test holds
+this file to that copy. What is particular to the package follows it, under
+the heading "Particular to" and the package's name.
+
+## Before you start
+
+Open an issue first for anything bigger than a typo, so that we can agree on the
+shape before you spend time on it. Taking part follows the
+[Code of Conduct](CODE_OF_CONDUCT.md); report a security concern privately, as
+[SECURITY.md](SECURITY.md) says.
+
+## Making a change
+
+```sh
+pnpm install
+pnpm check          # lint, types and tests: the same as CI
+pnpm test:package   # pack it as npm does, install it in an empty project, import every entry
+pnpm site           # build the demo into ./site, as GitHub Pages publishes it
+```
+
+The package's own further commands (its browser tests, its command line, its
+data scripts) are listed under its own heading below.
+
+## House rules, shared by every package of the family
+
+- **No runtime dependencies.** Development dependencies are for tests, builds and
+  documentation only.
+- **The core is pure.** Every function in it returns new values and never
+  changes what it was given.
+- **Test what you change.** Tests sit beside the code they test. A rule you
+  change has a test that would have caught it.
+- **Words a person reads come in English and Japanese.** If you cannot write the
+  Japanese, say so in the pull request and someone will.
+- **Option values and names are kebab case.**
+- **Art and sound are CC0 or public domain only**, checked at the source and
+  credited. Data and word lists may be under another licence that lets them be
+  shipped, with its notice kept in `NOTICE.md`. No GPL or LGPL code.
+- **Needs Node 22 or later.**
+- **A README table, example or count that a test holds to the code** changes
+  together with the code.
+- **The family's own files are the same in every package**: `demo/family.css`,
+  `scripts/family-template.mjs`, `scripts/family-readme.mjs`,
+  `scripts/release-notes.mjs`, the files in `scripts/community/` and
+  `family.test.js` (in `src/`, or in `test/`). Do not edit one here. To change
+  one, change it in every repository at once, bump `FAMILY_TEMPLATE_VERSION` for
+  the template, and record the new hash in `family.test.js`. What is the
+  package's own goes in its own stylesheet, `demo/<name>.css`, and its page
+  builder, `scripts/site.mjs`.
+- **The list of the family in the README is made, not written.**
+  `pnpm family:readme` writes it between its markers from
+  `scripts/family-template.mjs`.
+- **The workflows are the family's too.** `ci.yml` runs `pnpm check`, the demo's
+  browser tests and the packed package on Linux, macOS and Windows; `pages.yml`
+  is the same text in every package. A package adds jobs of its own after those.
+
+## Pull requests
+
+One change per pull request. Say what changed and how you checked it, and add a
+line to `CHANGELOG.md` under **Unreleased**: for a change a user would notice,
+and for one to the repository alone.
+
+## Releasing
+
+Maintainers bump the version in `package.json` (and in `src/version.ts`, where
+the package has one), move *Unreleased* to the new version in `CHANGELOG.md`,
+dated, push, wait for CI and tag `vX.Y.Z`, the same as `package.json`'s version.
+The Release workflow (`.github/workflows/release.yml`) checks and builds the
+package, attaches the tarball to a GitHub release and publishes it to npm by
+trusted publishing, with provenance and no token. A version already on npm is
+not published again.
+
+## Particular to Korokoro
+
+### Reporting a bug
 
 Open an issue with what you rolled (the dice notation, or a shared link),
 what you expected, what happened, and your browser. A shared roll link is the
 quickest way to show a result that looks wrong.
 
-## Making a change
+### Commands and rules
 
 ```sh
-git clone https://github.com/johnmorrisdotca/korokoro
-cd korokoro
-pnpm install
 pnpm check    # lint, types and tests: the same as CI
 pnpm test:tray   # the tray in real browsers: builds the demo, then taps it
 pnpm test:cli    # the command line, run as a child process
@@ -21,7 +95,6 @@ pnpm test:package   # npm pack, install the tarball, import every entry, run the
 pnpm test:languages # the examples in Python, Go, Rust and C#, for whichever of them this machine has
 pnpm docs:site      # the documentation site, into ./site/docs
 pnpm site     # builds the demo into ./site
-pnpm dlx serve site   # or any static server
 ```
 
 - **The tray is tested by tapping it.** `tray/*.tray.mjs` are Playwright
@@ -36,17 +109,11 @@ pnpm dlx serve site   # or any static server
   the API reference is TypeDoc's, from the doc comments. To change a page,
   change the README or the document it came from. A new section of the README
   has to be given a page in that script, or the build says so.
-- **The demo's look is the family's.** `demo/family.css` and
-  `scripts/family-template.mjs` are shared, unchanged, with the sibling
-  packages; a test holds the stylesheet to the hash on its first line. What
-  is Korokoro's own goes in `demo/site.css`. After a change to either,
+- **A change to the demo's look is compared picture by picture.** What is
+  Korokoro's own goes in `demo/korokoro.css`. After a change to it,
   `node tray/look.mjs before` on the old build and
   `node tray/look.mjs before after` on the new compare 56 pictures of the
   page, pixel for pixel.
-- **The list of the family in the README is made, not written.** `pnpm family:readme` writes it between its
-  markers from `scripts/family-template.mjs` (the names, the Japanese names and a line on each), and
-  `scripts/family-readme.mjs` is the same file in every package. To add a package or change a line, change the
-  template in every repository, bump `FAMILY_TEMPLATE_VERSION` and record the new hash in `src/family.test.js`.
 - **A change to a seeded roll or to the notation changes the conformance
   suite**, and the test that holds it fails until `pnpm docs:make` rewrites
   it. That is the moment to ask whether the change was meant: ports check
@@ -74,11 +141,8 @@ pnpm dlx serve site   # or any static server
 - **Sounds.** The recordings are the `.m4a` files in `sounds/`; `pnpm sounds`
   writes them into `src/ui/sounds-data.ts`, and a test fails if the two
   differ. A new recording must be CC0 or your own, and is named in `SOUNDS.md`.
-- **No dependencies.** The package has none at run time and should stay so.
-- One change per pull request, with a line in `CHANGELOG.md` under
-  *Unreleased*.
 
-## Adding a game
+### Adding a game
 
 A game is **one entry of data and a test**. Nothing in the tray changes: the
 Games list, the search, the odds table, the gallery in `docs/games.md` and
@@ -151,24 +215,3 @@ The rules for a game:
 
 Not sure how to do any of it? Open a *Suggest a game* issue with the rules and
 a link, and that is enough.
-
-## Releasing
-
-Maintainers bump the version in `package.json` and move *Unreleased* to the new
-version in `CHANGELOG.md`, dated. Pushing the tag `vX.Y.Z` runs the Release
-workflow, which checks that the tag matches `package.json`, runs the checks,
-builds and packs the package, attaches the tarball to a GitHub release, and
-publishes it to npm with provenance, through npm's trusted publishing (no
-token is kept). A version already on npm is not published again. The workflow
-can also be run by hand.
-
-## House rules, shared by every package of the family
-
-- Open an issue first for anything bigger than a typo, so that we can agree on the shape before you spend time on it.
-- No runtime dependencies. Every function that plays or checks a game is pure: it returns new values and never changes what it was given.
-- Tests sit beside the code they test. A rule you change has a test that would have caught it.
-- Words a player reads come in English and Japanese. If you cannot write the Japanese, say so in the pull request and someone will.
-- Option values and names are kebab case.
-- Art and sound are CC0 or public domain only, checked at the source, and credited in the README. No GPL or LGPL code.
-- Needs Node 22 or later. A change a user would notice gets a line in `CHANGELOG.md`.
-- `SECURITY.md` and `CODE_OF_CONDUCT.md` are the family's text, copied unchanged from the master in [johnmorrisdotca/.github](https://github.com/johnmorrisdotca/.github); a copy is kept in `scripts/community` and a test holds the two to it.
