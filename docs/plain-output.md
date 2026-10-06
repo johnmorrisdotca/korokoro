@@ -16,7 +16,7 @@ look at some odds.
 **It runs in your browser.** Korokoro has no server: nothing is sent
 anywhere, and a program cannot fetch dice from this address, because what
 comes back is the page, not the answer. A program should use
-[the command line](../README.md#the-command-line) or the package. A hosted
+[the command line](command-line.md#the-command-line) or the package. A hosted
 HTTP API is not planned, because it would need a server and somebody to pay
 for it.
 

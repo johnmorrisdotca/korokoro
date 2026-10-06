@@ -1,36 +1,17 @@
-// Takes the pictures the README shows, from the built demo in `site/`: `pnpm pictures` (builds the demo, then runs this).
-// The page is served to a browser without a port, never fetched from the live site, and the same each run:
-// the rolls come from a seed (`?seed=`) and motion is reduced.
-// Output: docs/desktop.jpg (1280 wide, light, English), docs/phone.jpg (390 by 844, dark, Japanese) and docs/games.jpg (390 by 844, light, English) and docs/dice-war.jpg (390 by 844, light, English).
-import { existsSync, readFileSync, statSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+// Takes the pictures the README shows, from the built demo in `site/`: `pnpm screenshots:readme` (builds the demo, then runs this).
+// The family's standard is in johnmorrisdotca/.github (README-STANDARD.md); the shared part is readme-pictures-lib.mjs.
+// The page is served to a browser without a port, never fetched from the live site, and the same each run: the rolls come from a
+// seed (`?seed=`), the dice are typed or chosen as a person does, a throw is a tap on the felt, and motion is reduced. It waits on
+// the tray being drawn, never on a clock.
+// Output: docs/images/<subject>-<desk|phone>-<light|dark>.webp.
+import { takePictures } from "./readme-pictures-lib.mjs";
 
-import { chromium } from "@playwright/test";
+const TRAY = '[data-testid="kk-tray"]';
+const ALL = '[data-testid="korokoro"]';
+const address = (lang = "en") => `/?lang=${lang}&help=off&seed=readme`;
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const site = join(root, "site");
-const docs = join(root, "docs");
-const host = "http://korokoro.test";
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".png": "image/png", ".woff2": "font/woff2" };
-const QUALITY = 76;
-
-if (!existsSync(join(site, "index.html"))) throw new Error("site/ is not built: run `pnpm pictures` (it builds the demo first)");
-const browser = await chromium.launch();
-
-/** The built demo on a seed, with `notation` typed in, `rolls` throws of it made, and one tab of the panel under the dice open. */
-async function shot({ width, height, colorScheme, lang, seed, notation, game, rolls, tab, path, scrollTo }) {
-  const context = await browser.newContext({ viewport: { width, height }, colorScheme, reducedMotion: "reduce", locale: "en-US", deviceScaleFactor: 2 });
-  const page = await context.newPage();
-  await page.route(`${host}/**`, (route) => {
-    const { pathname } = new URL(route.request().url());
-    const asked = join(site, pathname === "/" ? "index.html" : pathname);
-    const file = existsSync(asked) && statSync(asked).isDirectory() ? join(asked, "index.html") : asked;
-    if (!existsSync(file)) return route.fulfill({ status: 404, body: "" });
-    return route.fulfill({ body: readFileSync(file), contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream" });
-  });
-  await page.goto(`${host}/?lang=${lang}&seed=${seed}`);
-  await page.locator('[data-testid="kk-tray"]').waitFor();
+/** Type the dice (or choose a game), throw them `rolls` times by tapping the felt where no die lies, and open a tab of the panel under them. */
+const roll = ({ notation, game, rolls = 1, tab }) => async (page) => {
   if (game) {
     await page.locator('[data-testid="kk-games-panel"] summary').click();
     await page.locator('[data-testid="kk-games-search"]').fill(game);
@@ -40,26 +21,51 @@ async function shot({ width, height, colorScheme, lang, seed, notation, game, ro
     await box.fill(notation);
     await box.press("Enter");
   }
-  // A throw is a tap on the felt where no die lies: its lower left corner.
   for (let throws = 0; throws < rolls; throws += 1) {
-    const felt = await page.locator('[data-testid="kk-tray"]').first().boundingBox();
-    await page.locator('[data-testid="kk-tray"]').first().click({ position: { x: 10, y: felt.height - 10 } });
+    const felt = await page.locator(TRAY).first().boundingBox();
+    const watch = game === "dice-war" ? '[data-testid="kk-war"]' : '[data-testid="kk-result"]';
+    const before = await page.locator(watch).first().textContent();
+    await page.locator(TRAY).first().click({ position: { x: 10, y: felt.height - 10 } });
+    await page.waitForFunction(([selector, was]) => document.querySelector(selector)?.textContent !== was, [watch, before]);
   }
   if (tab) await page.locator(`[data-testid="kk-tab-${tab}"]`).click();
-  await page.waitForTimeout(400);
-  if (scrollTo) await page.locator(scrollTo).evaluate((element) => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 16));
-  else await page.evaluate(() => window.scrollTo(0, 0));
-  await page.mouse.move(0, 0);
-  await page.screenshot({ path, type: "jpeg", quality: QUALITY });
-  await context.close();
-}
+};
+const scrollTo = (selector) => (page) => page.locator(selector).evaluate((element) => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 16));
 
-// Eight d6, from the top of the page so the header, the language chooser and the cloth patches show, with the stats of a few throws.
-await shot({ width: 1280, height: 900, colorScheme: "light", lang: "en", seed: "readme", notation: "8d6", rolls: 12, tab: "stats", path: join(docs, "desktop.jpg") });
-// Four d6 with the lowest dropped, on a phone in Japanese.
-await shot({ width: 390, height: 844, colorScheme: "dark", lang: "ja", seed: "readme", notation: "4d6dl1", rolls: 1, path: join(docs, "phone.jpg"), scrollTo: '[data-testid="kk-tray"]' });
-// Yahtzee chosen: five d6 and its three rolls.
-await shot({ width: 390, height: 844, colorScheme: "light", lang: "en", seed: "readme", game: "yahtzee", rolls: 1, path: join(docs, "games.jpg"), scrollTo: '[data-testid="kk-tray"]' });
-// Dice War chosen: three players, a few throws in, with the scores and the last throw under the felt.
-await shot({ width: 390, height: 844, colorScheme: "light", lang: "en", seed: "readme", game: "dice-war", rolls: 4, path: join(docs, "dice-war.jpg"), scrollTo: '[data-testid="kk-war"]' });
-await browser.close();
+await takePictures({
+  shots: [
+    // Eight d6, from the top of the page, with the stats of twelve throws. On a phone, in Japanese: four d6, the lowest dropped.
+    {
+      subject: "hero",
+      views: ["desk", "phone"],
+      url: address(),
+      ready: TRAY,
+      height: 900,
+      async prepare(page, { view }) {
+        if (view === "phone") {
+          await page.goto(`http://korokoro.test${address("ja")}`);
+          await page.waitForSelector(TRAY);
+          await roll({ notation: "4d6dl1" })(page);
+          await scrollTo(TRAY)(page);
+        } else {
+          await roll({ notation: "8d6", rolls: 12, tab: "stats" })(page);
+          await page.evaluate(() => window.scrollTo(0, 0));
+        }
+      },
+    },
+    // Advantage: two d20, the higher kept, plus 5, and the exact odds of every total.
+    { subject: "odds", views: ["desk"], url: address(), ready: TRAY, target: ALL, prepare: roll({ notation: "2d20kh1+5", rolls: 3, tab: "odds" }) },
+    // The history of six throws of two d6.
+    { subject: "history", views: ["desk"], url: address(), ready: TRAY, target: ALL, prepare: roll({ notation: "2d6+3", rolls: 6, tab: "history" }) },
+    // A dice pool: count the d10 that show 8 or more, a 1 takes one away.
+    { subject: "pool", views: ["desk"], url: address(), ready: TRAY, target: ALL, prepare: roll({ notation: "6d10>=8f=1", rolls: 2, tab: "odds" }) },
+    // A die of your own: Hit, Miss and Miss, three of them.
+    { subject: "custom-dice", views: ["desk"], url: address(), ready: TRAY, target: ALL, prepare: roll({ notation: "3d[Hit=1,Miss=0,Miss=0]", rolls: 2 }) },
+    // Yahtzee chosen: five d6 and its three rolls, read the way the game reads them.
+    { subject: "games", views: ["phone"], url: address(), ready: TRAY, target: ALL, prepare: roll({ game: "yahtzee", rolls: 1 }) },
+    // Dice War: three players, a few throws in, with the scores and the last throw under the felt.
+    { subject: "dice-war", views: ["phone"], scale: 1.5, url: address(), ready: TRAY, target: ALL, prepare: roll({ game: "dice-war", rolls: 4 }) },
+    // One die on its own: a d20 that rolls and a d6 that only shows a face.
+    { subject: "one-die", views: ["desk"], url: `${address()}#one-die`, ready: '[data-testid="solo-dice"]', target: '[data-testid="solo-dice"]' },
+  ],
+});

@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.15.1",
+  "version": "1.15.2",
   "description": "Dice roller and dice notation parser with exact odds: any die from d4 to d1000, custom and loaded dice, pools, and game presets from Yahtzee to craps. A typed API, a command line and a dice tray for any framework. Zero dependencies.",
   "keywords": [
     "dice",
@@ -162,7 +162,8 @@
     "family:readme": "node scripts/family-readme.mjs",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
     "site": "pnpm build && node scripts/site.mjs",
-    "pictures": "pnpm site && node scripts/readme-pictures.mjs",
+    "screenshots:readme": "pnpm site && node scripts/readme-pictures.mjs",
+    "test:readme": "pnpm build && node scripts/check-readme-examples.mjs",
     "sounds": "node scripts/sounds.mjs",
     "docs:make": "node scripts/docs.mjs",
     "prepublishOnly": "pnpm check && pnpm build"

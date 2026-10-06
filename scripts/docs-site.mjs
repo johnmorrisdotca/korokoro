@@ -7,9 +7,11 @@
 //
 // What it writes (website/guide, website/reference, website/public and two
 // files under website/.vitepress) is made, not kept: git ignores it.
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, posix } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import { fullReadme } from "./full-readme.mjs";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = join(root, "website");
@@ -19,7 +21,8 @@ const read = (file) => readFileSync(join(root, file), "utf8");
 /** The README's sections, gathered into pages: [address, title, the README's own headings that go on it, a line for the home page]. */
 const FROM_README = [
   ["start", "Getting started", ["Roll in 30 seconds", "Who it is for", "Features"]],
-  ["use", "Use it in your project", ["Use it in your project"]],
+  ["use", "Use it", ["Use it in your project", "One die on its own", "Embed it on any site"]],
+  ["examples", "Examples", ["Examples"]],
   ["notation", "Dice notation", ["Dice notation"]],
   ["rolls", "Rolls", ["What a roll returns", "Several rolls in one go", "Holding dice", "Seeded and shared rolls"]],
   ["dice", "Dice of your own", ["Custom dice", "Loaded dice, and testing a die", "Sets of dice"]],
@@ -29,7 +32,7 @@ const FROM_README = [
   ["api", "API in brief", ["API"]],
   ["tray", "The tray", ["Sound", "Theming", "Browser support", "Accessibility", "Languages"]],
   ["limits", "Limits", ["Limits"]],
-  ["about", "About Korokoro", ["Architecture", "The name", "Where it comes from, and where it is used", "Roadmap", "Contributing", "Licence"]],
+  ["about", "About Korokoro", ["Architecture", "The name", "Where it comes from, and where it is used", "Roadmap", "Development", "Contributing", "Licence"]],
 ];
 
 /** The documents in docs/, as they are: [file, address, title]. */
@@ -79,7 +82,8 @@ function lines(text) {
 }
 
 // 1. The README, cut at its second-level headings.
-const readme = lines(read("README.md"));
+// The README with the sections that moved to pages under docs/ put back, so that the site has them whole.
+const readme = lines(fullReadme(read));
 const sections = new Map();
 let current = null;
 for (const { line, code } of readme) {
@@ -166,12 +170,11 @@ rmSync(join(out, "public"), { recursive: true, force: true });
 mkdirSync(join(out, "guide"), { recursive: true });
 mkdirSync(join(out, "public"), { recursive: true });
 for (const page of pages) writeFileSync(join(out, "guide", `${page.address}.md`), ready(page));
-for (const picture of ["desktop.jpg", "phone.jpg", "games.jpg", "dice-war.jpg"]) cpSync(join(root, "docs", picture), join(out, "public", picture));
 
 // 3. The sidebar, in the order a reader would want the pages.
 const entry = (address) => ({ text: pages.find((page) => page.address === address).title, link: `/guide/${address}` });
 const sidebar = [
-  { text: "Start", items: ["start", "use"].map(entry) },
+  { text: "Start", items: ["start", "use", "examples"].map(entry) },
   { text: "Rolling", items: ["notation", "rolls", "dice", "games", "gallery", "odds", "loaded-dice"].map(entry) },
   { text: "Using it", items: ["tray", "cli", "plain-output", "other-languages", "api", "limits"].map(entry).concat([{ text: "API reference", link: "/reference/" }]) },
   { text: "Reference", items: ["notation-compared", "spec-notation", "spec-random", "strings-ja", "migrating", "changes"].map(entry) },

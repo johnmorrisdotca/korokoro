@@ -21,8 +21,10 @@ import { chanceAtLeast, chanceExactly, distributionHolding, distributionOf, exac
 import { seededSource } from "./random.ts";
 import { shareQuery } from "./share.ts";
 import { STRINGS } from "./ui/strings.ts";
+import { fullReadme } from "../scripts/full-readme.mjs";
 
-const readme = readFileSync("README.md", "utf8");
+// The README with the sections that moved to pages under docs/ put back: the tests hold the whole of what it says to the code.
+const readme = fullReadme();
 const cell = (text) => text.replace(/\\\|/g, "|").trim();
 
 /** The rows of the table under a heading: each row's cells. */

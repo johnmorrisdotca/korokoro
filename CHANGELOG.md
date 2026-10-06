@@ -6,8 +6,21 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+## [1.15.2] - 2026-10-06
+
+Nothing that was exported has changed. The README is the family's one layout, in full, and the reference material that made it too long for npm moved to pages under `docs/`.
+
+### Added
+
+- The README has a picture of the demo on a desk and on a phone, in light and dark, taken from the demo by `pnpm screenshots:readme` (the pictures are in `docs/images/` and are not in the package), a picture of the odds, the history, a dice pool, a die of your own, Yahtzee, Dice War and one die on its own, an Examples section of thirteen examples that run, tables of the entry points and the calls to learn first, a Development section and a fuller Accessibility section.
+- `docs/notation.md`, `docs/rolls.md`, `docs/custom-dice.md`, `docs/games-and-dice-war.md`, `docs/odds.md`, `docs/command-line.md`, `docs/embedding.md`, `docs/api.md` and `docs/architecture.md` hold the sections of the README that were its reference (the notation, rolls, dice of your own, games, odds, the command line and export, embedding, the API and the source tree), word for word. npm shows only the first 65,536 characters of a README and this one was 91,192 (the registry's copy ended in the middle of the API section); it is 52,329 now, and each moved section keeps its heading, a summary and a link. `scripts/full-readme.mjs` puts the moved sections back, so that the tests that hold the documentation to the code, and the documentation site, read the whole.
+- `https://johnmorrisdotca.github.io/korokoro/api.html` goes to the API reference, as the same address does in every package of the family.
+- `pnpm test:readme` type-checks and runs every TypeScript and JavaScript example in the README against the built package, as a job of its own in CI; `src/readme.test.js` holds the README to the family's standard (sections in order, languages on code fences, pictures with alt text and a caption, no marketing words, version pins, at most 64,000 characters) in `pnpm check`; `pnpm test:package` fails if a picture or anything under `docs/` is in the packed package.
+
 ### Changed
 
+- `pnpm pictures` is `pnpm screenshots:readme`, and takes WebP pictures in light and dark under `docs/images/`; `docs/desktop.jpg`, `docs/phone.jpg`, `docs/games.jpg` and `docs/dice-war.jpg` are gone. Its copy of the family's picture library also serves a folder's `index.html`, which the demo's `embed/` and `api/` pages need.
+- The documentation site's pages are made from the README put back whole, and "One die on its own" and "Embed it on any site" are sections of their own, on the same page as before.
 - Repository only: the package and everything it exports are unchanged. `CONTRIBUTING.md` is the family's one text with a section of its own for Korokoro, held to the master in johnmorrisdotca/.github by `src/family.test.js`; `ci.yml` and `pages.yml` are the family's one text (`pnpm check`, the demo, and the package on Linux, macOS and Windows), and any jobs of the package's own after them.
 - The demo's own stylesheet is `demo/korokoro.css`, named for the package like the family's.
 - `/api.html` exists, as it does for every package, and leads on to the API reference in the documentation site; `/api/` is still the page that rolls dice from an address.

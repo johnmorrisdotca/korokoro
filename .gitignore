@@ -9,3 +9,4 @@ website/public/
 website/.vitepress/cache/
 website/.vitepress/sidebar.json
 website/.vitepress/theme/family-tokens.css
+.readme-examples/

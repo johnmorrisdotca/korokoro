@@ -23,4 +23,6 @@ for (const [mark, part] of Object.entries(parts)) {
   page = page.replace(mark, () => part);
 }
 writeFileSync("site/index.html", page);
+// The API reference is made by `pnpm docs:site` into site/docs/reference; the README and every package of the family link `api.html`.
+writeFileSync("site/api.html", '<!doctype html>\n<meta charset="utf-8">\n<title>Korokoro API reference</title>\n<meta http-equiv="refresh" content="0; url=docs/reference/">\n<link rel="canonical" href="docs/reference/">\n<p><a href="docs/reference/">The API reference</a></p>\n');
 console.log("site/ is ready: serve it, or let the Pages workflow publish it.");
