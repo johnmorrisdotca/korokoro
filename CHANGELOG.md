@@ -6,6 +6,11 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+
+### Changed
+
+- Group the package family by kind, alphabetize each group, and include the geography packages and REST in Pieces in the shared footer and README.
+
 ## [1.15.2] - 2026-10-06
 
 Nothing that was exported has changed. The README is the family's one layout, in full, and the reference material that made it too long for npm moved to pages under `docs/`.
