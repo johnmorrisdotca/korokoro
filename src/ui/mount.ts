@@ -187,7 +187,8 @@ function defaultStorage(): StorageLike | undefined {
 export function mountRoller(target: HTMLElement, options: RollerOptions = {}): RollerHandle {
   const doc = target.ownerDocument;
   const win = doc.defaultView;
-  injectStyle(doc);
+  const tree = target.getRootNode();
+  injectStyle(doc, tree.nodeType === 11 && "host" in tree ? tree as ShadowRoot : undefined);
   const wordsFor = (tag: string): RollerStrings => ({ ...(tag.toLowerCase().startsWith("ja") ? STRINGS.ja : STRINGS.en), ...options.strings });
   let locale = options.locale ?? doc.documentElement.lang ?? "en";
   let t: RollerStrings = wordsFor(locale);

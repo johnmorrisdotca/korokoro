@@ -84,11 +84,15 @@ An iframe, where the page allows no scripts:
 <iframe src="https://johnmorrisdotca.github.io/korokoro/embed/?dice=2d6%2B3&size=small" title="Korokoro" width="360" height="540" style="border:0;max-width:100%" loading="lazy"></iframe>
 ```
 
-The address takes `dice` (any notation), `size`, `lang` (`en` or `ja`),
-`sound=off`, `seed`, and the colours `felt` and `ink` as `#rrggbb`. The page
-tracks nothing and loads nothing from anywhere else; a large tray keeps its
-history on the visitor's own device. Each roll is sent to the page that
-frames it: `{ korokoro: "roll", notation, total, dice }` by `postMessage`.
+The canonical address uses the element's names: `notation`, `size`, `lang`,
+`width`, `theme`, `cloth`, `one-pip`, `label`, `seed`, `sound`, `hold`,
+`placeholder`, `keyboard`, `wide`, `language-chooser`, `dice-war` and
+`animation-ms`. Values are validated before the element is configured.
+Existing `dice`, `roll` and `onepip` links and validated `felt` / `ink` colours
+remain aliases. The iframe writes no history or preferences, at any size.
+Every roll sends `{ type: "korokoro-roll", detail }`, with the element's
+JSON-safe roll detail. The older `{ korokoro: "roll", notation, total, dice }`
+message remains available for existing hosts.
 
 One tag, where the page may run a script, with nothing to install:
 
@@ -99,3 +103,26 @@ One tag, where the page may run a script, with nothing to install:
 
 [The demo](https://johnmorrisdotca.github.io/korokoro/#embed) writes both
 for the dice you last rolled there, with a look at each size.
+
+
+## Build and share your setup
+
+[Build your dice](https://johnmorrisdotca.github.io/korokoro/builder.html) to preview a dice tray or one die. The shared builder writes custom-element, iframe, ES-module, React 19, Vue, Svelte, Angular, plain-HTML and URL-only code. Its URL hash preserves the setup and selected code tab. The npm script is pinned to the package's current major. Defaults are omitted; the tray's notation and storage-free setup are explicit.
+
+All observed attributes can be set as properties. Hyphenated names also have camel-case aliases: one-pip / onePip and animation-ms / animationMs, for example. Existing numeric face reading and assignment remain unchanged. Boolean properties preserve the actual defaults: hold, keyboard and placeholder are on when omitted, whereas wide and dice-war are off. Off, false, no, none and 0 turn a flag off. Null removes an attribute and restores its default.
+
+Width constrains the component in CSS pixels; theme can be light, dark or auto; label supplies an accessible group name. The styles are installed in the mounted element's own document or shadow root. Existing host sizing is retained when width is absent.
+
+The single-die iframe lives at [embed/die/](https://johnmorrisdotca.github.io/korokoro/embed/die/). It validates sides, face, display size, pixel width, language, seed, sound and rollability and sends `{ type: "korokoro-die-roll", detail: face }`. Both pages are transparent, noindex and free of document scrolling. Reduced motion is honoured by the existing die/roller renderers.
+
+A host checks the origin and source of each message:
+
+```js
+const frame = document.querySelector("iframe");
+window.addEventListener("message", (event) => {
+  if (event.origin !== "https://johnmorrisdotca.github.io") return;
+  if (event.source !== frame.contentWindow) return;
+  if (event.data?.type === "korokoro-roll") console.log(event.data.detail.total);
+  if (event.data?.type === "korokoro-die-roll") console.log(event.data.detail);
+});
+```

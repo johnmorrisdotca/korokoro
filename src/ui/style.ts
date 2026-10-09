@@ -22,6 +22,10 @@ export const CSS = `
     --kk-felt: #214337; --kk-felt-deep: #152c24; --kk-die: #f4efe2; --kk-die-edge: #8f8778;
   }
 }
+.kk-root[data-theme="dark"] {
+  --kk-surface: #1d201e; --kk-ink: #ece8dc; --kk-muted: #a09d93; --kk-rule: #3a3d38;
+  --kk-felt: #214337; --kk-felt-deep: #152c24; --kk-die: #f4efe2; --kk-die-edge: #8f8778;
+}
 .kk-root *, .kk-root *::before, .kk-root *::after { box-sizing: border-box; }
 .kk-root button { font: inherit; color: inherit; cursor: pointer; }
 /* Long notation, a custom die's faces above all, wraps where it must and never widens the page. */
@@ -304,10 +308,11 @@ button.kk-die[aria-pressed="true"]::before { content: attr(data-tag); position: 
 `;
 
 /** Add the tray's stylesheet to a document, once. */
-export function injectStyle(doc: Document): void {
-  if (doc.getElementById(STYLE_ID) !== null) return;
+export function injectStyle(doc: Document, root?: ShadowRoot): void {
+  const into = root ?? doc.head;
+  if (into.querySelector(`#${STYLE_ID}`) !== null) return;
   const style = doc.createElement("style");
   style.id = STYLE_ID;
   style.textContent = CSS;
-  doc.head.append(style);
+  into.append(style);
 }

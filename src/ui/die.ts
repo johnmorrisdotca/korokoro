@@ -119,7 +119,8 @@ function restingFace(group: DiceGroup): number {
 export function mountDie(target: HTMLElement, options: DieOptions = {}): DieHandle {
   const doc = target.ownerDocument;
   const win = doc.defaultView;
-  injectStyle(doc);
+  const tree = target.getRootNode();
+  injectStyle(doc, tree.nodeType === 11 && "host" in tree ? tree as ShadowRoot : undefined);
   const reduced = win?.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   const animationMs = reduced ? 0 : Math.max(0, options.animationMs ?? DEFAULT_TUMBLE_MS);
   let locale = options.locale ?? doc.documentElement.lang ?? "en";

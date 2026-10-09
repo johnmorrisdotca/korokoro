@@ -330,13 +330,18 @@ from your own bundle:
 | `storage="none"`, `storage-key` | Keep no history; or the key it is kept under |
 | `animation-ms`, `share-base`, `query` | As the options of the same names |
 | `cloth` | The felt's cloth: `green` (unless said), `blue`, `red`, `black` or `wood`, the family's five; changed in place, keeping the dice and the rolls |
+| `width` | Pixel width, within the available host space |
+| `theme` | `light`, `dark` or `auto` for the controls |
+| `label` | An accessible name for the dice group |
+| `seed` | The same seed gives the same sequence of throws |
 | `one-pip` | The colour of a d6's one pip: `red` (unless said) or `black`; changed in place |
 
-What an attribute cannot carry (a theme, your own words, your own sound) goes
+What an attribute cannot carry (custom CSS variables, your own words, your own sound) goes
 on the element's `options` property. React 19, Vue 3 and Svelte 5 set a
 property rather than an attribute on a custom element that has one of the
-name; the only name here that is also a property is the die's `face`, and
-`die.face = 5` sets the `face` attribute, as the attribute does. `roll()`, `setSpec()` and `history` are
+name. Every watched attribute is reflected as a property, with camel-case
+aliases for hyphenated names. The die's existing numeric `face` getter remains,
+and `die.face = 5` still sets the `face` attribute. `roll()`, `setSpec()` and `history` are
 on the element. The tray is drawn in the element's own light DOM, so the
 page's `--kk-…` variables theme it as they do a mounted tray.
 
@@ -725,7 +730,7 @@ A single die with nothing round it, that rolls when tapped or only shows a face:
 
 <!-- moved: docs/embedding.md -->
 
-The tray on a page you do not build, in an iframe or as one tag, in three sizes. [Embedding](docs/embedding.md#embed-it-on-any-site) has the address and the sizes.
+The [shared builder](https://johnmorrisdotca.github.io/korokoro/builder.html) previews a tray or one die and writes code for your page. The tray fits an iframe or one tag, in three sizes. [Embedding](docs/embedding.md#embed-it-on-any-site) has the address and the sizes.
 
 ## Sound
 
@@ -966,14 +971,14 @@ Korokoro is one of twenty-eight packages, each made for the same site, each at
 
 **Geography & data**
 
-- [address-plus](https://github.com/johnmorrisdotca/address-plus) (アドレスプラス): parse and format addresses in the United States, Canada and Japan. [Demo](https://johnmorrisdotca.github.io/address-plus/).
+- [address-plus](https://github.com/johnmorrisdotca/address-plus) (アドレスプラス): parse and format addresses in the United States, Canada, Japan, Australia and the United Kingdom. [Demo](https://johnmorrisdotca.github.io/address-plus/).
 - [Chizu](https://github.com/johnmorrisdotca/chizu) (地図): maps of the world and of countries' regions, in English and Japanese, with a quiz and callouts. [Demo](https://johnmorrisdotca.github.io/chizu/).
 - [Hata](https://github.com/johnmorrisdotca/hata) (旗): country and regional flags as SVG, at their true proportions and keyed by ISO code. [Demo](https://johnmorrisdotca.github.io/hata/).
 - [Kuni](https://github.com/johnmorrisdotca/kuni) (国): countries and their regions, with ISO codes and names in English and Japanese. [Demo](https://johnmorrisdotca.github.io/kuni/).
 
 **Developer tools**
 
-- [REST in Pieces](https://github.com/spxis/rest-in-pieces) (レスト・イン・ピーシズ): seeded test data and REST APIs for frontend development, with latency and error drills. [Demo](https://spxis.github.io/rest-in-pieces/).
+- [REST in Pieces](https://github.com/spxis/rest-in-pieces) (レスト・イン・ピーシーズ): seeded test data and REST APIs for frontend development, with latency and error drills. [Demo](https://spxis.github.io/rest-in-pieces/).
 
 
 **This package is Korokoro.** The demos of all twenty-eight share one header and footer, so each links the rest.

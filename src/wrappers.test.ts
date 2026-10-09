@@ -15,11 +15,11 @@ describe("the custom element, where there is no browser", () => {
   });
 
   it("watches the attributes it documents", () => {
-    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth", "one-pip", "dice-war"]);
+    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth", "one-pip", "dice-war", "width", "theme", "label", "seed"]);
   });
 
   it("has a die of its own, under its own tag, that is safe where there is no browser", () => {
-    expect(KorokoroDie.observedAttributes).toEqual(["sides", "face", "rollable", "size", "width", "one-pip", "lang", "seed", "sound", "animation-ms", "cloth"]);
+    expect(KorokoroDie.observedAttributes).toEqual(["sides", "face", "rollable", "size", "width", "one-pip", "lang", "seed", "sound", "animation-ms", "cloth", "theme", "label"]);
     expect(DIE_TAG).toBe("korokoro-die");
     expect(() => defineDie()).not.toThrow();
     expect(() => defineDie("my-die")).not.toThrow();

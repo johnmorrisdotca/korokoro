@@ -10,6 +10,8 @@ All notable changes to this project are written here. The format follows
 
 ### Added
 
+- Add the shared roller/die builder, standard element properties and display options, and validated iframe parameters without stored history, preserving existing links and messages.
+
 - Share a package-independent embed builder for option controls, preview adapters, code tabs and shareable links.
 
 ### Changed
