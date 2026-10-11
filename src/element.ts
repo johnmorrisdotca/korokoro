@@ -40,7 +40,13 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
  * or at any time, which mounts the tray afresh.
  */
 
-/** The element's tag, unless another is asked for. */
+/** The element's tag, unless another is asked for.
+ * @example
+ * ```ts
+ * import { ROLLER_TAG } from "@johnmorrisdotca/korokoro/element";
+ * console.log(typeof ROLLER_TAG); // string
+ * ```
+ */
 export const ROLLER_TAG = "korokoro-roller";
 
 /** The attributes the element watches. */
@@ -86,7 +92,13 @@ const appearance = (element: HTMLElement): void => {
   }
 };
 
-/** The `<korokoro-roller>` element. */
+/** The `<korokoro-roller>` element.
+ * @example
+ * ```ts
+ * import { KorokoroRoller } from "@johnmorrisdotca/korokoro/element";
+ * console.log(KorokoroRoller.observedAttributes.includes("lang")); // true
+ * ```
+ */
 export class KorokoroRoller extends Base {
   get notation(): string | null { return this.getAttribute("notation"); }
   set notation(value: string | number | null | undefined) { writeAttribute(this, "notation", value); }
@@ -241,6 +253,14 @@ export class KorokoroRoller extends Base {
  * Register the element, as `<korokoro-roller>` unless another tag is asked
  * for. Safe to call more than once, and does nothing where there are no
  * custom elements (on a server).
+ * @param tag - The custom tag name; omitted to use the package default.
+ * @returns Nothing; existing definitions and server imports remain safe.
+ * @example
+ * ```ts
+ * import { defineRoller } from "@johnmorrisdotca/korokoro/element";
+ * defineRoller();
+ * console.log(typeof defineRoller); // function
+ * ```
  */
 export function defineRoller(tag: string = ROLLER_TAG): void {
   if (typeof customElements === "undefined" || customElements.get(tag) !== undefined) return;
@@ -248,7 +268,13 @@ export function defineRoller(tag: string = ROLLER_TAG): void {
   customElements.define(tag, tag === ROLLER_TAG ? KorokoroRoller : class extends KorokoroRoller {});
 }
 
-/** The die's tag, unless another is asked for. */
+/** The die's tag, unless another is asked for.
+ * @example
+ * ```ts
+ * import { DIE_TAG } from "@johnmorrisdotca/korokoro/element";
+ * console.log(typeof DIE_TAG); // string
+ * ```
+ */
 export const DIE_TAG = "korokoro-die";
 
 /** The attributes the die element watches. */
@@ -272,6 +298,11 @@ const DIE_WATCHED = ["sides", "face", "rollable", "size", "width", "one-pip", "l
  * `korokoro-die-roll` event whose `detail` is the face. Setting `face` shows
  * that face at once. `roll()` throws it from code; `options` takes what an
  * attribute cannot carry, as `<korokoro-roller>` does.
+ * @example
+ * ```ts
+ * import { KorokoroDie } from "@johnmorrisdotca/korokoro/element";
+ * console.log(KorokoroDie.observedAttributes.includes("lang")); // true
+ * ```
  */
 export class KorokoroDie extends Base {
   get sides(): string | null { return this.getAttribute("sides"); }
@@ -389,7 +420,16 @@ export class KorokoroDie extends Base {
   }
 }
 
-/** Register `<korokoro-die>`, as that tag unless another is asked for. Safe to call more than once; does nothing where there are no custom elements. */
+/** Register `<korokoro-die>`, as that tag unless another is asked for. Safe to call more than once; does nothing where there are no custom elements.
+ * @param tag - The custom tag name; omitted to use the package default.
+ * @returns Nothing; existing definitions and server imports remain safe.
+ * @example
+ * ```ts
+ * import { defineDie } from "@johnmorrisdotca/korokoro/element";
+ * defineDie();
+ * console.log(typeof defineDie); // function
+ * ```
+ */
 export function defineDie(tag: string = DIE_TAG): void {
   if (typeof customElements === "undefined" || customElements.get(tag) !== undefined) return;
   customElements.define(tag, tag === DIE_TAG ? KorokoroDie : class extends KorokoroDie {});

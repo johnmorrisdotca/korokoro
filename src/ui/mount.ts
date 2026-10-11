@@ -183,6 +183,15 @@ function defaultStorage(): StorageLike | undefined {
  *
  * A tap on the felt throws the pool. Once plain dice have been thrown, a tap
  * on a die holds it and the next throw rolls the rest.
+ * @param target - The HTMLElement that owns the native interface.
+ * @param options - Native settings and callbacks for this mounted interface.
+ * @returns The native mounted handle, including controls and destroy() cleanup.
+ * @example
+ * ```ts
+ * import { mountRoller } from "@johnmorrisdotca/korokoro";
+ * const show = (host: HTMLElement, options: Parameters<typeof mountRoller>[1]) => mountRoller(host, options);
+ * console.log(typeof show); // function
+ * ```
  */
 export function mountRoller(target: HTMLElement, options: RollerOptions = {}): RollerHandle {
   const doc = target.ownerDocument;

@@ -5,9 +5,6 @@ All notable changes to this project are written here. The format follows
 [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
-
-
-
 ### Added
 
 - Add the shared roller/die builder, standard element properties and display options, and validated iframe parameters without stored history, preserving existing links and messages.
@@ -17,6 +14,8 @@ All notable changes to this project are written here. The format follows
 ### Changed
 
 - Group the package family by kind, alphabetize each group, and include the geography packages and REST in Pieces in the shared footer and README.
+
+- Update the shared family description for addresses in all seven supported countries, including France and Germany.
 
 ## [1.15.2] - 2026-10-06
 

@@ -15,7 +15,7 @@ test("the shared builder makes both a tray and a die and shares every host forma
   }
   await expect(page.locator("#bld-code")).toContainText("/embed/die/?sides=20");
   await page.locator('[data-lang="ja"]').click();
-  await expect(page.locator("#bld-maker-says")).toContainText("サイコロ");
+  await expect(page.locator("#bld-maker-says")).toContainText("ダイス1個");
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });

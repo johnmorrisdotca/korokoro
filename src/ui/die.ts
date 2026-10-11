@@ -115,6 +115,9 @@ function restingFace(group: DiceGroup): number {
  * @example
  * const die = mountDie(box, { sides: 20, size: "large", onRoll: (face) => console.log(face) });
  * die.roll();
+ * @param target - The HTMLElement that owns the native interface.
+ * @param options - Native settings and callbacks for this mounted interface.
+ * @returns The native mounted handle, including controls and destroy() cleanup.
  */
 export function mountDie(target: HTMLElement, options: DieOptions = {}): DieHandle {
   const doc = target.ownerDocument;
