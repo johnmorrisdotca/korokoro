@@ -3,7 +3,7 @@
 // which is copied into this repository unchanged, as demo/family.css is.
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
-import { FAMILY_SCRIPT, familyEmbedBuilder, familyHead, familyFooter, familyHeader, familyUnreviewed } from "./family-template.mjs";
+import { FAMILY_SCRIPT, FAMILY_EMBED_BUILDER_WORDS, familyEmbedBuilder, familyHead, familyFooter, familyHeader, familyUnreviewed } from "./family-template.mjs";
 
 rmSync("site", { recursive: true, force: true });
 mkdirSync("site", { recursive: true });
@@ -27,7 +27,7 @@ writeFileSync("site/index.html", page);
 writeFileSync("site/api.html", '<!doctype html>\n<meta charset="utf-8">\n<title>Korokoro API reference</title>\n<meta http-equiv="refresh" content="0; url=docs/reference/">\n<link rel="canonical" href="docs/reference/">\n<p><a href="docs/reference/">The API reference</a></p>\n');
 console.log("site/ is ready: serve it, or let the Pages workflow publish it.");
 
-writeFileSync("site/family-embed-builder.js", `export ${familyEmbedBuilder.toString()};\n`);
+writeFileSync("site/family-embed-builder.js", `export const FAMILY_EMBED_BUILDER_WORDS = ${JSON.stringify(FAMILY_EMBED_BUILDER_WORDS)};\nexport ${familyEmbedBuilder.toString()};\n`);
 const builderParts = {
   builderHead: familyHead({ id, title: "Korokoro · build your dice", description: "Choose dice, try a roll and copy the embed code." }),
   builderHeader: familyHeader({ id, links: [{ href: "./", say: "toGallery" }] }),
