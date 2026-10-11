@@ -94,6 +94,8 @@ pnpm test:cli    # the command line, run as a child process
 pnpm test:package   # npm pack, install the tarball, import every entry, run the commands
 pnpm test:languages # the examples in Python, Go, Rust and C#, for whichever of them this machine has
 pnpm docs:site      # the documentation site, into ./site/docs
+pnpm docs:check     # check TSDoc, guides, links and executable examples
+pnpm size --write   # measure the entry-point bundle sizes
 pnpm site     # builds the demo into ./site
 ```
 
@@ -104,11 +106,14 @@ pnpm site     # builds the demo into ./site
   under 44px, and the page complained of nothing. A change to the tray comes
   with a test there. The first time, `pnpm exec playwright install chromium
   webkit` fetches the browsers.
-- **The documentation site is made, not written.** `scripts/docs-site.mjs`
-  cuts the README at its headings and takes the pages in `docs/` as they are;
-  the API reference is TypeDoc's, from the doc comments. To change a page,
-  change the README or the document it came from. A new section of the README
-  has to be given a page in that script, or the build says so.
+- **The documentation site is made from its sources.** The shared
+  `scripts/docs-site.mjs` reads public TSDoc and the English/Japanese guides
+  in `docs/guides/`, checks their examples and links, and builds reference
+  pages and local search. Change the doc comment or guide that owns the words;
+  keep the shared generator unchanged. `pnpm docs:check` validates the sources.
+  `scripts/docs-compat.mjs` keeps published guide and reference addresses
+  pointing to the new pages; the Pages build and browser setup run it after
+  the shared build. The README remains the front door.
 - **A change to the demo's look is compared picture by picture.** What is
   Korokoro's own goes in `demo/korokoro.css`. After a change to it,
   `node tray/look.mjs before` on the old build and

@@ -1,4 +1,4 @@
-<h1 align="center">Korokoro <sub>コロコロ</sub></h1>
+<h1 align="center">Korokoro <sub>コロコロ</sub> — Dice roller with notation and exact odds</h1>
 
 <p align="center"><strong>Fair dice for the table, with the odds of every throw.</strong><br>
 Tap dice to build a roll, up to ten in any mix from a d4 to a d100, or type any dice at all. Exact probabilities, roll history and stats, in a tray that runs anywhere.</p>
@@ -9,16 +9,18 @@ Tap dice to build a roll, up to ten in any mix from a d4 to a d100, or type any 
   <a href="./LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-2f5d4a"></a>
   <img alt="No dependencies" src="https://img.shields.io/badge/dependencies-0-2f5d4a">
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
+  <a href="https://johnmorrisdotca.github.io/korokoro/docs/api/main/index.html"><img alt="101.0 kB minified and gzipped" src="https://img.shields.io/badge/min%2Bgzip-101.0%20kB-2f5d4a"></a>
+  <a href="https://www.npmjs.com/package/@johnmorrisdotca/korokoro#provenance"><img alt="Published with npm provenance" src="https://img.shields.io/badge/npm-provenance-2f5d4a"></a>
 </p>
 
-<p align="center"><a href="https://johnmorrisdotca.github.io/korokoro/"><strong>Roll some dice →</strong></a> · <a href="https://johnmorrisdotca.github.io/korokoro/docs/"><strong>Read the documentation →</strong></a></p>
+<p align="center"><a href="https://johnmorrisdotca.github.io/korokoro/"><strong>Roll some dice →</strong></a> · <a href="https://johnmorrisdotca.github.io/korokoro/docs/"><strong>Documentation</strong></a> · <a href="https://johnmorrisdotca.github.io/korokoro/docs/guides/getting-started.html">Getting started</a></p>
 
 <table align="center">
 <tr>
 <td align="center" valign="top">
 <picture>
 <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/korokoro/main/docs/images/hero-desk-dark.webp">
-<img src="https://raw.githubusercontent.com/johnmorrisdotca/korokoro/main/docs/images/hero-desk-light.webp" alt="The demo on a desk, in English, with eight d6 on the green felt after twelve rolls: the page header with the language chooser, five cloth patches and the Help switch, the dice showing 1 to 6 on white faces, their total of 30 with a luck meter, and beside them the Stats tab with the rolls, luck and streaks, the count of each face and the totals drawn against the odds" width="600">
+<img src="https://raw.githubusercontent.com/johnmorrisdotca/korokoro/main/docs/images/hero-desk-light.webp" alt="The demo on a desk, in English, with eight d6 on the green felt after twelve rolls: the page header with the language chooser, Docs and API reference links, five cloth patches and the Help switch, the dice showing 1 to 6 on white faces, their total of 30 with a luck meter, and beside them the Stats tab with the rolls, luck and streaks, the count of each face and the totals drawn against the odds" width="600">
 </picture>
 <br><em>The demo on a desk: eight d6 and the stats of twelve throws.</em>
 </td>
@@ -191,7 +193,7 @@ Each picture is the real tray, drawn by the package and taken from [the demo](ht
 <td align="center" valign="top" width="50%">
 <picture>
 <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/korokoro/main/docs/images/dice-war-phone-dark.webp">
-<img src="https://raw.githubusercontent.com/johnmorrisdotca/korokoro/main/docs/images/dice-war-phone-light.webp" alt="Dice War in the demo on a phone: you and two computers, the scores, the last throws with a war in them, and the odds of your roll under the felt" width="240">
+<img src="https://raw.githubusercontent.com/johnmorrisdotca/korokoro/main/docs/images/dice-war-phone-light.webp" alt="Dice War in the demo on a phone: you and two computers, the scores, the last throws and the odds of your roll under the felt, after four throws with the goal set to 20 rounds" width="240">
 </picture>
 <br><em><strong>Dice War.</strong> Everybody rolls, the highest scores, and a tie is war; two to eight players, any of them a computer.</em>
 </td>
@@ -224,6 +226,18 @@ yarn add @johnmorrisdotca/korokoro
 ```
 
 It is ES modules only, with its types included, and needs Node 22 or later outside a browser. A page with no bundler loads the tag from a CDN (`@1` is the major version).
+
+### Install under another name
+
+The alias changes the import name in your project; it installs the same package.
+
+```sh
+npm install dice@npm:@johnmorrisdotca/korokoro
+```
+
+```ts no-check
+import { roll } from "dice";
+```
 
 ### 1. The API alone
 
@@ -995,6 +1009,8 @@ pnpm test:readme         # run every example in this README against the built pa
 pnpm site                # build the demo into ./site, then serve it
 pnpm screenshots:readme  # take the README's pictures from the built demo, in light and dark
 pnpm docs:site           # build the documentation site
+pnpm docs:check          # type-check and run every public API and guide example
+pnpm size --write        # refresh the measured entry-point sizes
 ```
 
 ## Contributing

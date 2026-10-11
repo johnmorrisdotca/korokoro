@@ -1,7 +1,7 @@
 {
   "name": "@johnmorrisdotca/korokoro",
   "version": "1.15.2",
-  "description": "Dice roller and dice notation parser with exact odds: any die from d4 to d1000, custom and loaded dice, pools, and game presets from Yahtzee to craps. A typed API, a command line and a dice tray for any framework. Zero dependencies.",
+  "description": "Korokoro コロコロ — Dice roller with notation and exact odds: mixed dice, seeded rolls, history and a browser tray. Zero dependencies.",
   "keywords": [
     "dice",
     "dice-roller",
@@ -154,8 +154,8 @@
     "lint": "eslint .",
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
-    "docs:site": "pnpm build && node scripts/docs-site.mjs && typedoc --logLevel Error && vitepress build website",
-    "test:tray": "pnpm site && pnpm docs:site && playwright test",
+    "docs:site": "pnpm build && node scripts/docs-site.mjs build",
+    "test:tray": "pnpm test:demo",
     "test:languages": "pnpm build && node scripts/check-languages.mjs",
     "test:cli": "pnpm build && node scripts/check-cli.mjs",
     "test:package": "pnpm build && node scripts/check-package.mjs",
@@ -166,7 +166,10 @@
     "test:readme": "pnpm build && node scripts/check-readme-examples.mjs",
     "sounds": "node scripts/sounds.mjs",
     "docs:make": "node scripts/docs.mjs",
-    "prepublishOnly": "pnpm check && pnpm build"
+    "prepublishOnly": "pnpm check && pnpm build",
+    "docs:check": "pnpm build && node scripts/docs-site.mjs check",
+    "size": "node scripts/docs-site.mjs size",
+    "test:demo": "pnpm site && node scripts/docs-site.mjs build && playwright test"
   },
   "peerDependencies": {
     "react": ">=18",
@@ -193,7 +196,10 @@
     "vite": "^8.3.1",
     "vitepress": "^1.6.4",
     "vitest": "^5.0.0",
-    "vue": "^3.5.43"
+    "vue": "^3.5.43",
+    "pagefind": "^1.5.2",
+    "marked": "^18.0.0",
+    "esbuild": "^0.28.0"
   },
   "publishConfig": {
     "access": "public"

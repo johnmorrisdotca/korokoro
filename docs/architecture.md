@@ -56,9 +56,13 @@ src/
 ```
 
 Tests sit beside the code they test (`*.test.ts`), and `src/docs.test.js`
-runs the README's examples. `bin/` is the few lines that hand the command line
+holds documentation promises to the source. `scripts/check-readme-examples.mjs`
+runs the README examples; the shared documentation generator also runs the
+public API and guide examples. `bin/` is the few lines that hand the command line
 the real process, `scripts/` builds the demo and the documentation site and
 checks the package as npm packs it, `conformance/` is the vectors another
 language's port checks itself against, `tray/` taps the tray in real browsers,
-`website/` and `docs/` are the documentation, and `demo/` is the page
-published on GitHub Pages.
+`docs/guides/` and `docs/guides/ja/` are the documentation-site guides, and
+`docs/site.json` supplies the approved job and header words. The older
+`website/` source is retained as a historical reference; the shared generator
+now builds `site/docs/`. `demo/` is the native page published on GitHub Pages.

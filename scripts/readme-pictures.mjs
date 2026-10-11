@@ -16,6 +16,8 @@ const roll = ({ notation, game, rolls = 1, tab }) => async (page) => {
     await page.locator('[data-testid="kk-games-panel"] summary').click();
     await page.locator('[data-testid="kk-games-search"]').fill(game);
     await page.locator(`[data-testid="kk-game"][data-value="${game}"]`).click();
+    // A four-throw picture must not finish early when a tied pot awards several points.
+    if (game === "dice-war") await page.locator('[data-testid="kk-war-goal"]').selectOption("rounds:20");
   } else {
     const box = page.locator('[data-testid="kk-notation"]');
     await box.fill(notation);
@@ -23,12 +25,25 @@ const roll = ({ notation, game, rolls = 1, tab }) => async (page) => {
   }
   for (let throws = 0; throws < rolls; throws += 1) {
     const felt = await page.locator(TRAY).first().boundingBox();
-    const watch = game === "dice-war" ? '[data-testid="kk-war"]' : '[data-testid="kk-result"]';
+    const watch = game === "dice-war" ? '[data-testid="kk-war-text"]' : '[data-testid="kk-result"]';
     const before = await page.locator(watch).first().textContent();
     await page.locator(TRAY).first().click({ position: { x: 10, y: felt.height - 10 } });
     await page.waitForFunction(([selector, was]) => document.querySelector(selector)?.textContent !== was, [watch, before]);
   }
   if (tab) await page.locator(`[data-testid="kk-tab-${tab}"]`).click();
+};
+// Only the screenshot fixture supplies predictable crypto/clock values; the published tray uses its native sources.
+const fixedWarPicture = () => {
+  let word = 2026;
+  Object.defineProperty(globalThis.crypto, "getRandomValues", { value: (array) => {
+    for (let at = 0; at < array.length; at += 1) { word = (Math.imul(word, 1664525) + 1013904223) >>> 0; array[at] = word; }
+    return array;
+  } });
+  const OriginalDate = Date;
+  globalThis.Date = class extends OriginalDate {
+    constructor(...args) { super(...(args.length ? args : [1700000000000])); }
+    static now() { return 1700000000000; }
+  };
 };
 const scrollTo = (selector) => (page) => page.locator(selector).evaluate((element) => window.scrollTo(0, element.getBoundingClientRect().top + window.scrollY - 16));
 
@@ -64,7 +79,7 @@ await takePictures({
     // Yahtzee chosen: five d6 and its three rolls, read the way the game reads them.
     { subject: "games", views: ["phone"], url: address(), ready: TRAY, target: ALL, prepare: roll({ game: "yahtzee", rolls: 1 }) },
     // Dice War: three players, a few throws in, with the scores and the last throw under the felt.
-    { subject: "dice-war", views: ["phone"], scale: 1.5, url: address(), ready: TRAY, target: ALL, prepare: roll({ game: "dice-war", rolls: 4 }) },
+    { subject: "dice-war", views: ["phone"], scale: 1.5, init: fixedWarPicture, url: address(), ready: TRAY, target: ALL, prepare: roll({ game: "dice-war", rolls: 4 }) },
     // One die on its own: a d20 that rolls and a d6 that only shows a face.
     { subject: "one-die", views: ["desk"], url: `${address()}#one-die`, ready: '[data-testid="solo-dice"]', target: '[data-testid="solo-dice"]' },
   ],

@@ -1,0 +1,38 @@
+{
+  "job": "Dice roller with notation and exact odds",
+  "pitch": {
+    "en": "Roll mixed dice or type notation, compare exact probabilities, keep a history and replay seeded rolls.",
+    "ja": "ダイスを組み合わせて振り、ダイス表記を読み取り、正確な確率を調べます。履歴の保存やシードを指定した再現もできます。"
+  },
+  "name": {
+    "en": "Korokoro describes something small rolling in Japanese.",
+    "ja": "「コロコロ」は、小さなものが転がる様子を表す言葉です。"
+  },
+  "entries": {
+    ".": {
+      "en": "Rolls and exact odds",
+      "ja": "ロールと正確な確率"
+    },
+    "./element": {
+      "en": "Embedded roller and die",
+      "ja": "埋め込みのローラーとダイス"
+    },
+    "./react": {
+      "en": "React components",
+      "ja": "Reactコンポーネント"
+    },
+    "./vue": {
+      "en": "Vue components",
+      "ja": "Vueコンポーネント"
+    },
+    "./element/define": {
+      "en": "Automatic tag registration",
+      "ja": "タグの自動登録"
+    },
+    "./sounds": {
+      "en": "Recorded dice sounds",
+      "ja": "録音したダイスの音"
+    }
+  },
+  "icon": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='20' fill='%23fffdf7' stroke='%232f5d4a' stroke-width='8'/%3E%3Ccircle cx='30' cy='30' r='9' fill='%231f2320'/%3E%3Ccircle cx='50' cy='50' r='11' fill='%23b5452c'/%3E%3Ccircle cx='70' cy='70' r='9' fill='%231f2320'/%3E%3C/svg%3E"
+}

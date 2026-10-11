@@ -160,16 +160,19 @@ test("in Japanese the die speaks Japanese", async ({ page }) => {
   expect(await fits(page)).toBeLessThanOrEqual(0);
 });
 
-test("the documentation shows both dice, live: one rolls on a tap, one never does", async ({ page }) => {
+test("the documentation opens both native dice: one rolls on a tap, one never does", async ({ page }) => {
   const errors = await open(page, "/korokoro/docs/guide/use.html");
-  const live = page.locator('[data-testid="live-die"]');
+  const example = page.locator("main").getByRole("link", { name: "Try both single dice", exact: true });
+  const address = await example.getAttribute("href");
+  await page.goto(address.replace("https://johnmorrisdotca.github.io/korokoro/", "http://korokoro.test/"));
+  const live = page.locator('[data-testid="solo-dice"]');
   await live.scrollIntoViewIfNeeded();
   await expect(live.locator('[data-testid="kk-solo-die"]')).toHaveCount(2);
   await live.locator("button.kk-die").click();
-  await expect(live.locator(".live-die-said")).toContainText("Rolled");
-  await expect(live.locator('[role="img"].kk-die')).toHaveAttribute("data-face", "5");
+  await expect(page.locator('[data-testid="solo-said"]')).toContainText("Rolled");
+  await expect(live.locator('[role="img"].kk-die')).toHaveAttribute("data-face", "20");
   await live.locator('[role="img"].kk-die').click({ force: true });
-  await expect(live.locator('[role="img"].kk-die')).toHaveAttribute("data-face", "5");
+  await expect(live.locator('[role="img"].kk-die')).toHaveAttribute("data-face", "20");
   expect(await fits(page)).toBeLessThanOrEqual(0);
   expect(errors).toEqual([]);
 });

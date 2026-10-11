@@ -4,8 +4,9 @@ import { defineConfig, devices } from "@playwright/test";
 const phone = { viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true };
 
 export default defineConfig({
-  testDir: "tray",
-  testMatch: "*.tray.mjs",
+  testDir: ".",
+  globalSetup: "./scripts/docs-compat.mjs",
+  testMatch: ["tray/*.tray.mjs", "e2e/*.demo.mjs"],
   fullyParallel: true,
   forbidOnly: true,
   reporter: "list",

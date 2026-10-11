@@ -12,7 +12,7 @@ cpSync("dist", "site/dist", { recursive: true });
 
 const id = "korokoro";
 const parts = {
-  "<!-- family:header -->": familyHeader({ id }),
+  "<!-- family:header -->": familyHeader({ id, links: [{ href: "docs/index.html", say: "pageDocs" }, { href: "api.html", say: "pageApi" }] }),
   "<!-- family:unreviewed -->": familyUnreviewed({ id }),
   "<!-- family:footer -->": familyFooter({ id }),
   "/* family:script */": FAMILY_SCRIPT,
@@ -23,13 +23,13 @@ for (const [mark, part] of Object.entries(parts)) {
   page = page.replace(mark, () => part);
 }
 writeFileSync("site/index.html", page);
-// The API reference is made by `pnpm docs:site` into site/docs/reference; the README and every package of the family link `api.html`.
+// The API reference is made by `pnpm docs:site` into site/docs/api; the README and every package of the family link `api.html`.
 writeFileSync("site/api.html", '<!doctype html>\n<meta charset="utf-8">\n<title>Korokoro API reference</title>\n<meta http-equiv="refresh" content="0; url=docs/reference/">\n<link rel="canonical" href="docs/reference/">\n<p><a href="docs/reference/">The API reference</a></p>\n');
 console.log("site/ is ready: serve it, or let the Pages workflow publish it.");
 
 writeFileSync("site/family-embed-builder.js", `export const FAMILY_EMBED_BUILDER_WORDS = ${JSON.stringify(FAMILY_EMBED_BUILDER_WORDS)};\nexport ${familyEmbedBuilder.toString()};\n`);
 const builderParts = {
-  builderHead: familyHead({ id, title: "Korokoro · build your dice", description: "Choose dice, try a roll and copy the embed code." }),
+  builderHead: familyHead({ id, title: "Korokoro コロコロ — Dice roller with notation and exact odds · Embed builder", description: "Choose dice, try a roll and copy the embed code." }),
   builderHeader: familyHeader({ id, links: [{ href: "./", say: "toGallery" }] }),
   unreviewed: familyUnreviewed({ id }), footer: familyFooter({ id }), script: `<script>${FAMILY_SCRIPT}</script>`,
 };

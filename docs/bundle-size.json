@@ -1,0 +1,29 @@
+{
+  "measured": "esbuild 0.28.2, bundled, minified, ES2020, gzip level 9",
+  "entries": {
+    ".": {
+      "minified": 278478,
+      "gzip": 100962
+    },
+    "./react": {
+      "minified": 293175,
+      "gzip": 106436
+    },
+    "./element": {
+      "minified": 268914,
+      "gzip": 97179
+    },
+    "./element/define": {
+      "minified": 268924,
+      "gzip": 97185
+    },
+    "./vue": {
+      "minified": 299715,
+      "gzip": 110185
+    },
+    "./sounds": {
+      "minified": 35773,
+      "gzip": 22819
+    }
+  }
+}

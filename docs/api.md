@@ -5,7 +5,7 @@ Every call, by what it does. Back to the [README](../README.md#api).
 ## API
 
 Every function is pure unless it says otherwise, every type is exported, and
-each has a doc comment your editor will show. The [API reference](https://johnmorrisdotca.github.io/korokoro/docs/reference/),
+each has a doc comment your editor will show. The [API reference](https://johnmorrisdotca.github.io/korokoro/docs/api/main/index.html),
 made from the source by `pnpm docs:site`, lists every export of every entry
 point with its signature and its doc comment.
 

@@ -599,7 +599,8 @@ describe("the family's address for the API reference", () => {
     const page = readFileSync("demo/api.html", "utf8");
     expect(page).toContain('<meta http-equiv="refresh" content="0; url=docs/reference/" />');
     expect(page).toContain('<a href="docs/reference/">');
-    expect(readFileSync("scripts/docs-site.mjs", "utf8")).toContain('link: "/reference/"');
+    expect(readFileSync("scripts/docs-site.mjs", "utf8")).toContain("apiIndexPage(model)");
+    expect(readFileSync("scripts/docs-compat.mjs", "utf8")).toContain("reference/index.html");
     expect(readFileSync("demo/api/index.html", "utf8")).toContain("params.get");
   });
 });

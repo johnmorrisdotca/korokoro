@@ -97,8 +97,8 @@ describe("the workflows", () => {
     expect(ci).toContain("run: pnpm test:package");
   });
 
-  it("pages.yml is the same text in every package, named Pages, apart from one step that builds a documentation site", () => {
-    const pages = read(".github/workflows/pages.yml").replace("\n      - run: pnpm docs:site\n", "\n");
+  it("pages.yml is the same text in every package, named Pages, apart from the documentation build and compatibility steps", () => {
+    const pages = read(".github/workflows/pages.yml").replace("\n      - run: pnpm docs:site\n", "\n").replace("\n      - run: node scripts/docs-compat.mjs\n", "\n");
     expect(pages).toMatch(/^name: Pages$/m);
     expect(createHash("sha256").update(pages).digest("hex")).toBe(PAGES_SHA256);
   });

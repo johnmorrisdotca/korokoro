@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Korokoro · fair dice with the odds of every throw</title>
+    <title>Korokoro コロコロ — Dice roller with notation and exact odds</title>
     <meta name="description" content="Tap dice to build a roll: up to ten of d4, d6, d8, d10, d12, d20, d30 and d100, in any mix. Hold dice and roll the rest. Or type any dice: 4d6 drop the lowest, exploding dice, rerolls, Fate dice, a d14. Exact odds, seeded rolls, history and stats. Free and open source." />
     <meta name="theme-color" content="#2f5d4a" />
-    <meta property="og:title" content="Korokoro dice roller" />
+    <meta property="og:title" content="Korokoro コロコロ — Dice roller with notation and exact odds" />
     <meta property="og:description" content="Fair dice for the table, with the odds of every throw." />
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='6' y='6' width='88' height='88' rx='20' fill='%23fffdf7' stroke='%232f5d4a' stroke-width='8'/%3E%3Ccircle cx='30' cy='30' r='9' fill='%231f2320'/%3E%3Ccircle cx='50' cy='50' r='11' fill='%23b5452c'/%3E%3Ccircle cx='70' cy='70' r='9' fill='%231f2320'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="family.css" />
@@ -104,6 +104,8 @@
           ex9: "Advantage: two d20, keep the highest, add 5",
           ex10: "Six ability scores in one tap",
           docs: "Read the documentation",
+          pageDocs: "Docs",
+          pageApi: "API reference",
           plain: "Dice as plain text, from an address",
           embedTitle: "Put the dice on your own page",
           embedText: "Choose how much of the tray you want, and copy the code. It shows the dice you rolled last here, and works on any site: nothing to install and nothing to pay.",
@@ -147,6 +149,8 @@
           ex8: "自分で作るダイス: 面は自由です",
           ex9: "有利: d20を2個振って大きいほうを採用し、5を足します",
           ex10: "能力値6つを一度に振ります",
+          pageDocs: "ドキュメント",
+          pageApi: "APIリファレンス",
           docs: "ドキュメントを読む（英語）",
           plain: "アドレスからダイスを振り、テキストで受け取る",
           embedTitle: "自分のページにダイスを置く",
@@ -181,7 +185,11 @@
       let roller;
       let rollDie;
       let showDie;
-      const language = familyLanguage({ id: "korokoro", words: WORDS, onChange: (lang) => { roller.setLocale(lang); rollDie.setLocale(lang); showDie.setLocale(lang); embed(); } });
+      function docsLink(lang) {
+        for (const link of document.querySelectorAll('[data-say="pageDocs"], [data-say="docs"]')) link.setAttribute("href", lang === "ja" ? "docs/ja/index.html" : "docs/index.html");
+      }
+      const language = familyLanguage({ id: "korokoro", words: WORDS, onChange: (lang) => { roller.setLocale(lang); rollDie.setLocale(lang); showDie.setLocale(lang); docsLink(lang); embed(); } });
+      docsLink(language.lang);
 
       // The code to put the tray on another page: the dice rolled last here, at the size chosen.
       const HEIGHTS = { small: 540, medium: 1320, large: 1600 };
