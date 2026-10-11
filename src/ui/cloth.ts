@@ -2,6 +2,12 @@
  * THE CLOTHS A TRAY MAY BE LAID IN: the same five the whole family offers, and itsutsu.com's boards —
  * green (the tray's own, unless said), blue, red, black, and wood. Each is the felt's colour, its deep
  * edge and the ink written on it, given to the tray as its `--kk-felt` variables.
+ *
+ * @example
+ * ```ts
+ * import { KOROKORO_CLOTHS } from "@johnmorrisdotca/korokoro";
+ * console.log(Object.keys(KOROKORO_CLOTHS));
+ * ```
  */
 export const KOROKORO_CLOTHS = {
   green: { felt: "#2f5d4a", deep: "#1f4135", ink: "#f3efe4" },
@@ -11,15 +17,45 @@ export const KOROKORO_CLOTHS = {
   wood: { felt: "#e2ba7a", deep: "#c4954f", ink: "#2b1d0e" },
 } as const;
 
-/** A cloth's name. */
+/** A cloth's name.
+ *
+ * @example
+ * ```ts
+ * import type { Cloth } from "@johnmorrisdotca/korokoro";
+ * const value: Cloth = "green";
+ * console.log(value);
+ * ```
+ */
 export type Cloth = keyof typeof KOROKORO_CLOTHS;
 
-/** Whether a text names a cloth. */
+/** Whether a text names a cloth.
+ *
+ * @param text - Text to parse, validate or format.
+ * @returns Whether a text names a cloth.
+
+ *
+ * @example
+ * ```ts
+ * import { isCloth } from "@johnmorrisdotca/korokoro";
+ * console.log(isCloth("green"), isCloth("unknown"));
+ * ```
+ */
 export function isCloth(text: unknown): text is Cloth {
   return typeof text === "string" && Object.hasOwn(KOROKORO_CLOTHS, text);
 }
 
-/** A cloth as the tray's CSS variables; nothing for a name that is not a cloth, so the tray keeps its own. */
+/** A cloth as the tray's CSS variables; nothing for a name that is not a cloth, so the tray keeps its own.
+ *
+ * @param cloth - A built-in cloth name; an unknown name leaves the tray defaults.
+ * @returns A cloth as the tray's CSS variables; nothing for a name that is not a cloth, so the tray keeps its own.
+
+ *
+ * @example
+ * ```ts
+ * import { clothVars } from "@johnmorrisdotca/korokoro";
+ * console.log(clothVars("green"));
+ * ```
+ */
 export function clothVars(cloth: string | undefined | null): Record<`--kk-${string}`, string> {
   if (!isCloth(cloth)) return {};
   const { felt, deep, ink } = KOROKORO_CLOTHS[cloth];

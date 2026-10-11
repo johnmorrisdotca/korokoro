@@ -4,6 +4,10 @@ import type { Roll, RollSpec } from "./dice.ts";
 import { parseNotation } from "./notation.ts";
 import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
 
+
+// A Boolean prop left out is `undefined`, not `false`: the tray's own default then stands.
+const flag = { type: Boolean, default: undefined } as const;
+
 /**
  * The tray as a Vue component:
  *
@@ -17,10 +21,13 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
  * it mounts, so give the component a new `key` to start over with different
  * ones. Each roll is a `roll` event. `roll()`, `history()`, `setSpec()` and
  * `setLocale()` are there on a template ref.
+ *
+ * @example
+ * ```ts
+ * import { DiceRoller } from "@johnmorrisdotca/korokoro/vue";
+ * console.log(DiceRoller.name);
+ * ```
  */
-// A Boolean prop left out is `undefined`, not `false`: the tray's own default then stands.
-const flag = { type: Boolean, default: undefined } as const;
-
 export const DiceRoller = defineComponent({
   name: "DiceRoller",
   props: {

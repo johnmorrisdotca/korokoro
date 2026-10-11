@@ -3,7 +3,15 @@ import { useEffect, useRef, type HTMLAttributes } from "react";
 import { parseNotation } from "./notation.ts";
 import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
 
-/** The tray's options as props, `notation` as a shorter way to give the dice, and any attribute for the `<div>` the tray is mounted in. */
+/** The tray's options as props, `notation` as a shorter way to give the dice, and any attribute for the `<div>` the tray is mounted in.
+ *
+ * @example
+ * ```ts
+ * import type { DiceRollerProps } from "@johnmorrisdotca/korokoro/react";
+ * const value: DiceRollerProps = { notation: "2d6", sound: false };
+ * console.log(value.notation);
+ * ```
+ */
 export type DiceRollerProps = RollerOptions & {
   /** The dice showing at first, as notation: "2d20kh1+5". It wins over `spec` when both are given, and the tray follows it when it changes. */
   notation?: string;
@@ -20,6 +28,18 @@ const OPTION_NAMES = ["notation", "locale", "strings", "storage", "storageKey", 
  * mounts (and again when `locale` changes); give it a new `key` to start over
  * with different ones. `notation` is followed as it changes, and `onRoll` is
  * always the newest one passed.
+ *
+ * @param props - Component properties, including notation, tray options and host attributes.
+ * @returns A React host element; the tray is mounted when the component reaches the browser.
+
+ *
+ * @example
+ * ```ts
+ * import { createElement } from "react";
+ * import { DiceRoller } from "@johnmorrisdotca/korokoro/react";
+ * const element = createElement(DiceRoller, { notation: "2d6" });
+ * console.log(element.type === DiceRoller);
+ * ```
  */
 export function DiceRoller(props: DiceRollerProps) {
   const host = useRef<HTMLDivElement>(null);

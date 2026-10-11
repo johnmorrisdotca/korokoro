@@ -13,7 +13,18 @@ const lowest = ([n, d]: Fraction): Fraction => {
 const add = (a: Fraction, b: Fraction): Fraction => lowest([a[0] * b[1] + b[0] * a[1], a[1] * b[1]]);
 const times = (a: Fraction, b: Fraction): Fraction => lowest([a[0] * b[0], a[1] * b[1]]);
 
-/** A fraction as a number, for showing. */
+/** A fraction as a number, for showing.
+ *
+ * @param options - The numerator and denominator as an exact fraction.
+ * @returns A fraction as a number, for showing.
+
+ *
+ * @example
+ * ```ts
+ * import { asChance } from "@johnmorrisdotca/korokoro";
+ * console.log(asChance([1n, 6n]).toFixed(3));
+ * ```
+ */
 export const asChance = ([n, d]: Fraction): number => Number(n) / Number(d);
 
 /**
@@ -43,6 +54,16 @@ function afterReroll(held: number): Fraction[] {
  * The chance of a Yahtzee (five dice alike) within a number of rolls, holding
  * the largest group each time: 1 roll is 1 in 1296, and the usual three come
  * to 347897 in 7558272, about 4.6%.
+ *
+ * @param rolls - Completed rolls, or the number of attempts where this parameter is numeric.
+ * @returns The chance of a Yahtzee (five dice alike) within a number of rolls, holding the largest group each time: 1 roll is 1 in 1296, and the usual three come to 347897 in 7558272, about 4.6%.
+
+ *
+ * @example
+ * ```ts
+ * import { yahtzeeWithin } from "@johnmorrisdotca/korokoro";
+ * console.log(yahtzeeWithin(3).map(String));
+ * ```
  */
 export function yahtzeeWithin(rolls: number): Fraction {
   // state[m] is the chance of holding a largest group of m dice.
@@ -64,6 +85,15 @@ export function yahtzeeWithin(rolls: number): Fraction {
 /**
  * The chance that a craps shooter passes: a natural on the come-out, or a
  * point that comes again before a seven. 244 in 495, a little under a half.
+ *
+ * @returns The chance that a craps shooter passes: a natural on the come-out, or a point that comes again before a seven. 244 in 495, a little under a half.
+
+ *
+ * @example
+ * ```ts
+ * import { crapsPass } from "@johnmorrisdotca/korokoro";
+ * console.log(crapsPass().map(String));
+ * ```
  */
 export function crapsPass(): Fraction {
   const ways = (total: number): bigint => BigInt(6 - Math.abs(7 - total));
@@ -73,7 +103,18 @@ export function crapsPass(): Fraction {
   return pass;
 }
 
-/** The chance that three dice make a chinchirorin hand within a number of throws: each throw makes one half the time, so three come to 7 in 8. */
+/** The chance that three dice make a chinchirorin hand within a number of throws: each throw makes one half the time, so three come to 7 in 8.
+ *
+ * @param throws - The number of independent throws to allow.
+ * @returns The chance that three dice make a chinchirorin hand within a number of throws: each throw makes one half the time, so three come to 7 in 8.
+
+ *
+ * @example
+ * ```ts
+ * import { chinchirorinHandWithin } from "@johnmorrisdotca/korokoro";
+ * console.log(chinchirorinHandWithin(3).map(String));
+ * ```
+ */
 export function chinchirorinHandWithin(throws: number): Fraction {
   return lowest([2n ** BigInt(throws) - 1n, 2n ** BigInt(throws)]);
 }

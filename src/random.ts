@@ -5,6 +5,14 @@
  * cryptographic generator, which is the default and the fair one, and a seeded
  * generator for rolls that somebody else must be able to reproduce (a shared
  * link, a test, a table that wants to check the dungeon master's dice).
+ *
+ * @example
+ * ```ts
+ * import type { RandomSource } from "@johnmorrisdotca/korokoro";
+ * import { seededSource } from "@johnmorrisdotca/korokoro";
+ * const value: RandomSource = seededSource("table");
+ * console.log(value.next());
+ * ```
  */
 export type RandomSource = {
   /** An integer in [0, 2^32). */
@@ -15,7 +23,18 @@ export type RandomSource = {
 
 type CryptoLike = { getRandomValues<T extends ArrayBufferView>(array: T): T };
 
-/** The platform's cryptographic generator, buffered so a roll of ten dice is one call. */
+/** The platform's cryptographic generator, buffered so a roll of ten dice is one call.
+ *
+ * @param provider - The cryptographic getRandomValues provider; the platform provider by default.
+ * @returns The platform's cryptographic generator, buffered so a roll of ten dice is one call.
+
+ *
+ * @example
+ * ```ts
+ * import { cryptoSource } from "@johnmorrisdotca/korokoro";
+ * console.log(cryptoSource().seed);
+ * ```
+ */
 export function cryptoSource(provider: CryptoLike | undefined = globalThis.crypto): RandomSource {
   if (provider === undefined || typeof provider.getRandomValues !== "function") {
     throw new Error("korokoro: no crypto.getRandomValues on this platform; pass a seeded source instead");
@@ -57,6 +76,16 @@ function hashSeed(text: string): [number, number, number, number] {
 /**
  * sfc32 started from a text seed: the same seed gives the same rolls on every
  * platform, forever. Not for anything that must be unguessable.
+ *
+ * @param seed - Text that reproduces the same random sequence, or null for an unseeded stored roll.
+ * @returns sfc32 started from a text seed: the same seed gives the same rolls on every platform, forever. Not for anything that must be unguessable.
+
+ *
+ * @example
+ * ```ts
+ * import { seededSource } from "@johnmorrisdotca/korokoro";
+ * console.log(seededSource("table").next() === seededSource("table").next());
+ * ```
  */
 export function seededSource(seed: string): RandomSource {
   let [a, b, c, d] = hashSeed(seed);
@@ -79,7 +108,19 @@ export function seededSource(seed: string): RandomSource {
   return { seed, next: step };
 }
 
-/** A short seed anybody can read aloud or type: eight letters and digits. */
+/** A short seed anybody can read aloud or type: eight letters and digits.
+ *
+ * @param source - A source of unsigned 32-bit integers; crypto by default where optional.
+ * @returns A short seed anybody can read aloud or type: eight letters and digits.
+
+ *
+ * @example
+ * ```ts
+ * import { newSeed } from "@johnmorrisdotca/korokoro";
+ * import { seededSource } from "@johnmorrisdotca/korokoro";
+ * console.log(newSeed(seededSource("table")));
+ * ```
+ */
 export function newSeed(source: RandomSource = cryptoSource()): string {
   const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
   let out = "";
@@ -91,6 +132,18 @@ export function newSeed(source: RandomSource = cryptoSource()): string {
  * A fair integer in [0, n). Rejection sampling, never `next() % n`: the modulo
  * leans towards the low faces whenever n does not divide 2^32, and a d6 or a
  * d10 does not.
+ *
+ * @param source - A source of unsigned 32-bit integers; crypto by default where optional.
+ * @param n - The threshold, denominator or exclusive upper bound used by this call.
+ * @returns A fair integer in [0, n). Rejection sampling, never `next() % n`: the modulo leans towards the low faces whenever n does not divide 2^32, and a d6 or a d10 does not.
+
+ *
+ * @example
+ * ```ts
+ * import { randomInt } from "@johnmorrisdotca/korokoro";
+ * import { seededSource } from "@johnmorrisdotca/korokoro";
+ * console.log(randomInt(seededSource("table"), 6));
+ * ```
  */
 export function randomInt(source: RandomSource, n: number): number {
   if (!Number.isInteger(n) || n < 1 || n > 2 ** 32) throw new RangeError(`korokoro: cannot pick from ${n}`);

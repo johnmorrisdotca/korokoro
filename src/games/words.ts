@@ -8,6 +8,14 @@ import type { ReadingId } from "./readings.ts";
  */
 type Words = Record<`${ReadingId}.${string}`, string>;
 
+/** English and Japanese outcome text, keyed by reading.outcome.
+ *
+ * @example
+ * ```ts
+ * import { READING_WORDS } from "@johnmorrisdotca/korokoro";
+ * console.log(READING_WORDS.en["craps.natural"]);
+ * ```
+ */
 export const READING_WORDS: { en: Words; ja: Words } = {
   en: {
     "sum.total": "{total}",

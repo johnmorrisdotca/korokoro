@@ -10,6 +10,14 @@ import { diceOf, groupsOf, playsByNewRules, valueOfFace, type DiceGroup, type Ro
  * Readings are small and particular on purpose. They do not run a game (turn
  * order, scores across rounds): they read one roll, with the rolls just before
  * it where a game needs them, as craps does for its point.
+ *
+ * @example
+ * ```ts
+ * import type { Outcome } from "@johnmorrisdotca/korokoro";
+ * import { getPreset, presetSpec, roll, seededSource, readDiceAs } from "@johnmorrisdotca/korokoro";
+ * const value: Outcome = readDiceAs(getPreset("cho-han")!.reading, roll(presetSpec(getPreset("cho-han")!), seededSource("docs"), 0));
+ * console.log(value.outcome);
+ * ```
  */
 export type Outcome = {
   /** The outcome's name within its reading: "natural", "point", "yahtzee". */
@@ -66,7 +74,18 @@ function longestRun(faces: number[]): number {
   return best;
 }
 
-/** Every way to make a total from different numbers 1 to 9, largest first: the tiles a Shut the Box roll may shut. */
+/** Every way to make a total from different numbers 1 to 9, largest first: the tiles a Shut the Box roll may shut.
+ *
+ * @param total - The total to measure or compare.
+ * @returns Every way to make a total from different numbers 1 to 9, largest first: the tiles a Shut the Box roll may shut.
+
+ *
+ * @example
+ * ```ts
+ * import { waysToShut } from "@johnmorrisdotca/korokoro";
+ * console.log(waysToShut(7));
+ * ```
+ */
 export function waysToShut(total: number): number[][] {
   const ways: number[][] = [];
   const walk = (left: number, top: number, picked: number[]) => {
@@ -354,10 +373,37 @@ function hazardFirst(main: number, total: number): "nick" | "out" | "chance" {
   return "chance";
 }
 
-/** The name of a reading. */
+/** The name of a reading.
+ *
+ * @example
+ * ```ts
+ * import type { ReadingId } from "@johnmorrisdotca/korokoro";
+ * import { getPreset } from "@johnmorrisdotca/korokoro";
+ * const value: ReadingId = getPreset("cho-han")!.reading;
+ * console.log(value);
+ * ```
+ */
 export type ReadingId = keyof typeof READERS;
 
-/** Read a roll the way a reading does, with the rolls before it in the same game where that matters. */
+/** Read a roll the way a reading does, with the rolls before it in the same game where that matters.
+ *
+ * @param reading - The named game reading to apply.
+ * @param roll - The completed roll to read or record.
+ * @param before - Earlier rolls needed by a reading with a running result.
+ * @param options - Options for this call; omitted fields keep their documented defaults.
+ * @returns Read a roll the way a reading does, with the rolls before it in the same game where that matters.
+
+ *
+ * @example
+ * ```ts
+ * import { readDiceAs } from "@johnmorrisdotca/korokoro";
+ * import { getPreset, normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const preset = getPreset("cho-han")!;
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(readDiceAs(preset.reading, sample).outcome);
+ * ```
+ */
 export function readDiceAs(reading: ReadingId, roll: Roll, before: readonly Roll[] = [], options: Record<string, number> = {}): Outcome {
   return (READERS[reading] as Read)(diceFor(roll), before.map(diceFor), options);
 }
@@ -369,6 +415,18 @@ export function readDiceAs(reading: ReadingId, roll: Roll, before: readonly Roll
  * (none here does, within a kind) can be counted over thousands of patterns
  * where there are millions of throws. Null when the dice are not plain: a
  * reroll or an explosion has no fixed number of throws to count.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns Every way the dice of a spec can fall, kind by kind, each with how many of the equally likely throws fall that way. The dice of a kind are given sorted, highest first, so a reading that does not care about their order (none here does, within a kind) can be counted over thousands of patterns where there are millions of throws. null when the dice are not plain: a reroll or an explosion has no fixed number of throws to count.
+
+ *
+ * @example
+ * ```ts
+ * import { patternsOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(patternsOf(spec)?.length);
+ * ```
  */
 export function patternsOf(spec: RollSpec): { dice: Dice; ways: bigint }[] | null {
   const groups = groupsOf(spec);

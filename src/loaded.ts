@@ -5,6 +5,14 @@ import { chancesOf, faceRange, type DiceGroup } from "./dice.ts";
  * fair. These are not, they say so, and nothing here can make one pass for a
  * fair die: a loaded die's weights are part of its name (`d6{6:3}`), of its
  * spec, of every roll it makes and of every link to one.
+ *
+ * @example
+ * ```ts
+ * import type { LoadedPreset } from "@johnmorrisdotca/korokoro";
+ * import { LOADED_PRESETS } from "@johnmorrisdotca/korokoro";
+ * const value: LoadedPreset = LOADED_PRESETS[0]!;
+ * console.log(value.notation);
+ * ```
  */
 export type LoadedPreset = {
   /** A short id, for code and links. */
@@ -17,7 +25,14 @@ export type LoadedPreset = {
   says: string;
 };
 
-/** Three loaded dice to try, each an old trick with a long record. */
+/** Three loaded dice to try, each an old trick with a long record.
+ *
+ * @example
+ * ```ts
+ * import { LOADED_PRESETS } from "@johnmorrisdotca/korokoro";
+ * console.log(Object.keys(LOADED_PRESETS));
+ * ```
+ */
 export const LOADED_PRESETS: readonly LoadedPreset[] = [
   {
     id: "optimist",
@@ -39,7 +54,16 @@ export const LOADED_PRESETS: readonly LoadedPreset[] = [
   },
 ];
 
-/** One face of a die and how often it comes up, beside how often it would on a fair one. */
+/** One face of a die and how often it comes up, beside how often it would on a fair one.
+ *
+ * @example
+ * ```ts
+ * import type { FaceChance } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, faceChances } from "@johnmorrisdotca/korokoro";
+ * const value: FaceChance = faceChances(DEFAULT_SPEC)[0]!;
+ * console.log(value.chance);
+ * ```
+ */
 export type FaceChance = {
   /** The face, as a roll records it. */
   face: number;
@@ -51,7 +75,20 @@ export type FaceChance = {
   fair: number;
 };
 
-/** Every face of one die of a group with its chance, beside the fair die's. For a custom die of words this is its odds: the faces have no total to have odds of. */
+/** Every face of one die of a group with its chance, beside the fair die's. For a custom die of words this is its odds: the faces have no total to have odds of.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns Every face of one die of a group with its chance, beside the fair die's. For a custom die of words this is its odds: the faces have no total to have odds of.
+
+ *
+ * @example
+ * ```ts
+ * import { faceChances } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(faceChances(spec)[0]);
+ * ```
+ */
 export function faceChances(group: DiceGroup): FaceChance[] {
   const low = group.faces !== undefined ? 1 : faceRange(group.sides).low;
   const chances = chancesOf(group);
@@ -68,6 +105,17 @@ function lowestTerms(top: number, bottom: number): [number, number] {
  * What a loaded die's loading comes to, as exact fractions, for the face it
  * favours most: `{ face: 6, loaded: [3, 8], fair: [1, 6] }` is "6 comes up 3
  * in 8, not 1 in 6". Null for a die that is not loaded.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns What a loaded die's loading comes to, as exact fractions, for the face it favours most: `{ face: 6, loaded: [3, 8], fair: [1, 6] }` is "6 comes up 3 in 8, not 1 in 6". null for a die that is not loaded.
+
+ *
+ * @example
+ * ```ts
+ * import { loadingOf } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(loadingOf(parseNotation("1d6{6:3}")!));
+ * ```
  */
 export function loadingOf(group: DiceGroup): { face: number; loaded: [number, number]; fair: [number, number] } | null {
   if (group.weights === undefined) return null;

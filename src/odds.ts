@@ -15,6 +15,14 @@ import { mathText, spreadMath } from "./math.ts";
  * rounded off, and nothing is left out: exploding dice stop at
  * `MAX_EXPLOSIONS`, in the roll and in the odds alike, so the odds are those
  * of the dice as they are really thrown.
+ *
+ * @example
+ * ```ts
+ * import type { Distribution } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, distributionOf } from "@johnmorrisdotca/korokoro";
+ * const value: Distribution = distributionOf(DEFAULT_SPEC);
+ * console.log([value.min, value.max]);
+ * ```
  */
 export type Distribution = {
   /** The lowest total the dice can make. */
@@ -25,7 +33,16 @@ export type Distribution = {
   probabilities: number[];
 };
 
-/** The odds as whole numbers: how many of the equally likely outcomes make each total. */
+/** The odds as whole numbers: how many of the equally likely outcomes make each total.
+ *
+ * @example
+ * ```ts
+ * import type { ExactCounts } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, exactCounts } from "@johnmorrisdotca/korokoro";
+ * const value: ExactCounts = exactCounts(DEFAULT_SPEC)!;
+ * console.log(String(value.outcomes));
+ * ```
+ */
 export type ExactCounts = {
   /** The lowest total the dice can make. */
   min: number;
@@ -300,6 +317,18 @@ function anchorOf(spec: RollSpec): number {
  * Null for rerolled or exploding dice, for several dice kept, and for large
  * mixed pools, whose odds are worked out as probabilities; `distributionOf`
  * answers for every roll.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns The odds as exact whole numbers, for the dice that have them: plain dice added up, one die kept from a pool (advantage), loaded and custom dice the same way (their weights are whole numbers, so their odds are exact fractions), and several such kinds added together while that stays quick. null for rerolled or exploding dice, for several dice kept, and for large mixed pools, whose odds are worked out as probabilities; `distributionOf` answers for every roll.
+
+ *
+ * @example
+ * ```ts
+ * import { exactCounts } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(String(exactCounts(spec)?.outcomes));
+ * ```
  */
 export function exactCounts(spec: RollSpec): ExactCounts | null {
   // A formula's outcomes are not equally likely totals to count.
@@ -365,6 +394,19 @@ function keyOf(group: DiceGroup): string {
  * independent, so their totals are put together by convolution: every pair of
  * totals, their chances multiplied. Worked out once for each spec, then
  * remembered.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns Every total a spec can make and its chance. Several kinds of dice are independent, so their totals are put together by convolution: every pair of totals, their chances multiplied. Worked out once for each spec, then remembered.
+
+ *
+ * @example
+ * ```ts
+ * import { distributionOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const odds = distributionOf(spec);
+ * console.log(odds.min, odds.max, odds.probabilities[7 - odds.min]);
+ * ```
  */
 export function distributionOf(spec: RollSpec): Distribution {
   const groups = groupsOf(spec);
@@ -410,6 +452,21 @@ export function distributionOf(spec: RollSpec): Distribution {
  * and only the rest are still to be thrown. `held[i]` is whether face i is
  * held. With every die held there is one total, and it is certain. A
  * RangeError for dice that cannot be held (`canHold`).
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param faces - Physical face values, in the order thrown.
+ * @param held - A mask marking dice whose faces stay fixed.
+ * @returns The odds of a roll with some of its dice held: the held faces are settled, and only the rest are still to be thrown. `held[i]` is whether face i is held. With every die held there is one total, and it is certain. A RangeError for dice that cannot be held (`canHold`).
+
+ *
+ * @example
+ * ```ts
+ * import { distributionHolding } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const odds = distributionHolding(spec, [6, 3], [true, false]);
+ * console.log(odds.min, odds.max);
+ * ```
  */
 export function distributionHolding(spec: RollSpec, faces: readonly number[], held: readonly boolean[]): Distribution {
   if (!canHold(spec)) throw new RangeError("korokoro: only plain dice can be held");
@@ -466,13 +523,41 @@ function summedOf(d: Distribution): Summed {
   return made;
 }
 
-/** The chance of exactly this total. */
+/** The chance of exactly this total.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param total - The total to measure or compare.
+ * @returns The chance of exactly this total.
+
+ *
+ * @example
+ * ```ts
+ * import { chanceExactly } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(chanceExactly(spec, 7));
+ * ```
+ */
 export function chanceExactly(spec: Odds, total: number): number {
   const d = odds(spec);
   return d.probabilities[total - d.min] ?? 0;
 }
 
-/** The chance of this total or more: "what do I need to beat a DC of 15". */
+/** The chance of this total or more: "what do I need to beat a DC of 15".
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param target - The DOM host, or the target total for a probability calculation.
+ * @returns The chance of this total or more: "what do I need to beat a DC of 15".
+
+ *
+ * @example
+ * ```ts
+ * import { chanceAtLeast } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(chanceAtLeast(spec, 10));
+ * ```
+ */
 export function chanceAtLeast(spec: Odds, target: number): number {
   const d = odds(spec);
   let sum = 0;
@@ -480,17 +565,60 @@ export function chanceAtLeast(spec: Odds, target: number): number {
   return Math.min(1, sum);
 }
 
-/** The chance of this total or less. */
+/** The chance of this total or less.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param target - The DOM host, or the target total for a probability calculation.
+ * @returns The chance of this total or less.
+
+ *
+ * @example
+ * ```ts
+ * import { chanceAtMost } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(chanceAtMost(spec, 4));
+ * ```
+ */
 export function chanceAtMost(spec: Odds, target: number): number {
   return Math.max(0, 1 - chanceAtLeast(spec, target + 1));
 }
 
-/** The chance that at least one of several throws of a roll reaches a target: a set of six ability scores holding at least one 16, say. */
+/** The chance that at least one of several throws of a roll reaches a target: a set of six ability scores holding at least one 16, say.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param target - The DOM host, or the target total for a probability calculation.
+ * @param times - The number of independent repeats.
+ * @returns The chance that at least one of several throws of a roll reaches a target: a set of six ability scores holding at least one 16, say.
+
+ *
+ * @example
+ * ```ts
+ * import { chanceAnyAtLeast } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(chanceAnyAtLeast(spec, 10, 3));
+ * ```
+ */
 export function chanceAnyAtLeast(spec: Odds, target: number, times: number): number {
   return 1 - (1 - chanceAtLeast(spec, target)) ** times;
 }
 
-/** The average of the highest total among several throws of a roll. Exact: the highest is at most t when every throw is. */
+/** The average of the highest total among several throws of a roll. Exact: the highest is at most t when every throw is.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param times - The number of independent repeats.
+ * @returns The average of the highest total among several throws of a roll. Exact: the highest is at most t when every throw is.
+
+ *
+ * @example
+ * ```ts
+ * import { expectedHighest } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(expectedHighest(spec, 3));
+ * ```
+ */
 export function expectedHighest(spec: Odds, times: number): number {
   const d = odds(spec);
   const { below } = summedOf(d);
@@ -499,12 +627,38 @@ export function expectedHighest(spec: Odds, times: number): number {
   return mean;
 }
 
-/** The average total over many rolls. */
+/** The average total over many rolls.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns The average total over many rolls.
+
+ *
+ * @example
+ * ```ts
+ * import { expectedTotal } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(expectedTotal(spec));
+ * ```
+ */
 export function expectedTotal(spec: Odds): number {
   return summedOf(odds(spec)).mean;
 }
 
-/** How far a typical roll lands from the average. */
+/** How far a typical roll lands from the average.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns How far a typical roll lands from the average.
+
+ *
+ * @example
+ * ```ts
+ * import { spreadOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(spreadOf(spec));
+ * ```
+ */
 export function spreadOf(spec: Odds): number {
   const d = odds(spec);
   const mean = expectedTotal(spec);
@@ -514,6 +668,19 @@ export function spreadOf(spec: Odds): number {
 /**
  * How lucky a total was, from 0 (the worst the dice can do) to 1 (the best):
  * the share of rolls it beats, counting a tie as half. A 7 on 2d6 is 0.5.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param total - The total to measure or compare.
+ * @returns How lucky a total was, from 0 (the worst the dice can do) to 1 (the best): the share of rolls it beats, counting a tie as half. A 7 on 2d6 is 0.5.
+
+ *
+ * @example
+ * ```ts
+ * import { luckOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(luckOf(spec, 7));
+ * ```
  */
 export function luckOf(spec: Odds, total: number): number {
   const d = odds(spec);
@@ -521,7 +688,20 @@ export function luckOf(spec: Odds, total: number): number {
   return Math.min(1, Math.max(0, (summedOf(d).below[at] as number) + chanceExactly(spec, total) / 2));
 }
 
-/** The most likely totals: several when the peak is flat, as it is for one die. */
+/** The most likely totals: several when the peak is flat, as it is for one die.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns The most likely totals: several when the peak is flat, as it is for one die.
+
+ *
+ * @example
+ * ```ts
+ * import { mostLikely } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(mostLikely(spec));
+ * ```
+ */
 export function mostLikely(spec: Odds): number[] {
   const d = odds(spec);
   const top = d.probabilities.reduce((a, b) => Math.max(a, b), 0);

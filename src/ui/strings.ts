@@ -4,6 +4,14 @@ import type { NotationProblem } from "../notation.ts";
  * Every word the tray says, in English and Japanese. A page in another
  * language passes its own table: `{ ...STRINGS.en, roll: "Lanzar" }`.
  * `{n}` and the other braces are filled in; a table must keep them.
+ *
+ * @example
+ * ```ts
+ * import type { RollerStrings } from "@johnmorrisdotca/korokoro";
+ * import { STRINGS } from "@johnmorrisdotca/korokoro";
+ * const value: RollerStrings = STRINGS.en;
+ * console.log(Object.keys(value).slice(0, 3));
+ * ```
  */
 export type RollerStrings = {
   dice: string;
@@ -218,7 +226,14 @@ export type RollerStrings = {
   savedNowhere: string;
 };
 
-/** The built-in words, in English and Japanese. */
+/** The built-in words, in English and Japanese.
+ *
+ * @example
+ * ```ts
+ * import { STRINGS } from "@johnmorrisdotca/korokoro";
+ * console.log(Object.keys(STRINGS.en).slice(0, 5));
+ * ```
+ */
 export const STRINGS: { en: RollerStrings; ja: RollerStrings } = {
   en: {
     dice: "Dice",

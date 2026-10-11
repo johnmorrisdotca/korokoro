@@ -5,6 +5,12 @@ import { formatNotation, parseNotation } from "./notation.ts";
  * The version of the notation a link is written in. 2 is where `r` came to
  * mean reroll until clear; a link with no version is from 1.0.0 to 1.3.0,
  * where `r` rerolled once, and is read that way.
+ *
+ * @example
+ * ```ts
+ * import { SHARE_VERSION } from "@johnmorrisdotca/korokoro";
+ * console.log(SHARE_VERSION);
+ * ```
  */
 export const SHARE_VERSION = 2;
 
@@ -13,6 +19,19 @@ export const SHARE_VERSION = 2;
  * person opening it sees exactly what was thrown, every rerolled and exploded
  * die included. A seeded roll carries its seed too, so the same dice can be
  * thrown again and come out the same; a roll with dice held says which.
+ *
+ * @param roll - The completed roll to read or record.
+ * @returns A roll as a link. The query carries the dice, the faces and when, so the person opening it sees exactly what was thrown, every rerolled and exploded die included. A seeded roll carries its seed too, so the same dice can be thrown again and come out the same; a roll with dice held says which.
+
+ *
+ * @example
+ * ```ts
+ * import { shareQuery } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(shareQuery(sample));
+ * ```
  */
 export function shareQuery(roll: Roll): string {
   const params = new URLSearchParams({ roll: formatNotation(roll.spec), faces: roll.faces.join(","), at: String(roll.at) });
@@ -25,6 +44,19 @@ export function shareQuery(roll: Roll): string {
 /**
  * A set of rolls as a link: the notation with its `6#`, and every roll's
  * faces, the rolls parted by semicolons.
+ *
+ * @param rolls - Completed rolls, or the number of attempts where this parameter is numeric.
+ * @returns A set of rolls as a link: the notation with its `6#`, and every roll's faces, the rolls parted by semicolons.
+
+ *
+ * @example
+ * ```ts
+ * import { shareQueryMany } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(shareQueryMany([sample, sample]));
+ * ```
  */
 export function shareQueryMany(rolls: readonly Roll[]): string {
   const first = rolls[0];
@@ -36,7 +68,21 @@ export function shareQueryMany(rolls: readonly Roll[]): string {
   return params.toString();
 }
 
-/** A shared set of rolls from a query string, or null when it does not hold one: as many rolls as the notation's `#` says, each with faces its dice could show. */
+/** A shared set of rolls from a query string, or null when it does not hold one: as many rolls as the notation's `#` says, each with faces its dice could show.
+ *
+ * @param query - A query string or URLSearchParams containing the shared settings.
+ * @returns A shared set of rolls from a query string, or null when it does not hold one: as many rolls as the notation's `#` says, each with faces its dice could show.
+
+ *
+ * @example
+ * ```ts
+ * import { readSharedMany } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom, shareQueryMany } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(readSharedMany(shareQueryMany([sample, sample]))?.length);
+ * ```
+ */
 export function readSharedMany(query: string | URLSearchParams): Roll[] | null {
   const params = typeof query === "string" ? new URLSearchParams(query.replace(/^\?/, "")) : query;
   const spec = parseNotation(params.get("roll") ?? "", { legacyReroll: params.get("v") === null });
@@ -55,7 +101,21 @@ export function readSharedMany(query: string | URLSearchParams): Roll[] | null {
   return rolls;
 }
 
-/** A shared roll from a query string, or null when it does not describe one this roller could have thrown. */
+/** A shared roll from a query string, or null when it does not describe one this roller could have thrown.
+ *
+ * @param query - A query string or URLSearchParams containing the shared settings.
+ * @returns A shared roll from a query string, or null when it does not describe one this roller could have thrown.
+
+ *
+ * @example
+ * ```ts
+ * import { readShared } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom, shareQuery } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(readShared(shareQuery(sample))?.total);
+ * ```
+ */
 export function readShared(query: string | URLSearchParams): Roll | null {
   const params = typeof query === "string" ? new URLSearchParams(query.replace(/^\?/, "")) : query;
   const spec = parseNotation(params.get("roll") ?? "", { legacyReroll: params.get("v") === null });

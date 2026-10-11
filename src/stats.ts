@@ -2,7 +2,16 @@ import { diceCount, diceOf, dieName, faceRange, groupOf, hasTotal, sidesOf, type
 import { formatNotation } from "./notation.ts";
 import { distributionOf, expectedTotal, luckOf } from "./odds.ts";
 
-/** Everything worth saying about a history of rolls. Pure: a history in, numbers out. */
+/** Everything worth saying about a history of rolls. Pure: a history in, numbers out.
+ *
+ * @example
+ * ```ts
+ * import type { Stats } from "@johnmorrisdotca/korokoro";
+ * import { statsOf } from "@johnmorrisdotca/korokoro";
+ * const value: Stats = statsOf([]);
+ * console.log(value.rolls);
+ * ```
+ */
 export type Stats = {
   /** How many rolls the history holds. */
   rolls: number;
@@ -28,7 +37,16 @@ export type Stats = {
   totals: TotalStats | null;
 };
 
-/** How often each face of one kind of die came up, and whether that looks fair. */
+/** How often each face of one kind of die came up, and whether that looks fair.
+ *
+ * @example
+ * ```ts
+ * import type { FaceStats } from "@johnmorrisdotca/korokoro";
+ * import { faceStats } from "@johnmorrisdotca/korokoro";
+ * const value: FaceStats = faceStats([], 6);
+ * console.log(value.counts);
+ * ```
+ */
 export type FaceStats = {
   /** The kind of die counted. */
   sides: Sides;
@@ -44,7 +62,16 @@ export type FaceStats = {
   loaded?: true;
 };
 
-/** The totals of one spec: seen against what the odds promise. */
+/** The totals of one spec: seen against what the odds promise.
+ *
+ * @example
+ * ```ts
+ * import type { TotalStats } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, totalStats } from "@johnmorrisdotca/korokoro";
+ * const value: TotalStats = totalStats([], DEFAULT_SPEC);
+ * console.log(value.rolls);
+ * ```
+ */
 export type TotalStats = {
   /** The spec, as notation. */
   notation: string;
@@ -118,16 +145,43 @@ function gammaQ(a: number, x: number): number {
  * The upper tail of a chi-square distribution: the chance that a fair die
  * strays at least this far. Worked out from the incomplete gamma function,
  * not approximated by a normal curve.
+ *
+ * @param statistic - The nonnegative chi-squared statistic.
+ * @param degrees - The number of degrees of freedom.
+ * @returns The upper tail of a chi-square distribution: the chance that a fair die strays at least this far. Worked out from the incomplete gamma function, not approximated by a normal curve.
+
+ *
+ * @example
+ * ```ts
+ * import { chiSquareTail } from "@johnmorrisdotca/korokoro";
+ * console.log(chiSquareTail(0, 5));
+ * ```
  */
 export function chiSquareTail(statistic: number, degrees: number): number {
   if (degrees < 1) return 1;
   return gammaQ(degrees / 2, statistic / 2);
 }
 
-/** The fewest throws of each face a fairness test wants before it will say anything: the usual rule for a chi-square. */
+/** The fewest throws of each face a fairness test wants before it will say anything: the usual rule for a chi-square.
+ *
+ * @example
+ * ```ts
+ * import { FAIRNESS_MINIMUM_EACH } from "@johnmorrisdotca/korokoro";
+ * console.log(FAIRNESS_MINIMUM_EACH);
+ * ```
+ */
 export const FAIRNESS_MINIMUM_EACH = 5;
 
-/** What a fairness test makes of a die. */
+/** What a fairness test makes of a die.
+ *
+ * @example
+ * ```ts
+ * import type { Fairness } from "@johnmorrisdotca/korokoro";
+ * import { fairnessTest } from "@johnmorrisdotca/korokoro";
+ * const value: Fairness = fairnessTest([30, 30, 30, 30, 30, 30]);
+ * console.log(value.enough);
+ * ```
+ */
 export type Fairness = {
   /** How many faces the die has. */
   sides: number;
@@ -157,6 +211,17 @@ export type Fairness = {
  * came up (`counts[i]` for the i-th face) against a fair die, or against
  * `chances` when the die is supposed to be something else. It makes no roll:
  * the counts can come from a history here or from a real die on a real table.
+ *
+ * @param counts - Observed counts in face order.
+ * @param chances - Expected face probabilities; uniform when omitted.
+ * @returns Is this die fair? A chi-square goodness-of-fit test of how often each face came up (`counts[i]` for the i-th face) against a fair die, or against `chances` when the die is supposed to be something else. It makes no roll: the counts can come from a history here or from a real die on a real table.
+
+ *
+ * @example
+ * ```ts
+ * import { fairnessTest } from "@johnmorrisdotca/korokoro";
+ * console.log(fairnessTest([30, 30, 30, 30, 30, 30]).enough);
+ * ```
  */
 export function fairnessTest(counts: readonly number[], chances?: readonly number[]): Fairness {
   const sides = counts.length;
@@ -176,7 +241,16 @@ export function fairnessTest(counts: readonly number[], chances?: readonly numbe
   return { sides, rolls, minimum, enough: true, expected, statistic, p, verdict: p >= 0.05 ? "fair" : p >= 0.001 ? "unusual" : "lopsided" };
 }
 
-/** What `readResults` found in somebody's typed results. */
+/** What `readResults` found in somebody's typed results.
+ *
+ * @example
+ * ```ts
+ * import type { TypedResults } from "@johnmorrisdotca/korokoro";
+ * import { readResults } from "@johnmorrisdotca/korokoro";
+ * const value: TypedResults = readResults("1 2 3 4 5 6", 6);
+ * console.log(value.ok);
+ * ```
+ */
 export type TypedResults = { ok: true; sides: number; counts: number[]; rolls: number } | { ok: false; part: string };
 
 /**
@@ -184,6 +258,17 @@ export type TypedResults = { ok: true; sides: number; counts: number[]; rolls: n
  * whole numbers separated by spaces, commas or new lines. `sides` is the die;
  * left out, it is taken to be the highest face seen, and at least 2. Says
  * which piece it could not read.
+ *
+ * @param text - Text to parse, validate or format.
+ * @param sides - A numbered die size or F for Fate dice.
+ * @returns Results typed or pasted from a real die, such as `3 5 6 6 1` or `3,5,6`: whole numbers separated by spaces, commas or new lines. `sides` is the die; left out, it is taken to be the highest face seen, and at least 2. Says which piece it could not read.
+
+ *
+ * @example
+ * ```ts
+ * import { readResults } from "@johnmorrisdotca/korokoro";
+ * console.log(readResults("1 2 3 4 5 6", 6));
+ * ```
  */
 export function readResults(text: string, sides?: number): TypedResults {
   const pieces = text.split(/[\s,;]+/).filter((piece) => piece !== "");
@@ -207,6 +292,20 @@ export function readResults(text: string, sides?: number): TypedResults {
  * or a group, which counts exactly that die. A numbered die, loaded or not,
  * is tested against the fair die of its size; a custom die against its faces
  * as written.
+ *
+ * @param history - Completed rolls, newest first where the history API requires it.
+ * @param kind - The die size or group whose face statistics are requested.
+ * @returns How often each face of one kind of die came up in a history, with a chi-square test of whether that looks fair. `kind` is a number of sides (or "F"), which counts the fair dice of that size and no loaded or custom one; or a group, which counts exactly that die. A numbered die, loaded or not, is tested against the fair die of its size; a custom die against its faces as written.
+
+ *
+ * @example
+ * ```ts
+ * import { faceStats } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(faceStats([sample], 6)?.counts);
+ * ```
  */
 export function faceStats(history: readonly Roll[], kind: Sides | DiceGroup): FaceStats {
   const group: DiceGroup = typeof kind === "object" ? kind : { count: 1, sides: kind, keep: "all" };
@@ -229,7 +328,22 @@ export function faceStats(history: readonly Roll[], kind: Sides | DiceGroup): Fa
   return stats;
 }
 
-/** The totals of every roll of one spec in a history, beside what the odds expect. */
+/** The totals of every roll of one spec in a history, beside what the odds expect.
+ *
+ * @param history - Completed rolls, newest first where the history API requires it.
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns The totals of every roll of one spec in a history, beside what the odds expect.
+
+ *
+ * @example
+ * ```ts
+ * import { totalStats } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(totalStats([sample], spec)?.average);
+ * ```
+ */
 export function totalStats(history: readonly Roll[], spec: RollSpec): TotalStats {
   const notation = formatNotation(spec);
   // A roll with dice held is a choice as much as a throw, so it is not set against the odds.
@@ -255,6 +369,21 @@ export function totalStats(history: readonly Roll[], spec: RollSpec): TotalStats
  * Stats for a history, oldest roll first. `focus` picks which spec's totals to
  * break down, and which die's faces: its first kind, or `sides` when a roll
  * of several kinds wants another.
+ *
+ * @param history - Completed rolls, newest first where the history API requires it.
+ * @param focus - The spec whose totals are measured.
+ * @param sides - A numbered die size or F for Fate dice.
+ * @returns Stats for a history, oldest roll first. `focus` picks which spec's totals to break down, and which die's faces: its first kind, or `sides` when a roll of several kinds wants another.
+
+ *
+ * @example
+ * ```ts
+ * import { statsOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(statsOf([sample]).rolls);
+ * ```
  */
 export function statsOf(history: readonly Roll[], focus?: RollSpec, sides?: Sides | DiceGroup): Stats {
   let hot = 0;

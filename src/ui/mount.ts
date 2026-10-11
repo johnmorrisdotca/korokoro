@@ -51,7 +51,15 @@ import { injectStyle } from "./style.ts";
 import { helpMarks } from "./help.ts";
 import { REFUSALS, STRINGS, fillIn, type RollerStrings } from "./strings.ts";
 
-/** Everything a tray can be told when it is mounted. All of it is optional. */
+/** Everything a tray can be told when it is mounted. All of it is optional.
+ *
+ * @example
+ * ```ts
+ * import type { RollerOptions } from "@johnmorrisdotca/korokoro";
+ * const value: RollerOptions = { spec: { count: 2, sides: 6 }, storage: null, sound: false };
+ * console.log(value.spec?.count);
+ * ```
+ */
 export type RollerOptions = {
   /** For numbers and times, and for which built-in words to use: "ja…" is Japanese, anything else English. */
   locale?: string;
@@ -125,10 +133,27 @@ export type RollerOptions = {
   size?: RollerSize;
 };
 
-/** How much of the tray is drawn: the felt alone, the felt and the choice of dice, or all of it. */
+/** How much of the tray is drawn: the felt alone, the felt and the choice of dice, or all of it.
+ *
+ * @example
+ * ```ts
+ * import type { RollerSize } from "@johnmorrisdotca/korokoro";
+ * const value: RollerSize = "small";
+ * console.log(value);
+ * ```
+ */
 export type RollerSize = "small" | "medium" | "large";
 
-/** What `mountRoller` hands back: the tray, driven from code. */
+/** What `mountRoller` hands back: the tray, driven from code.
+ *
+ * @example
+ * ```ts no-run
+ * import type { RollerHandle } from "@johnmorrisdotca/korokoro";
+ * import { mountRoller } from "@johnmorrisdotca/korokoro";
+ * const value: RollerHandle = mountRoller(document.createElement("div"), { sound: false, storage: null });
+ * console.log(value.history());
+ * ```
+ */
 export type RollerHandle = {
   /** Throw the dice showing, as a tap on the felt does. */
   roll(): void;

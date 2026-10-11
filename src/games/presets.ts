@@ -4,13 +4,29 @@ import { parseNotation } from "../notation.ts";
 import { READERS, diceFor, patternsOf, readDiceAs, type Outcome, type ReadingId } from "./readings.ts";
 import { READING_WORDS } from "./words.ts";
 
-/** The shelves the games are kept on. */
+/** The shelves the games are kept on.
+ *
+ * @example
+ * ```ts
+ * import type { GameFamily } from "@johnmorrisdotca/korokoro";
+ * const value: GameFamily = "dice";
+ * console.log(value);
+ * ```
+ */
 export type GameFamily = "board" | "dice" | "traditional" | "cards" | "roleplaying" | "handy";
 
 /**
  * The dice for a game, and how the game reads them. A preset is data: a line
  * here, not code. Korokoro rolls and reads the dice; it does not run the game
  * (whose turn it is, a score sheet across rounds).
+ *
+ * @example
+ * ```ts
+ * import type { Preset } from "@johnmorrisdotca/korokoro";
+ * import { getPreset } from "@johnmorrisdotca/korokoro";
+ * const value: Preset = getPreset("cho-han")!;
+ * console.log(value.notation);
+ * ```
  */
 export type Preset = {
   /** A short name for code, links and the command line: "yahtzee", "cho-han". */
@@ -48,6 +64,14 @@ export type Preset = {
 
 const wiki = (page: string) => `https://en.wikipedia.org/wiki/${page}`;
 
+/** Game presets with their dice, readings and English/Japanese help.
+ *
+ * @example
+ * ```ts
+ * import { PRESETS } from "@johnmorrisdotca/korokoro";
+ * console.log(PRESETS.map((preset) => preset.id).slice(0, 5));
+ * ```
+ */
 export const PRESETS: readonly Preset[] = [
   // Board games
   { id: "monopoly", name: "Monopoly", nameJa: "モノポリー", aliases: ["property trading"], family: "board", notation: "2d6", reading: "doubles", options: { third: 1 }, total: true, runs: true, hold: false, says: "Two dice; doubles roll again, and a third doubles in a row ends the turn.", saysJa: "ダイス2個。ゾロ目ならもう一度、3回続くと手番が終わります。", how: "Roll two dice and move their total. Doubles give another turn after the move. Doubles three times in a row send the player to jail without moving for the third.", source: wiki("Monopoly_(game)") },
@@ -109,14 +133,36 @@ export const PRESETS: readonly Preset[] = [
 /** A preset's name, for finding it: lower case, with what is not a letter or a digit taken out. */
 const plainName = (text: string) => text.toLowerCase().normalize("NFKD").replace(/[^\p{L}\p{N}]/gu, "");
 
-/** A preset by its id, its name or any of its other names: `getPreset("yahtzee")` and `getPreset("Yacht")` are the same game. Undefined when there is none. */
+/** A preset by its id, its name or any of its other names: `getPreset("yahtzee")` and `getPreset("Yacht")` are the same game. Undefined when there is none.
+ *
+ * @param name - The preset or saved-set name to look up or write.
+ * @returns A preset by its id, its name or any of its other names: `getPreset("yahtzee")` and `getPreset("Yacht")` are the same game. undefined when there is none.
+
+ *
+ * @example
+ * ```ts
+ * import { getPreset } from "@johnmorrisdotca/korokoro";
+ * console.log(getPreset("Yacht")?.id, getPreset("unknown"));
+ * ```
+ */
 export function getPreset(name: string): Preset | undefined {
   const wanted = plainName(name);
   if (wanted === "") return undefined;
   return PRESETS.find((p) => plainName(p.id) === wanted || plainName(p.name) === wanted) ?? PRESETS.find((p) => plainName(p.nameJa) === wanted || p.aliases.some((a) => plainName(a) === wanted));
 }
 
-/** The presets a search finds: every word typed has to be in the name, another name, the one-line description or the notation. An empty search finds them all. */
+/** The presets a search finds: every word typed has to be in the name, another name, the one-line description or the notation. An empty search finds them all.
+ *
+ * @param search - Text to match against preset ids, names and aliases.
+ * @returns The presets a search finds: every word typed has to be in the name, another name, the one-line description or the notation. An empty search finds them all.
+
+ *
+ * @example
+ * ```ts
+ * import { findPresets } from "@johnmorrisdotca/korokoro";
+ * console.log(findPresets("yahtzee").map((preset) => preset.id));
+ * ```
+ */
 export function findPresets(search: string): Preset[] {
   const words = search.toLowerCase().normalize("NFKD").split(/\s+/).filter((w) => w !== "");
   return PRESETS.filter((p) => {
@@ -125,12 +171,34 @@ export function findPresets(search: string): Preset[] {
   });
 }
 
-/** A preset's dice, as a spec. */
+/** A preset's dice, as a spec.
+ *
+ * @param preset - The game preset whose dice and reading are used.
+ * @returns A preset's dice, as a spec.
+
+ *
+ * @example
+ * ```ts
+ * import { presetSpec } from "@johnmorrisdotca/korokoro";
+ * import { formatNotation, getPreset } from "@johnmorrisdotca/korokoro";
+ * const preset = getPreset("cho-han")!;
+ * console.log(formatNotation(presetSpec(preset)));
+ * ```
+ */
 export function presetSpec(preset: Preset): RollSpec {
   return parseNotation(preset.notation) as RollSpec;
 }
 
-/** What a game makes of a roll: the outcome, and the words for it. */
+/** What a game makes of a roll: the outcome, and the words for it.
+ *
+ * @example
+ * ```ts
+ * import type { PresetReading } from "@johnmorrisdotca/korokoro";
+ * import { getPreset, presetSpec, roll, seededSource, readPreset } from "@johnmorrisdotca/korokoro";
+ * const value: PresetReading = readPreset(getPreset("cho-han")!, roll(presetSpec(getPreset("cho-han")!), seededSource("docs"), 0));
+ * console.log(value.text);
+ * ```
+ */
 export type PresetReading = Outcome & {
   /** The reading in a sentence, in English. Empty for a die that says it all itself, such as a coin. */
   text: string;
@@ -144,13 +212,39 @@ const fill = (template: string, values: Outcome["values"]) => template.replace(/
  * light: the point in craps, a turn's total in Pig. `language` is "en" or
  * "ja". The roll may be of other dice than the preset opens with (a pool made
  * larger, a bonus added): it is read all the same.
+ *
+ * @param preset - The game preset whose dice and reading are used.
+ * @param thrown - The completed roll to read or announce.
+ * @param before - Earlier rolls needed by a reading with a running result.
+ * @param language - English or Japanese for the reading text.
+ * @returns Read a roll the way a game does. `before` is the rolls made just before it in the same game, oldest first, for a game that reads a roll in their light: the point in craps, a turn's total in Pig. `language` is "en" or "ja". The roll may be of other dice than the preset opens with (a pool made larger, a bonus added): it is read all the same.
+
+ *
+ * @example
+ * ```ts
+ * import { readPreset } from "@johnmorrisdotca/korokoro";
+ * import { getPreset, normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const preset = getPreset("cho-han")!;
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(readPreset(preset, sample, [], "en").text);
+ * ```
  */
 export function readPreset(preset: Preset, thrown: Roll, before: readonly Roll[] = [], language: "en" | "ja" = "en"): PresetReading {
   const outcome = readDiceAs(preset.reading, thrown, preset.runs === true ? before : [], preset.options ?? {});
   return { ...outcome, text: fill(READING_WORDS[language][`${preset.reading}.${outcome.outcome}`] ?? "", outcome.values) };
 }
 
-/** A game's dice thrown and read. */
+/** A game's dice thrown and read.
+ *
+ * @example
+ * ```ts
+ * import type { PresetRoll } from "@johnmorrisdotca/korokoro";
+ * import { rollPreset, seededSource } from "@johnmorrisdotca/korokoro";
+ * const value: PresetRoll = rollPreset("cho-han", { source: seededSource("docs"), at: 0 });
+ * console.log(value.roll.total);
+ * ```
+ */
 export type PresetRoll = {
   preset: Preset;
   /** The roll, or for a set such as ability scores, the last roll of it. */
@@ -167,6 +261,18 @@ export type PresetRoll = {
  * Throw a game's dice and read them. `source` is the crypto generator unless
  * a seeded one is given; `before` is the rolls so far in the same game.
  * Throws a RangeError for a name that is no preset.
+ *
+ * @param name - The preset or saved-set name to look up or write.
+ * @param options - Options for this call; omitted fields keep their documented defaults.
+ * @returns Throw a game's dice and read them. `source` is the crypto generator unless a seeded one is given; `before` is the rolls so far in the same game. Throws a RangeError for a name that is no preset.
+
+ *
+ * @example
+ * ```ts
+ * import { rollPreset } from "@johnmorrisdotca/korokoro";
+ * import { seededSource } from "@johnmorrisdotca/korokoro";
+ * console.log(rollPreset("cho-han", { source: seededSource("table"), at: 0 }).reading.text);
+ * ```
  */
 export function rollPreset(name: string, options: { source?: RandomSource; at?: number; before?: readonly Roll[]; language?: "en" | "ja" } = {}): PresetRoll {
   const preset = getPreset(name);
@@ -178,7 +284,16 @@ export function rollPreset(name: string, options: { source?: RandomSource; at?: 
   return { preset, roll: rolls.at(-1) as Roll, rolls, readings, reading: readings.at(-1) as PresetReading };
 }
 
-/** One line of a game's odds: an outcome, the words for it, and its chance as a whole-number count of the equally likely throws. */
+/** One line of a game's odds: an outcome, the words for it, and its chance as a whole-number count of the equally likely throws.
+ *
+ * @example
+ * ```ts
+ * import type { OutcomeOdds } from "@johnmorrisdotca/korokoro";
+ * import { getPreset, presetOdds } from "@johnmorrisdotca/korokoro";
+ * const value: OutcomeOdds = presetOdds(getPreset("cho-han")!)![0]!;
+ * console.log(value.text);
+ * ```
+ */
 export type OutcomeOdds = {
   outcome: string;
   /** The outcome in words, with its figures left as they were first seen: "Three of a kind". */
@@ -200,6 +315,20 @@ export type OutcomeOdds = {
  * Null where there is nothing to count: a reading that is only the total,
  * whose odds `distributionOf` gives; a reading that depends on the order of
  * the dice; or dice that are rerolled or explode.
+ *
+ * @param preset - The game preset whose dice and reading are used.
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param language - English or Japanese for the reading text.
+ * @returns The exact odds of each outcome of a game's first roll: a natural in craps, each hand in chinchirorin, each result of a Risk battle. Every way the dice can fall is counted, in whole numbers. `spec` is the preset's own dice unless others are given (a larger pool, fewer battle dice). null where there is nothing to count: a reading that is only the total, whose odds `distributionOf` gives; a reading that depends on the order of the dice; or dice that are rerolled or explode.
+
+ *
+ * @example
+ * ```ts
+ * import { presetOdds } from "@johnmorrisdotca/korokoro";
+ * import { getPreset } from "@johnmorrisdotca/korokoro";
+ * const preset = getPreset("cho-han")!;
+ * console.log(presetOdds(preset)?.map((outcome) => outcome.text));
+ * ```
  */
 export function presetOdds(preset: Preset, spec: RollSpec = presetSpec(preset), language: "en" | "ja" = "en"): OutcomeOdds[] | null {
   if (["sum", "scores", "faces", "d66", "counts", "shutTheBox", "percentile", "highest"].includes(preset.reading)) return null;

@@ -84,6 +84,13 @@ import {
  * the die is clear, and `ro` rerolls once. Until 1.4.0 this package's `r`
  * rerolled once; `parseNotation(text, { legacyReroll: true })` reads text
  * written then.
+ *
+ * @example
+ * ```ts
+ * import type { NotationProblem } from "@johnmorrisdotca/korokoro";
+ * const value: NotationProblem = "count";
+ * console.log(value);
+ * ```
  */
 export type NotationProblem =
   /** Not dice notation at all. */
@@ -129,7 +136,16 @@ export type NotationProblem =
   /** A loaded die whose weights cannot be read: a face the die does not have, a weight past 99, fewer than two faces that can come up, a die too large to load, or weights that are all the same. */
   | "weights";
 
-/** What `checkNotation` found: the spec, or the part it refused and why. */
+/** What `checkNotation` found: the spec, or the part it refused and why.
+ *
+ * @example
+ * ```ts
+ * import type { NotationCheck } from "@johnmorrisdotca/korokoro";
+ * import { checkNotation } from "@johnmorrisdotca/korokoro";
+ * const value: NotationCheck = checkNotation("2d6");
+ * console.log(value.ok);
+ * ```
+ */
 export type NotationCheck =
   | { ok: true; spec: RollSpec }
   | {
@@ -141,7 +157,15 @@ export type NotationCheck =
       message: string;
     };
 
-/** How to read a notation. */
+/** How to read a notation.
+ *
+ * @example
+ * ```ts
+ * import type { NotationOptions } from "@johnmorrisdotca/korokoro";
+ * const value: NotationOptions = { legacyReroll: true, maxDice: 20 };
+ * console.log(value.legacyReroll);
+ * ```
+ */
 export type NotationOptions = {
   /** Read `r<` as 1.2.0 and 1.3.0 wrote it: reroll once. For text kept from those versions, such as an old shared link. */
   legacyReroll?: boolean;
@@ -393,7 +417,19 @@ function labelStart(text: string): number {
   return -1;
 }
 
-/** A spec from notation, or which part of the text was refused and why. Never a roll of something else. */
+/** A spec from notation, or which part of the text was refused and why. Never a roll of something else.
+ *
+ * @param text - Text to parse, validate or format.
+ * @param options - Options for this call; omitted fields keep their documented defaults.
+ * @returns A spec from notation, or which part of the text was refused and why. Never a roll of something else.
+
+ *
+ * @example
+ * ```ts
+ * import { checkNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(checkNotation("not dice"));
+ * ```
+ */
 export function checkNotation(text: string, options: NotationOptions = {}): NotationCheck {
   if (text.length > LONGEST) return refuse("shape", `${text.slice(0, 16)}…`);
   let rest = text;
@@ -622,7 +658,19 @@ function added(node: MathNode, sign = 1): number | null {
   return left === null || right === null ? null : left + right;
 }
 
-/** A spec from notation, or null when the text is not dice this roller can throw. `checkNotation` says why. */
+/** A spec from notation, or null when the text is not dice this roller can throw. `checkNotation` says why.
+ *
+ * @param text - Text to parse, validate or format.
+ * @param options - Options for this call; omitted fields keep their documented defaults.
+ * @returns A spec from notation, or null when the text is not dice this roller can throw. `checkNotation` says why.
+
+ *
+ * @example
+ * ```ts
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(parseNotation("2d20kh1+5"));
+ * ```
+ */
 export function parseNotation(text: string, options: NotationOptions = {}): RollSpec | null {
   const read = checkNotation(text, options);
   return read.ok ? read.spec : null;
@@ -637,6 +685,17 @@ function formatGroup(group: DiceGroup): string {
  * roll: each kind of dice as its count and sides, `!`, the reroll as `r<` or
  * `ro<`, what is kept as `kh` or `kl`; the kinds joined by `+`; then the
  * bonus. So `4d6dl1` is written back as `4d6kh3`.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns Notation for a spec: the inverse of `parseNotation`. One spelling for each roll: each kind of dice as its count and sides, `!`, the reroll as `r<` or `ro<`, what is kept as `kh` or `kl`; the kinds joined by `+`; then the bonus. So `4d6dl1` is written back as `4d6kh3`.
+
+ *
+ * @example
+ * ```ts
+ * import { formatNotation } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(formatNotation(parseNotation("2d20kh1+5")!));
+ * ```
  */
 export function formatNotation(spec: RollSpec): string {
   const modifier = spec.modifier === 0 ? "" : spec.modifier > 0 ? `+${spec.modifier}` : `${spec.modifier}`;

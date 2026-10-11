@@ -4,21 +4,71 @@ import { cryptoSource, randomInt, type RandomSource } from "./random.ts";
 /**
  * The dice the tray offers as buttons: the polyhedral set, the thirty-sided
  * die, and the percentile die. Any other die is reached by notation.
+ *
+ * @example
+ * ```ts
+ * import { DIE_SIDES } from "@johnmorrisdotca/korokoro";
+ * console.log(Object.keys(DIE_SIDES));
+ * ```
  */
 export const DIE_SIDES = [4, 6, 8, 10, 12, 20, 30, 100] as const;
-/** One of the dice the tray has a button for. */
+/** One of the dice the tray has a button for.
+ *
+ * @example
+ * ```ts
+ * import type { DieSides } from "@johnmorrisdotca/korokoro";
+ * const value: DieSides = 20;
+ * console.log(value);
+ * ```
+ */
 export type DieSides = (typeof DIE_SIDES)[number];
 
-/** A die of any size from a coin to a d1000, or a Fate die, whose faces are −1, 0 and +1. */
+/** A die of any size from a coin to a d1000, or a Fate die, whose faces are −1, 0 and +1.
+ *
+ * @example
+ * ```ts
+ * import type { Sides } from "@johnmorrisdotca/korokoro";
+ * const value: Sides = "F";
+ * console.log(value);
+ * ```
+ */
 export type Sides = number | "F";
-/** The fewest sides a numbered die has: a coin. */
+/** The fewest sides a numbered die has: a coin.
+ *
+ * @example
+ * ```ts
+ * import { MIN_SIDES } from "@johnmorrisdotca/korokoro";
+ * console.log(MIN_SIDES);
+ * ```
+ */
 export const MIN_SIDES = 2;
-/** The most sides a numbered die has. */
+/** The most sides a numbered die has.
+ *
+ * @example
+ * ```ts
+ * import { MAX_SIDES } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_SIDES);
+ * ```
+ */
 export const MAX_SIDES = 1000;
 
-/** The fewest dice in one roll. */
+/** The fewest dice in one roll.
+ *
+ * @example
+ * ```ts
+ * import { MIN_DICE } from "@johnmorrisdotca/korokoro";
+ * console.log(MIN_DICE);
+ * ```
+ */
 export const MIN_DICE = 1;
-/** The most dice in one roll: a fireball's 8d6, Farkle's six and a pool of ten all fit. */
+/** The most dice in one roll: a fireball's 8d6, Farkle's six and a pool of ten all fit.
+ *
+ * @example
+ * ```ts
+ * import { MAX_DICE } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_DICE);
+ * ```
+ */
 export const MAX_DICE = 10;
 /**
  * The most dice in one roll made from code, for a caller that asks:
@@ -28,47 +78,142 @@ export const MAX_DICE = 10;
  * dice go past ten: fair numbered or Fate dice, all added or one kept, with
  * no other rule, which is where the odds stay exact and quick however many
  * there are. The tray stays at ten.
+ *
+ * @example
+ * ```ts
+ * import { MAX_DICE_BY_CODE } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_DICE_BY_CODE);
+ * ```
  */
 export const MAX_DICE_BY_CODE = 100;
-/** The largest die whose dice may be asked to all differ (`u`). */
+/** The largest die whose dice may be asked to all differ (`u`).
+ *
+ * @example
+ * ```ts
+ * import { MAX_UNIQUE_SIDES } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_UNIQUE_SIDES);
+ * ```
+ */
 export const MAX_UNIQUE_SIDES = 100;
-/** The largest bonus, either way: a roll adds or takes away at most this. */
+/** The largest bonus, either way: a roll adds or takes away at most this.
+ *
+ * @example
+ * ```ts
+ * import { MAX_MODIFIER } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_MODIFIER);
+ * ```
+ */
 export const MAX_MODIFIER = 99;
 
 /**
  * How many more dice one exploding die may throw. The chain stops there and
  * the last die is read as it lies, so a roll always ends and its odds are the
  * exact odds of the dice as thrown. A d6 gets this far once in 60 million dice.
+ *
+ * @example
+ * ```ts
+ * import { MAX_EXPLOSIONS } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_EXPLOSIONS);
+ * ```
  */
 export const MAX_EXPLOSIONS = 10;
-/** The largest die that may explode: past this the exact odds stop being quick to count. */
+/** The largest die that may explode: past this the exact odds stop being quick to count.
+ *
+ * @example
+ * ```ts
+ * import { MAX_EXPLODING_SIDES } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_EXPLODING_SIDES);
+ * ```
+ */
 export const MAX_EXPLODING_SIDES = 100;
 /**
  * How many times one die is thrown again by a reroll-until (`r<`). After
  * that it stands as it lies, in the roll and in the odds alike. Such a reroll
  * may match at most half a die's faces, so at the very worst one die in a
  * thousand gets this far; a d6 rerolling its 1s does once in 60 million.
+ *
+ * @example
+ * ```ts
+ * import { MAX_REROLLS } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_REROLLS);
+ * ```
  */
 export const MAX_REROLLS = 10;
-/** The most kinds of dice in one roll: `1d20+1d4` is two. */
+/** The most kinds of dice in one roll: `1d20+1d4` is two.
+ *
+ * @example
+ * ```ts
+ * import { MAX_GROUPS } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_GROUPS);
+ * ```
+ */
 export const MAX_GROUPS = 4;
-/** The most times one roll may be repeated as a set: `6#4d6dl1` is six. */
+/** The most times one roll may be repeated as a set: `6#4d6dl1` is six.
+ *
+ * @example
+ * ```ts
+ * import { MAX_TIMES } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_TIMES);
+ * ```
+ */
 export const MAX_TIMES = 100;
-/** The most faces a custom die has, and the fewest is two. */
+/** The most faces a custom die has, and the fewest is two.
+ *
+ * @example
+ * ```ts
+ * import { MAX_FACES } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_FACES);
+ * ```
+ */
 export const MAX_FACES = 20;
-/** The longest a custom face's words may be, in characters. */
+/** The longest a custom face's words may be, in characters.
+ *
+ * @example
+ * ```ts
+ * import { MAX_LABEL } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_LABEL);
+ * ```
+ */
 export const MAX_LABEL = 16;
-/** The largest number a custom face may be worth, either way. */
+/** The largest number a custom face may be worth, either way.
+ *
+ * @example
+ * ```ts
+ * import { MAX_FACE_VALUE } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_FACE_VALUE);
+ * ```
+ */
 export const MAX_FACE_VALUE = 9999;
-/** The heaviest a face of a loaded die may be weighted. */
+/** The heaviest a face of a loaded die may be weighted.
+ *
+ * @example
+ * ```ts
+ * import { MAX_WEIGHT } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_WEIGHT);
+ * ```
+ */
 export const MAX_WEIGHT = 99;
-/** The largest die that may be loaded. */
+/** The largest die that may be loaded.
+ *
+ * @example
+ * ```ts
+ * import { MAX_LOADED_SIDES } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_LOADED_SIDES);
+ * ```
+ */
 export const MAX_LOADED_SIDES = 100;
 
 /**
  * One face of a custom die: what it says, what it is worth in a total if it
  * is worth anything, and a colour for it. The words are text and only ever
  * shown as text.
+ *
+ * @example
+ * ```ts
+ * import type { CustomFace } from "@johnmorrisdotca/korokoro";
+ * const value: CustomFace = { label: "Hit", value: 1, colour: "#2f5d4a" };
+ * console.log(value.label);
+ * ```
  */
 export type CustomFace = {
   /** What the face says: 1 to `MAX_LABEL` characters. */
@@ -83,6 +228,13 @@ export type CustomFace = {
  * Which dice count towards the total. `all` adds every die; `highest` and
  * `lowest` keep one, which is how advantage and disadvantage are rolled, or
  * as many as `keepCount` says.
+ *
+ * @example
+ * ```ts
+ * import type { Keep } from "@johnmorrisdotca/korokoro";
+ * const value: Keep = "highest";
+ * console.log(value);
+ * ```
  */
 export type Keep = "all" | "highest" | "lowest";
 
@@ -90,26 +242,71 @@ export type Keep = "all" | "highest" | "lowest";
  * A number a die is compared with: at a face (`=`), at or below it (`<=`), at
  * or above it (`>=`), or anything but it (`<>`). Notation's `<3` is kept as
  * `<=2`, and `>7` as `>=8`.
+ *
+ * @example
+ * ```ts
+ * import type { Compare } from "@johnmorrisdotca/korokoro";
+ * const value: Compare = { op: ">=", n: 5 };
+ * console.log(value.n);
+ * ```
  */
 export type Compare = { op: "=" | "<=" | ">=" | "<>"; n: number };
 
-/** Whether a number meets a comparison. */
+/** Whether a number meets a comparison.
+ *
+ * @param compare - The comparison operator and numeric threshold.
+ * @param value - The candidate face, value or name to check.
+ * @returns Whether a number meets a comparison.
+
+ *
+ * @example
+ * ```ts
+ * import { meets } from "@johnmorrisdotca/korokoro";
+ * console.log(meets({ op: ">=", n: 5 }, 6));
+ * ```
+ */
 export function meets(compare: Compare, value: number): boolean {
   return compare.op === "=" ? value === compare.n : compare.op === "<=" ? value <= compare.n : compare.op === ">=" ? value >= compare.n : value !== compare.n;
 }
 
-/** A comparison as notation writes it: `>=8`, `=1`, `<>3`. */
+/** A comparison as notation writes it: `>=8`, `=1`, `<>3`.
+ *
+ * @param compare - The comparison operator and numeric threshold.
+ * @returns A comparison as notation writes it: `>=8`, `=1`, `<>3`.
+
+ *
+ * @example
+ * ```ts
+ * import { compareText } from "@johnmorrisdotca/korokoro";
+ * console.log(compareText({ op: ">=", n: 5 }));
+ * ```
+ */
 export function compareText(compare: Compare): string {
   return `${compare.op}${compare.n}`;
 }
 
-/** How exploding dice are added up: each as a die of its own, all into the die that threw them (`!!`), or with one taken off each extra die (`!p`), or both (`!!p`). */
+/** How exploding dice are added up: each as a die of its own, all into the die that threw them (`!!`), or with one taken off each extra die (`!p`), or both (`!!p`).
+ *
+ * @example
+ * ```ts
+ * import type { ExplodeKind } from "@johnmorrisdotca/korokoro";
+ * const value: ExplodeKind = "compound";
+ * console.log(value);
+ * ```
+ */
 export type ExplodeKind = "compound" | "penetrating" | "compound-penetrating";
 
 /**
  * Some dice of one kind, with their own rules: the `2d20kh1` of
  * `2d20kh1+1d4`. The optional fields are left out of a group that does not
  * use them.
+ *
+ * @example
+ * ```ts
+ * import type { DiceGroup } from "@johnmorrisdotca/korokoro";
+ * const value: DiceGroup = { count: 2, sides: 6, keep: "all" };
+ * console.log(value.count);
+ * ```
  */
 export type DiceGroup = {
   /** How many dice: at least 1, and no more than `MAX_DICE` over the whole roll. */
@@ -170,6 +367,14 @@ export type DiceGroup = {
  * is `{ count, sides, modifier, keep }` and whichever optional fields it
  * uses. A roll of several kinds keeps its first kind there and the others in
  * `more`, so a one-kind spec is the same object it always was.
+ *
+ * @example
+ * ```ts
+ * import type { RollSpec } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const value: RollSpec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(value.sides);
+ * ```
  */
 export type RollSpec = DiceGroup & {
   /** Added to the total, as in 1d20+5. */
@@ -189,17 +394,40 @@ export type RollSpec = DiceGroup & {
   label?: string;
 };
 
-/** The longest a roll's label may be, in characters. */
+/** The longest a roll's label may be, in characters.
+ *
+ * @example
+ * ```ts
+ * import { MAX_ROLL_LABEL } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_ROLL_LABEL);
+ * ```
+ */
 export const MAX_ROLL_LABEL = 40;
 
 /**
  * One die as it was thrown. `kept` counts towards the total, `dropped` was
  * left out by keep or drop, and `rerolled` was thrown again: the die after it
  * is its replacement.
+ *
+ * @example
+ * ```ts
+ * import type { DieStatus } from "@johnmorrisdotca/korokoro";
+ * const value: DieStatus = "kept";
+ * console.log(value);
+ * ```
  */
 export type DieStatus = "kept" | "dropped" | "rerolled";
 
-/** One die of a roll: the face it showed and what became of it. */
+/** One die of a roll: the face it showed and what became of it.
+ *
+ * @example
+ * ```ts
+ * import type { DieRoll } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, readDice } from "@johnmorrisdotca/korokoro";
+ * const value: DieRoll = readDice(DEFAULT_SPEC, [2, 5])![0]!;
+ * console.log(value.face);
+ * ```
+ */
 export type DieRoll = {
   /** The face it showed. A Fate die shows −1, 0 or 1. */
   face: number;
@@ -221,7 +449,16 @@ export type DieRoll = {
   critical?: "success" | "failure";
 };
 
-/** One throw of the dice: what was asked for, every die thrown, and the total. */
+/** One throw of the dice: what was asked for, every die thrown, and the total.
+ *
+ * @example
+ * ```ts
+ * import type { Roll } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const value: Roll = rollFrom(DEFAULT_SPEC, [2, 5], "saved", 0, null)!;
+ * console.log(value.total);
+ * ```
+ */
 export type Roll = {
   /** Unique within one history. */
   id: string;
@@ -246,7 +483,16 @@ export type Roll = {
   set?: { id: string; index: number; of: number };
 };
 
-/** The same roll thrown several times in one go, with what the set comes to. */
+/** The same roll thrown several times in one go, with what the set comes to.
+ *
+ * @example
+ * ```ts
+ * import type { RollSet } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, rollMany, seededSource } from "@johnmorrisdotca/korokoro";
+ * const value: RollSet = rollMany(DEFAULT_SPEC, 3, seededSource("docs"), 0);
+ * console.log(value.rolls.length);
+ * ```
+ */
 export type RollSet = {
   /** Every roll, in the order thrown. */
   rolls: Roll[];
@@ -258,20 +504,60 @@ export type RollSet = {
   lowest: number;
 };
 
-/** The dice a tray shows when nothing else is asked for: 2d6. */
+/** The dice a tray shows when nothing else is asked for: 2d6.
+ *
+ * @example
+ * ```ts
+ * import { DEFAULT_SPEC, formatNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(formatNotation(DEFAULT_SPEC));
+ * ```
+ */
 export const DEFAULT_SPEC: RollSpec = { count: 2, sides: 6, modifier: 0, keep: "all" };
 
-/** One of the dice the tray has a button for. */
+/** One of the dice the tray has a button for.
+ *
+ * @param value - The candidate face, value or name to check.
+ * @returns One of the dice the tray has a button for.
+
+ *
+ * @example
+ * ```ts
+ * import { isDieSides } from "@johnmorrisdotca/korokoro";
+ * console.log(isDieSides(20), isDieSides(7));
+ * ```
+ */
 export function isDieSides(value: unknown): value is DieSides {
   return typeof value === "number" && (DIE_SIDES as readonly number[]).includes(value);
 }
 
-/** Any die this package can throw: two to a thousand sides, or a Fate die. */
+/** Any die this package can throw: two to a thousand sides, or a Fate die.
+ *
+ * @param value - The candidate face, value or name to check.
+ * @returns Any die this package can throw: two to a thousand sides, or a Fate die.
+
+ *
+ * @example
+ * ```ts
+ * import { isSides } from "@johnmorrisdotca/korokoro";
+ * console.log(isSides(7), isSides("F"));
+ * ```
+ */
 export function isSides(value: unknown): value is Sides {
   return value === "F" || (typeof value === "number" && Number.isInteger(value) && value >= MIN_SIDES && value <= MAX_SIDES);
 }
 
-/** The lowest and highest face of one die. */
+/** The lowest and highest face of one die.
+ *
+ * @param sides - A numbered die size or F for Fate dice.
+ * @returns The lowest and highest face of one die.
+
+ *
+ * @example
+ * ```ts
+ * import { faceRange } from "@johnmorrisdotca/korokoro";
+ * console.log(faceRange("F"));
+ * ```
+ */
 export function faceRange(sides: Sides): { low: number; high: number } {
   return sides === "F" ? { low: -1, high: 1 } : { low: 1, high: sides };
 }
@@ -281,12 +567,39 @@ function facesOf(group: DiceGroup): { low: number; high: number } {
   return group.faces !== undefined ? { low: 1, high: group.faces.length } : faceRange(group.sides);
 }
 
-/** What a face of a group's die is worth in a total: its number, or for a custom face its value, which is 0 when it is only words. */
+/** What a face of a group's die is worth in a total: its number, or for a custom face its value, which is 0 when it is only words.
+ *
+ * @param group - One kind of dice and its rules.
+ * @param face - The physical face value to display or read.
+ * @returns What a face of a group's die is worth in a total: its number, or for a custom face its value, which is 0 when it is only words.
+
+ *
+ * @example
+ * ```ts
+ * import { valueOfFace } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(valueOfFace(spec, 4));
+ * ```
+ */
 export function valueOfFace(group: DiceGroup, face: number): number {
   return group.faces !== undefined ? (group.faces[face - 1]?.value ?? 0) : face;
 }
 
-/** The chance of each face of one die of a group, from its lowest face up. They sum to 1; a fair die's are all the same. */
+/** The chance of each face of one die of a group, from its lowest face up. They sum to 1; a fair die's are all the same.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns The chance of each face of one die of a group, from its lowest face up. They sum to 1; a fair die's are all the same.
+
+ *
+ * @example
+ * ```ts
+ * import { chancesOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(chancesOf(spec));
+ * ```
+ */
 export function chancesOf(group: DiceGroup): number[] {
   const { low, high } = facesOf(group);
   const n = high - low + 1;
@@ -299,6 +612,17 @@ export function chancesOf(group: DiceGroup): number[] {
  * What one kind of die is called: `d6`, `dF`, a loaded `d6{6:3}`, a custom
  * `d[Yes,No,Maybe]`. It is how the kind is written in notation, so two dice
  * with the same name are the same die.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns What one kind of die is called: `d6`, `dF`, a loaded `d6{6:3}`, a custom `d[Yes,No,Maybe]`. It is how the kind is written in notation, so two dice with the same name are the same die.
+
+ *
+ * @example
+ * ```ts
+ * import { dieName } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(dieName(parseNotation("4dF")!));
+ * ```
  */
 export function dieName(group: DiceGroup): string {
   if (group.faces !== undefined) {
@@ -311,7 +635,19 @@ export function dieName(group: DiceGroup): string {
   return `d${group.sides}{${loaded.join(",")}}`;
 }
 
-/** Whether a roll has a loaded die in it. */
+/** Whether a roll has a loaded die in it.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns Whether a roll has a loaded die in it.
+
+ *
+ * @example
+ * ```ts
+ * import { isLoaded } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(isLoaded(parseNotation("1d6{6:3}")!));
+ * ```
+ */
 export function isLoaded(spec: RollSpec): boolean {
   return groupsOf(spec).some((g) => g.weights !== undefined);
 }
@@ -320,6 +656,17 @@ export function isLoaded(spec: RollSpec): boolean {
  * Whether a roll is of plain fair dice and nothing else: no loaded die, and
  * no custom die either, whose faces are whatever somebody made them. A site
  * that wants only honest standard dice refuses anything this is false for.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns Whether a roll is of plain fair dice and nothing else: no loaded die, and no custom die either, whose faces are whatever somebody made them. A site that wants only honest standard dice refuses anything this is false for.
+
+ *
+ * @example
+ * ```ts
+ * import { isFair } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(isFair(parseNotation("1d6{6:3}")!));
+ * ```
  */
 export function isFair(spec: RollSpec): boolean {
   return groupsOf(spec).every((g) => g.weights === undefined && g.faces === undefined);
@@ -329,12 +676,35 @@ export function isFair(spec: RollSpec): boolean {
  * Whether a roll's total says anything. It does unless every die in it is a
  * custom die with no numbers on it at all, such as Yes, No, Maybe: then the
  * roll is its faces' words, and the total is 0 and means nothing.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns Whether a roll's total says anything. It does unless every die in it is a custom die with no numbers on it at all, such as Yes, No, Maybe: then the roll is its faces' words, and the total is 0 and means nothing.
+
+ *
+ * @example
+ * ```ts
+ * import { hasTotal } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(hasTotal(parseNotation("2d[Left,Right]")!));
+ * ```
  */
 export function hasTotal(spec: RollSpec): boolean {
   return !groupsOf(spec).every((g) => g.faces !== undefined && g.faces.every((f) => f.value === undefined));
 }
 
-/** How many dice of one group count towards the total. For a roll of several kinds, ask each of `groupsOf`. */
+/** How many dice of one group count towards the total. For a roll of several kinds, ask each of `groupsOf`.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns How many dice of one group count towards the total. For a roll of several kinds, ask each of `groupsOf`.
+
+ *
+ * @example
+ * ```ts
+ * import { keptCount } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(keptCount(parseNotation("4d6kh3")!));
+ * ```
+ */
 export function keptCount(group: DiceGroup): number {
   return group.keep === "all" ? group.count : (group.keepCount ?? 1);
 }
@@ -346,42 +716,128 @@ function copyRules(from: Partial<DiceGroup>, to: Partial<DiceGroup>): void {
   for (const rule of RULES) if (from[rule] !== undefined) (to as Record<string, unknown>)[rule] = from[rule];
 }
 
-/** The kinds of dice in a roll, in order: the spec's own first, then the rest. */
+/** The kinds of dice in a roll, in order: the spec's own first, then the rest.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns The kinds of dice in a roll, in order: the spec's own first, then the rest.
+
+ *
+ * @example
+ * ```ts
+ * import { groupsOf } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(groupsOf(parseNotation("1d6+1d8")!).map((group) => group.sides));
+ * ```
+ */
 export function groupsOf(spec: RollSpec): DiceGroup[] {
   const first: DiceGroup = { count: spec.count, sides: spec.sides, keep: spec.keep };
   copyRules(spec, first);
   return [first, ...(spec.more ?? [])];
 }
 
-/** How many dice a roll asks for, over all its kinds. */
+/** How many dice a roll asks for, over all its kinds.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns How many dice a roll asks for, over all its kinds.
+
+ *
+ * @example
+ * ```ts
+ * import { diceCount } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(diceCount(parseNotation("2d6+1d8")!));
+ * ```
+ */
 export function diceCount(spec: RollSpec): number {
   return groupsOf(spec).reduce((sum, group) => sum + group.count, 0);
 }
 
-/** A spec from its kinds of dice and a bonus, brought into range. */
+/** A spec from its kinds of dice and a bonus, brought into range.
+ *
+ * @param groups - The dice groups to combine, in order.
+ * @param modifier - The bonus added after the dice totals.
+ * @returns A spec from its kinds of dice and a bonus, brought into range.
+
+ *
+ * @example
+ * ```ts
+ * import { specOf } from "@johnmorrisdotca/korokoro";
+ * import { formatNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(formatNotation(specOf([{ count: 2, sides: 6 }, { count: 1, sides: 8 }], 3)));
+ * ```
+ */
 export function specOf(groups: readonly Partial<DiceGroup>[], modifier = 0): RollSpec {
   const [first, ...more] = groups;
   return normalizeSpec({ ...first, modifier, more: more as DiceGroup[] });
 }
 
-/** Whether the dice may explode: numbered dice of a hundred sides or fewer, all of them kept. A custom die never does. */
+/** Whether the dice may explode: numbered dice of a hundred sides or fewer, all of them kept. A custom die never does.
+ *
+ * @param sides - A numbered die size or F for Fate dice.
+ * @param keep - Whether all dice, the highest or the lowest count.
+ * @returns Whether the dice may explode: numbered dice of a hundred sides or fewer, all of them kept. A custom die never does.
+
+ *
+ * @example
+ * ```ts
+ * import { mayExplode } from "@johnmorrisdotca/korokoro";
+ * console.log(mayExplode(6, "all"), mayExplode(1000, "all"));
+ * ```
+ */
 export function mayExplode(sides: Sides, keep: Keep): boolean {
   return sides !== "F" && sides <= MAX_EXPLODING_SIDES && keep === "all";
 }
 
-/** Whether a reroll at this face leaves something to do: it must reroll the lowest face and spare the highest. */
+/** Whether a reroll at this face leaves something to do: it must reroll the lowest face and spare the highest.
+ *
+ * @param sides - A numbered die size or F for Fate dice.
+ * @param reroll - The highest face eligible for a reroll.
+ * @returns Whether a reroll at this face leaves something to do: it must reroll the lowest face and spare the highest.
+
+ *
+ * @example
+ * ```ts
+ * import { mayReroll } from "@johnmorrisdotca/korokoro";
+ * console.log(mayReroll(6, 2), mayReroll(6, 6));
+ * ```
+ */
 export function mayReroll(sides: Sides, reroll: unknown): reroll is number {
   const { low, high } = faceRange(sides);
   return typeof reroll === "number" && Number.isInteger(reroll) && reroll >= low && reroll < high;
 }
 
-/** Whether a die may be rerolled until it clears this face: the reroll must match the lowest face and no more than half of them. */
+/** Whether a die may be rerolled until it clears this face: the reroll must match the lowest face and no more than half of them.
+ *
+ * @param sides - A numbered die size or F for Fate dice.
+ * @param reroll - The highest face eligible for a reroll.
+ * @returns Whether a die may be rerolled until it clears this face: the reroll must match the lowest face and no more than half of them.
+
+ *
+ * @example
+ * ```ts
+ * import { mayRerollUntil } from "@johnmorrisdotca/korokoro";
+ * console.log(mayRerollUntil(6, 2), mayRerollUntil(6, 4));
+ * ```
+ */
 export function mayRerollUntil(sides: Sides, reroll: unknown): reroll is number {
   const { low, high } = faceRange(sides);
   return mayReroll(sides, reroll) && (reroll - low + 1) * 2 <= high - low + 1;
 }
 
-/** Whether some dice of a roll can be held while the rest are thrown again: plain dice only, none rerolled, exploding, kept or dropped, counted, raised, lowered or sorted. */
+/** Whether some dice of a roll can be held while the rest are thrown again: plain dice only, none rerolled, exploding, kept or dropped, counted, raised, lowered or sorted.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns Whether some dice of a roll can be held while the rest are thrown again: plain dice only, none rerolled, exploding, kept or dropped, counted, raised, lowered or sorted.
+
+ *
+ * @example
+ * ```ts
+ * import { canHold } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(canHold(spec));
+ * ```
+ */
 export function canHold(spec: RollSpec): boolean {
   return spec.math === undefined && groupsOf(spec).every((g) => g.keep === "all" && g.explode !== true && g.reroll === undefined && g.rerollUntil === undefined && !playsByNewRules(g) && g.sort === undefined && g.unique !== true);
 }
@@ -391,22 +847,70 @@ export function canHold(spec: RollSpec): boolean {
  * what it can total: a reroll or an explosion at a comparison, compounding or
  * penetrating dice, `min` or `max`, or counted successes. Marks (`cs`, `cf`)
  * and a sort change nothing about the total and are not among them.
+ *
+ * @param g - One kind of dice and its rules.
+ * @returns Whether a kind of dice is played by a rule added in 1.7.0, one that changes what it can total: a reroll or an explosion at a comparison, compounding or penetrating dice, `min` or `max`, or counted successes. Marks (`cs`, `cf`) and a sort change nothing about the total and are not among them.
+
+ *
+ * @example
+ * ```ts
+ * import { playsByNewRules } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(playsByNewRules(parseNotation("3d6>=5")!));
+ * ```
  */
 export function playsByNewRules(g: DiceGroup): boolean {
   return g.rerollWhen !== undefined || g.rerollUntilWhen !== undefined || g.explodeWhen !== undefined || g.explodeKind !== undefined || g.floor !== undefined || g.ceiling !== undefined || g.success !== undefined;
 }
 
-/** Whether a kind of dice is counted for successes, not added up. */
+/** Whether a kind of dice is counted for successes, not added up.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns Whether a kind of dice is counted for successes, not added up.
+
+ *
+ * @example
+ * ```ts
+ * import { countsSuccesses } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(countsSuccesses(parseNotation("3d6>=5")!));
+ * ```
+ */
 export function countsSuccesses(group: DiceGroup): boolean {
   return group.success !== undefined;
 }
 
-/** Whether the first thing a roll says is a number of successes: every kind of dice in it is counted. */
+/** Whether the first thing a roll says is a number of successes: every kind of dice in it is counted.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns Whether the first thing a roll says is a number of successes: every kind of dice in it is counted.
+
+ *
+ * @example
+ * ```ts
+ * import { isSuccessRoll } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(isSuccessRoll(parseNotation("3d6>=5")!));
+ * ```
+ */
 export function isSuccessRoll(spec: RollSpec): boolean {
   return spec.math === undefined && groupsOf(spec).every(countsSuccesses);
 }
 
-/** Whether a kind of dice is plain enough to be rolled in any number: a fair numbered or Fate die, all added or one kept, under no other rule. */
+/** Whether a kind of dice is plain enough to be rolled in any number: a fair numbered or Fate die, all added or one kept, under no other rule.
+ *
+ * @param g - One kind of dice and its rules.
+ * @returns Whether a kind of dice is plain enough to be rolled in any number: a fair numbered or Fate die, all added or one kept, under no other rule.
+
+ *
+ * @example
+ * ```ts
+ * import { isPlainDice } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(isPlainDice(spec));
+ * ```
+ */
 export function isPlainDice(g: DiceGroup): boolean {
   return g.faces === undefined && g.weights === undefined && g.explode !== true && g.reroll === undefined && g.rerollUntil === undefined && !playsByNewRules(g) && g.unique !== true && (g.keep === "all" || (g.keepCount ?? 1) === 1);
 }
@@ -507,7 +1011,18 @@ const NOT_IN_A_LABEL = /[,[\]{}=#+]/;
 /** A control character: a new line, a tab, a bell. None belongs in a face's words. */
 const isControl = (text: string) => [...text].some((c) => (c.codePointAt(0) as number) < 32 || c.codePointAt(0) === 127);
 
-/** A custom die's faces, checked: the faces as given if every one is sound, or undefined. */
+/** A custom die's faces, checked: the faces as given if every one is sound, or undefined.
+ *
+ * @param faces - Physical face values, in the order thrown.
+ * @returns A custom die's faces, checked: the faces as given if every one is sound, or undefined.
+
+ *
+ * @example
+ * ```ts
+ * import { customFaces } from "@johnmorrisdotca/korokoro";
+ * console.log(customFaces([{ label: "Hit", value: 1 }, { label: "Miss", value: 0 }])?.map((face) => face.label));
+ * ```
+ */
 export function customFaces(faces: unknown): CustomFace[] | undefined {
   if (!Array.isArray(faces) || faces.length < MIN_SIDES || faces.length > MAX_FACES) return undefined;
   const sound: CustomFace[] = [];
@@ -534,6 +1049,17 @@ export function customFaces(faces: unknown): CustomFace[] | undefined {
  * 0 to `MAX_WEIGHT` for each face, at least two faces that can come up.
  * Undefined when they are not sound, and also when every face weighs the
  * same, which is a fair die and must not be called loaded.
+ *
+ * @param sides - A numbered die size or F for Fate dice.
+ * @param weights - One integer weight per physical face.
+ * @returns A loaded die's weights, checked and in lowest terms: one whole number from 0 to `MAX_WEIGHT` for each face, at least two faces that can come up. undefined when they are not sound, and also when every face weighs the same, which is a fair die and must not be called loaded.
+
+ *
+ * @example
+ * ```ts
+ * import { loadedWeights } from "@johnmorrisdotca/korokoro";
+ * console.log(loadedWeights(6, [1, 1, 1, 1, 1, 3]));
+ * ```
  */
 export function loadedWeights(sides: Sides, weights: unknown): number[] | undefined {
   if (sides === "F" || sides > MAX_LOADED_SIDES || !Array.isArray(weights) || weights.length !== sides) return undefined;
@@ -546,7 +1072,18 @@ export function loadedWeights(sides: Sides, weights: unknown): number[] | undefi
   return least.every((w) => w === 1) ? undefined : least;
 }
 
-/** A roll's label, checked: a few words with no control characters and nothing notation is written with, or undefined. */
+/** A roll's label, checked: a few words with no control characters and nothing notation is written with, or undefined.
+ *
+ * @param label - The optional short text that describes a roll.
+ * @returns A roll's label, checked: a few words with no control characters and nothing notation is written with, or undefined.
+
+ *
+ * @example
+ * ```ts
+ * import { rollLabel } from "@johnmorrisdotca/korokoro";
+ * console.log(rollLabel(" fire damage "));
+ * ```
+ */
 export function rollLabel(label: unknown): string | undefined {
   if (typeof label !== "string") return undefined;
   const words = label.trim().replace(/\s+/g, " ");
@@ -578,7 +1115,19 @@ function normalizeGroup(group: Partial<DiceGroup>, count: number): DiceGroup {
   return fair;
 }
 
-/** The modifiers of one kind of dice as notation writes them, in the one order they are written: `>=8f=1!`, `r<3kh3`. Two kinds with the same die and the same text here are the same dice under the same rules. */
+/** The modifiers of one kind of dice as notation writes them, in the one order they are written: `>=8f=1!`, `r<3kh3`. Two kinds with the same die and the same text here are the same dice under the same rules.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns The modifiers of one kind of dice as notation writes them, in the one order they are written: `>=8f=1!`, `r<3kh3`. Two kinds with the same die and the same text here are the same dice under the same rules.
+
+ *
+ * @example
+ * ```ts
+ * import { rulesText } from "@johnmorrisdotca/korokoro";
+ * import { parseNotation } from "@johnmorrisdotca/korokoro";
+ * console.log(rulesText(parseNotation("4d6kh3")!));
+ * ```
+ */
 export function rulesText(group: DiceGroup): string {
   const count = group.success === undefined ? "" : `${compareText(group.success)}${group.failure === undefined ? "" : `f${compareText(group.failure)}`}`;
   const kind = group.explodeKind === undefined ? "!" : group.explodeKind === "compound" ? "!!" : group.explodeKind === "penetrating" ? "!p" : "!!p";
@@ -611,6 +1160,17 @@ function sameDice(a: DiceGroup, b: DiceGroup): boolean {
  * is left out, never guessed at; `checkNotation` is the strict reader, and
  * says which part. Two kinds that are the same dice under the same rules
  * become one: `2d6+3d6` is `5d6`.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param limits - Optional limits for callers that allow larger plain pools.
+ * @returns A spec brought into range, so a hand-typed or stored one can never roll eleven dice, five kinds or a die with no faces. A part that cannot be kept is left out, never guessed at; `checkNotation` is the strict reader, and says which part. Two kinds that are the same dice under the same rules become one: `2d6+3d6` is `5d6`.
+
+ *
+ * @example
+ * ```ts
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * console.log(normalizeSpec({ count: 2, sides: 6 }));
+ * ```
  */
 export function normalizeSpec(spec: Partial<RollSpec>, limits: { maxDice?: number } = {}): RollSpec {
   const most = Math.min(MAX_DICE_BY_CODE, Math.max(MAX_DICE, Math.trunc(Number(limits.maxDice) || MAX_DICE)));
@@ -653,7 +1213,20 @@ function normalized(spec: Partial<RollSpec>, most: number): RollSpec {
   return fair;
 }
 
-/** The least and the most one kind of dice can total, its own rules applied. */
+/** The least and the most one kind of dice can total, its own rules applied.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns The least and the most one kind of dice can total, its own rules applied.
+
+ *
+ * @example
+ * ```ts
+ * import { groupRange } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(groupRange(spec));
+ * ```
+ */
 export function groupRange(group: DiceGroup): { min: number; max: number } {
   const dice = keptCount(group);
   if (group.unique === true) {
@@ -673,7 +1246,19 @@ export function groupRange(group: DiceGroup): { min: number; max: number } {
   return { min: dice * Math.min(...worth), max: dice * (group.explode === true ? high * (MAX_EXPLOSIONS + 1) : Math.max(...worth)) };
 }
 
-/** Which faces count towards the total when one is kept. Ties keep the first die that shows the kept value. */
+/** Which faces count towards the total when one is kept. Ties keep the first die that shows the kept value.
+ *
+ * @param faces - Physical face values, in the order thrown.
+ * @param keep - Whether all dice, the highest or the lowest count.
+ * @returns Which faces count towards the total when one is kept. Ties keep the first die that shows the kept value.
+
+ *
+ * @example
+ * ```ts
+ * import { keptFaces } from "@johnmorrisdotca/korokoro";
+ * console.log(keptFaces([1, 4, 6], "highest"));
+ * ```
+ */
 export function keptFaces(faces: readonly number[], keep: Keep): boolean[] {
   if (keep === "all") return faces.map(() => true);
   const target = keep === "highest" ? Math.max(...faces) : Math.min(...faces);
@@ -681,7 +1266,20 @@ export function keptFaces(faces: readonly number[], keep: Keep): boolean[] {
   return faces.map((_, i) => i === index);
 }
 
-/** The kept faces added up, plus the bonus. */
+/** The kept faces added up, plus the bonus.
+ *
+ * @param faces - Physical face values, in the order thrown.
+ * @param kept - A mask saying which dice count towards the total.
+ * @param modifier - The bonus added after the dice totals.
+ * @returns The kept faces added up, plus the bonus.
+
+ *
+ * @example
+ * ```ts
+ * import { totalOf } from "@johnmorrisdotca/korokoro";
+ * console.log(totalOf([2, 5], [true, true], 3));
+ * ```
+ */
 export function totalOf(faces: readonly number[], kept: readonly boolean[], modifier: number): number {
   return faces.reduce((sum, face, i) => (kept[i] ? sum + face : sum), 0) + modifier;
 }
@@ -705,6 +1303,18 @@ function rulesOf(group: DiceGroup): { once: (face: number) => boolean; until: (f
  * for dice that are counted, it is the successes it makes less the ones it
  * takes away. Exact as the rules are played: rerolls stop after
  * `MAX_REROLLS` and explosions after `MAX_EXPLOSIONS`, here as in a roll.
+ *
+ * @param group - One kind of dice and its rules.
+ * @returns One die of a kind worked through its own rules, before any keeping or dropping: the chance of each amount it adds to the total, from `least` up. For dice that are added, that is what the die is worth, explosions and all; for dice that are counted, it is the successes it makes less the ones it takes away. Exact as the rules are played: rerolls stop after `MAX_REROLLS` and explosions after `MAX_EXPLOSIONS`, here as in a roll.
+
+ *
+ * @example
+ * ```ts
+ * import { dieOutcomes } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(dieOutcomes(spec));
+ * ```
  */
 export function dieOutcomes(group: DiceGroup): { least: number; chances: number[] } {
   const { low } = facesOf(group);
@@ -849,6 +1459,19 @@ function play(spec: RollSpec, draw: (group: DiceGroup, taken?: ReadonlySet<numbe
  * What happened to each die of a roll, from its faces alone: which were
  * rerolled, which exploded, which were dropped. Null when the faces are not
  * ones this spec could have thrown, one too many or too few included.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param faces - Physical face values, in the order thrown.
+ * @returns What happened to each die of a roll, from its faces alone: which were rerolled, which exploded, which were dropped. null when the faces are not ones this spec could have thrown, one too many or too few included.
+
+ *
+ * @example
+ * ```ts
+ * import { readDice } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(readDice(spec, [2, 5])?.map((die) => die.status));
+ * ```
  */
 export function readDice(spec: RollSpec, faces: readonly unknown[]): DieRoll[] | null {
   let used = 0;
@@ -866,17 +1489,61 @@ export function readDice(spec: RollSpec, faces: readonly unknown[]): DieRoll[] |
   return dice === null || used !== faces.length ? null : dice;
 }
 
-/** The kind of dice one die of a roll belongs to, with its rules, faces and weights. */
+/** The kind of dice one die of a roll belongs to, with its rules, faces and weights.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param die - The logged die whose group is requested.
+ * @returns The kind of dice one die of a roll belongs to, with its rules, faces and weights.
+
+ *
+ * @example
+ * ```ts
+ * import { groupOf } from "@johnmorrisdotca/korokoro";
+ * import { diceOf, normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(groupOf(spec, diceOf(sample)[0]!).sides);
+ * ```
+ */
 export function groupOf(spec: RollSpec, die: DieRoll): DiceGroup {
   return groupsOf(spec)[die.group ?? 0] ?? groupsOf(spec)[0]!;
 }
 
-/** The kind of die one die of a roll is. */
+/** The kind of die one die of a roll is.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param die - The logged die whose group is requested.
+ * @returns The kind of die one die of a roll is.
+
+ *
+ * @example
+ * ```ts
+ * import { sidesOf } from "@johnmorrisdotca/korokoro";
+ * import { diceOf, normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(sidesOf(spec, diceOf(sample)[0]!));
+ * ```
+ */
 export function sidesOf(spec: RollSpec, die: DieRoll): Sides {
   return groupOf(spec, die).sides;
 }
 
-/** The dice of a roll: as recorded, or worked out from its faces for a roll made by hand or by an older version. */
+/** The dice of a roll: as recorded, or worked out from its faces for a roll made by hand or by an older version.
+ *
+ * @param roll - The completed roll to read or record.
+ * @returns The dice of a roll: as recorded, or worked out from its faces for a roll made by hand or by an older version.
+
+ *
+ * @example
+ * ```ts
+ * import { diceOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(diceOf(sample).length);
+ * ```
+ */
 export function diceOf(roll: Roll): DieRoll[] {
   return (
     roll.dice ??
@@ -933,7 +1600,21 @@ function totalOfDice(spec: RollSpec, dice: readonly DieRoll[]): number {
   return totals.reduce((sum, total) => sum + total, spec.modifier);
 }
 
-/** What each kind of dice of a roll came to, in order: what a formula puts together. */
+/** What each kind of dice of a roll came to, in order: what a formula puts together.
+ *
+ * @param roll - The completed roll to read or record.
+ * @returns What each kind of dice of a roll came to, in order: what a formula puts together.
+
+ *
+ * @example
+ * ```ts
+ * import { groupTotals } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(groupTotals(sample));
+ * ```
+ */
 export function groupTotals(roll: Roll): number[] {
   const groups = groupsOf(roll.spec);
   const totals = groups.map(() => 0);
@@ -964,7 +1645,15 @@ function made(fair: RollSpec, dice: DieRoll[], source: RandomSource, at: number)
   return thrown;
 }
 
-/** What `roll` and `rollMany` may be told beside the dice and the source. */
+/** What `roll` and `rollMany` may be told beside the dice and the source.
+ *
+ * @example
+ * ```ts
+ * import type { RollOptions } from "@johnmorrisdotca/korokoro";
+ * const value: RollOptions = { at: 0, maxDice: 20 };
+ * console.log(value.maxDice);
+ * ```
+ */
 export type RollOptions = {
   /** When the roll is made, in epoch milliseconds. Now, unless given. */
   at?: number;
@@ -977,7 +1666,21 @@ function rollOptions(when: number | RollOptions): { at: number; limits: { maxDic
   return { at: when.at ?? Date.now(), limits: when.maxDice === undefined ? {} : { maxDice: when.maxDice } };
 }
 
-/** What a set of rolls comes to: their sum, the highest and the lowest. */
+/** What a set of rolls comes to: their sum, the highest and the lowest.
+ *
+ * @param rolls - Completed rolls, or the number of attempts where this parameter is numeric.
+ * @returns What a set of rolls comes to: their sum, the highest and the lowest.
+
+ *
+ * @example
+ * ```ts
+ * import { setOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(setOf([sample, sample]).sum);
+ * ```
+ */
 export function setOf(rolls: Roll[]): RollSet {
   const totals = rolls.map((r) => r.total);
   return { rolls, sum: totals.reduce((a, b) => a + b, 0), highest: Math.max(...totals), lowest: Math.min(...totals) };
@@ -989,6 +1692,21 @@ export function setOf(rolls: Roll[]): RollSet {
  * source, so a seed replays the whole set, and each is an ordinary roll that
  * says which set it belongs to. `times` is the spec's own unless given, from
  * 1 to `MAX_TIMES`.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param times - The number of independent repeats.
+ * @param source - A source of unsigned 32-bit integers; crypto by default where optional.
+ * @param when - Epoch milliseconds, or roll options including the time and maximum dice.
+ * @returns Throw the same dice several times in one go, as ability scores are rolled: `4d6dl1` six times. The rolls are drawn one after another from the one source, so a seed replays the whole set, and each is an ordinary roll that says which set it belongs to. `times` is the spec's own unless given, from 1 to `MAX_TIMES`.
+
+ *
+ * @example
+ * ```ts
+ * import { rollMany } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, seededSource } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(rollMany(spec, 3, seededSource("table"), 0).rolls.length);
+ * ```
  */
 export function rollMany(spec: Partial<RollSpec>, times?: number, source: RandomSource = cryptoSource(), when: number | RollOptions = Date.now()): RollSet {
   const { at, limits } = rollOptions(when);
@@ -1006,6 +1724,22 @@ export function rollMany(spec: Partial<RollSpec>, times?: number, source: Random
  * from storage and a roll read from a link. The dice, which are kept and the
  * total are all worked out again, never trusted as given. Null when the dice
  * could not have shown those faces.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param faces - Physical face values, in the order thrown.
+ * @param id - The id recorded with the reconstructed roll.
+ * @param at - The recorded time in epoch milliseconds.
+ * @param seed - Text that reproduces the same random sequence, or null for an unseeded stored roll.
+ * @returns A roll put back together from its spec and its faces: for a history read from storage and a roll read from a link. The dice, which are kept and the total are all worked out again, never trusted as given. null when the dice could not have shown those faces.
+
+ *
+ * @example
+ * ```ts
+ * import { rollFrom } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(rollFrom(spec, [2, 5], "saved", 0, null)?.total);
+ * ```
  */
 export function rollFrom(spec: RollSpec, faces: readonly unknown[], id: string, at: number, seed: string | null): Roll | null {
   const dice = readDice(spec, faces);
@@ -1020,6 +1754,20 @@ export function rollFrom(spec: RollSpec, faces: readonly unknown[], id: string, 
  * third argument is when the roll is made, in epoch milliseconds (now, unless
  * given), or options: `{ at, maxDice }`. A spec asking for more than ten dice
  * is brought to ten unless `maxDice` says otherwise, up to `MAX_DICE_BY_CODE`.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @param source - A source of unsigned 32-bit integers; crypto by default where optional.
+ * @param when - Epoch milliseconds, or roll options including the time and maximum dice.
+ * @returns The completed roll, including its spec, faces, kept mask, total, seed and timestamp.
+
+ *
+ * @example
+ * ```ts
+ * import { roll } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, seededSource } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(roll(spec, seededSource("table"), 0).faces);
+ * ```
  */
 export function roll(spec: Partial<RollSpec>, source: RandomSource = cryptoSource(), when: number | RollOptions = Date.now()): Roll {
   const { at, limits } = rollOptions(when);
@@ -1034,6 +1782,22 @@ export function roll(spec: Partial<RollSpec>, source: RandomSource = cryptoSourc
  * The roll that comes back says which faces were held. Only plain dice can be
  * held (`canHold`); anything else is a RangeError, as is a `held` that does
  * not fit the roll.
+ *
+ * @param previous - The roll whose held dice must remain unchanged.
+ * @param held - A mask marking dice whose faces stay fixed.
+ * @param source - A source of unsigned 32-bit integers; crypto by default where optional.
+ * @param at - The recorded time in epoch milliseconds.
+ * @returns Hold some dice of a roll and throw the rest again, as Yacht and Farkle do. `held[i]` is whether face i stays. The dice not held are thrown in order from the source, so from a seed the second roll replays like the first. The roll that comes back says which faces were held. Only plain dice can be held (`canHold`); anything else is a RangeError, as is a `held` that does not fit the roll.
+
+ *
+ * @example
+ * ```ts
+ * import { rollHeld } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom, seededSource } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(rollHeld(sample, [true, false], seededSource("next"), 1).faces);
+ * ```
  */
 export function rollHeld(previous: Roll, held: readonly boolean[], source: RandomSource = cryptoSource(), at: number = Date.now()): Roll {
   if (!canHold(previous.spec)) throw new RangeError("korokoro: only plain dice can be held");
@@ -1047,7 +1811,20 @@ export function rollHeld(previous: Roll, held: readonly boolean[], source: Rando
   return { ...made(previous.spec, dice, source, at), held: held.map((h) => h === true) };
 }
 
-/** The lowest and highest totals a spec can produce. An exploding die's highest is every explosion it is allowed. */
+/** The lowest and highest totals a spec can produce. An exploding die's highest is every explosion it is allowed.
+ *
+ * @param spec - Dice counts, sides, rules and modifier; omitted fields use the documented defaults.
+ * @returns The lowest and highest totals a spec can produce. An exploding die's highest is every explosion it is allowed.
+
+ *
+ * @example
+ * ```ts
+ * import { rangeOf } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * console.log(rangeOf(spec));
+ * ```
+ */
 export function rangeOf(spec: RollSpec): { min: number; max: number } {
   const ranges = groupsOf(spec).map(groupRange);
   if (spec.math !== undefined) return mathRange(spec.math, ranges);

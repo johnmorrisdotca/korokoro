@@ -12,10 +12,26 @@ import { VERSION } from "./version.ts";
  * clipboard, a terminal) is the caller's.
  */
 
-/** The shape of the JSON this package writes. It goes up only when a reader of the old shape would be wrong about the new one. */
+/** The shape of the JSON this package writes. It goes up only when a reader of the old shape would be wrong about the new one.
+ *
+ * @example
+ * ```ts
+ * import { EXPORT_FORMAT } from "@johnmorrisdotca/korokoro";
+ * console.log(EXPORT_FORMAT);
+ * ```
+ */
 export const EXPORT_FORMAT = 1;
 
-/** One roll as the JSON export writes it. */
+/** One roll as the JSON export writes it.
+ *
+ * @example
+ * ```ts
+ * import type { ExportedRoll } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, rollFrom, exportedRoll } from "@johnmorrisdotca/korokoro";
+ * const value: ExportedRoll = exportedRoll(rollFrom(DEFAULT_SPEC, [2, 5], "saved", 0, null)!);
+ * console.log(value.total);
+ * ```
+ */
 export type ExportedRoll = {
   id: string;
   /** The dice as notation, its label included. */
@@ -42,7 +58,16 @@ export type ExportedRoll = {
   dice: DieRoll[];
 };
 
-/** A whole JSON export. */
+/** A whole JSON export.
+ *
+ * @example
+ * ```ts
+ * import type { Exported } from "@johnmorrisdotca/korokoro";
+ * import { DEFAULT_SPEC, rollFrom, toJSON } from "@johnmorrisdotca/korokoro";
+ * const value: Exported = JSON.parse(toJSON([rollFrom(DEFAULT_SPEC, [2, 5], "saved", 0, null)!]));
+ * console.log(value.format);
+ * ```
+ */
 export type Exported = {
   format: typeof EXPORT_FORMAT;
   generator: string;
@@ -50,7 +75,21 @@ export type Exported = {
   stats?: Stats;
 };
 
-/** One roll as the JSON export writes it. */
+/** One roll as the JSON export writes it.
+ *
+ * @param roll - The completed roll to read or record.
+ * @returns One roll as the JSON export writes it.
+
+ *
+ * @example
+ * ```ts
+ * import { exportedRoll } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(exportedRoll(sample).notation);
+ * ```
+ */
 export function exportedRoll(roll: Roll): ExportedRoll {
   const dice = diceOf(roll);
   const out: ExportedRoll = { id: roll.id, notation: formatNotation(roll.spec), spec: roll.spec, faces: roll.faces, kept: roll.kept, total: roll.total, at: roll.at, time: new Date(roll.at).toISOString(), seed: roll.seed, dice };
@@ -62,7 +101,22 @@ export function exportedRoll(roll: Roll): ExportedRoll {
   return out;
 }
 
-/** Rolls as JSON, two spaces deep, with the format's number first. `stats: true` adds `statsOf` the rolls. `fromJSON` reads it back. */
+/** Rolls as JSON, two spaces deep, with the format's number first. `stats: true` adds `statsOf` the rolls. `fromJSON` reads it back.
+ *
+ * @param rolls - Completed rolls, or the number of attempts where this parameter is numeric.
+ * @param options - Options for this call; omitted fields keep their documented defaults.
+ * @returns Rolls as JSON, two spaces deep, with the format's number first. `stats: true` adds `statsOf` the rolls. `fromJSON` reads it back.
+
+ *
+ * @example
+ * ```ts
+ * import { toJSON } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(toJSON([sample]));
+ * ```
+ */
 export function toJSON(rolls: readonly Roll[], options: { stats?: boolean } = {}): string {
   const out: Exported = { format: EXPORT_FORMAT, generator: `korokoro ${VERSION}`, rolls: rolls.map(exportedRoll) };
   if (options.stats === true) out.stats = statsOf(rolls);
@@ -75,6 +129,19 @@ export function toJSON(rolls: readonly Roll[], options: { stats?: boolean } = {}
  * dice and its faces, and one that does not add up is left out. Null when the
  * text is not JSON, holds no list of rolls, or is of a later format than this
  * version reads.
+ *
+ * @param text - Text to parse, validate or format.
+ * @returns Rolls from JSON that `toJSON` wrote, or a history that `serializeHistory` did. Nothing in it is trusted: each roll is put together again from its dice and its faces, and one that does not add up is left out. null when the text is not JSON, holds no list of rolls, or is of a later format than this version reads.
+
+ *
+ * @example
+ * ```ts
+ * import { fromJSON } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom, toJSON } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(fromJSON(toJSON([sample]))?.length);
+ * ```
  */
 export function fromJSON(text: string): Roll[] | null {
   let data: unknown;
@@ -100,14 +167,42 @@ function dieText(roll: Roll, die: DieRoll): string {
   return `${face}${worth}${die.exploded ? "!" : ""}${die.counts === 1 ? "*" : die.counts === -1 ? "x" : ""}`;
 }
 
-/** The dice of a roll as plain text, in the order thrown: `6 4 2 (1)`. */
+/** The dice of a roll as plain text, in the order thrown: `6 4 2 (1)`.
+ *
+ * @param roll - The completed roll to read or record.
+ * @returns The dice of a roll as plain text, in the order thrown: `6 4 2 (1)`.
+
+ *
+ * @example
+ * ```ts
+ * import { diceText } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(diceText(sample));
+ * ```
+ */
 export function diceText(roll: Roll): string {
   return diceOf(roll)
     .map((die) => dieText(roll, die))
     .join(" ");
 }
 
-/** A formula's roll with each kind of dice written as it fell: `([6 1]+3)*2-[3]`. For a roll without a formula, the same as `diceText`. */
+/** A formula's roll with each kind of dice written as it fell: `([6 1]+3)*2-[3]`. For a roll without a formula, the same as `diceText`.
+ *
+ * @param roll - The completed roll to read or record.
+ * @returns A formula's roll with each kind of dice written as it fell: `([6 1]+3)*2-[3]`. For a roll without a formula, the same as `diceText`.
+
+ *
+ * @example
+ * ```ts
+ * import { formulaText } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(formulaText(sample));
+ * ```
+ */
 export function formulaText(roll: Roll): string {
   const { math } = roll.spec;
   if (math === undefined) return diceText(roll);
@@ -115,7 +210,21 @@ export function formulaText(roll: Roll): string {
   return mathText(math, (group) => `[${dice.filter((die) => (die.group ?? 0) === group).map((die) => dieText(roll, die)).join(" ")}]`);
 }
 
-/** A roll's result as it would be said: its total, or for dice that are only words, the words. */
+/** A roll's result as it would be said: its total, or for dice that are only words, the words.
+ *
+ * @param roll - The completed roll to read or record.
+ * @returns A roll's result as it would be said: its total, or for dice that are only words, the words.
+
+ *
+ * @example
+ * ```ts
+ * import { resultText } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(resultText(sample));
+ * ```
+ */
 export function resultText(roll: Roll): string {
   return hasTotal(roll.spec)
     ? String(roll.total)
@@ -124,18 +233,53 @@ export function resultText(roll: Roll): string {
         .join(" ");
 }
 
-/** One roll on one line: `2d20kh1+5: 22  [17 (4)]`, or for a formula `(2d6+3)*2: 20  ([6 1]+3)*2`. */
+/** One roll on one line: `2d20kh1+5: 22  [17 (4)]`, or for a formula `(2d6+3)*2: 20  ([6 1]+3)*2`.
+ *
+ * @param roll - The completed roll to read or record.
+ * @returns One roll on one line: `2d20kh1+5: 22 [17 (4)]`, or for a formula `(2d6+3)*2: 20 ([6 1]+3)*2`.
+
+ *
+ * @example
+ * ```ts
+ * import { rollText } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(rollText(sample));
+ * ```
+ */
 export function rollText(roll: Roll): string {
   const dice = roll.spec.math !== undefined ? formulaText(roll) : `[${diceText(roll)}]`;
   return `${formatNotation(roll.spec)}: ${resultText(roll)}${hasTotal(roll.spec) ? `  ${dice}` : ""}`;
 }
 
-/** Rolls as plain text, one to a line, each with its time in UTC, oldest first as given. */
+/** Rolls as plain text, one to a line, each with its time in UTC, oldest first as given.
+ *
+ * @param rolls - Completed rolls, or the number of attempts where this parameter is numeric.
+ * @returns Rolls as plain text, one to a line, each with its time in UTC, oldest first as given.
+
+ *
+ * @example
+ * ```ts
+ * import { toText } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(toText([sample]));
+ * ```
+ */
 export function toText(rolls: readonly Roll[]): string {
   return rolls.map((roll) => `${new Date(roll.at).toISOString()}  ${rollText(roll)}${roll.loaded === true ? "  (loaded dice)" : ""}\n`).join("");
 }
 
-/** The columns of the CSV export, in order. */
+/** The columns of the CSV export, in order.
+ *
+ * @example
+ * ```ts
+ * import { CSV_COLUMNS } from "@johnmorrisdotca/korokoro";
+ * console.log(Object.keys(CSV_COLUMNS));
+ * ```
+ */
 export const CSV_COLUMNS = ["time", "notation", "label", "total", "dice", "faces", "seed", "held", "loaded", "set"] as const;
 
 /**
@@ -143,6 +287,16 @@ export const CSV_COLUMNS = ["time", "notation", "label", "total", "dice", "faces
  * cell that a spreadsheet would run as a formula (one starting with `=`, `+`,
  * `-`, `@`, a tab or a carriage return) is given a leading apostrophe, unless
  * it is simply a number, so that opening an export can never run anything.
+ *
+ * @param value - The candidate face, value or name to check.
+ * @returns One cell of CSV. Quoted when it holds a comma, a quote or a line break. A cell that a spreadsheet would run as a formula (one starting with `=`, `+`, `-`, `@`, a tab or a carriage return) is given a leading apostrophe, unless it is simply a number, so that opening an export can never run anything.
+
+ *
+ * @example
+ * ```ts
+ * import { csvCell } from "@johnmorrisdotca/korokoro";
+ * console.log(csvCell("A quote: \" and a comma, here"));
+ * ```
  */
 export function csvCell(value: string | number): string {
   let text = String(value);
@@ -156,6 +310,19 @@ export function csvCell(value: string | number): string {
  * words; `dice` is each die as text (see `diceText`); `faces` is the bare
  * faces thrown; `held` is which dice were held, counted from 1; `set` is
  * `2/6` for the second roll of six.
+ *
+ * @param rolls - Completed rolls, or the number of attempts where this parameter is numeric.
+ * @returns Rolls as CSV for a spreadsheet: a header, then a row for each roll, lines ended CRLF as RFC 4180 has them. `total` is empty for dice that are only words; `dice` is each die as text (see `diceText`); `faces` is the bare faces thrown; `held` is which dice were held, counted from 1; `set` is `2/6` for the second roll of six.
+
+ *
+ * @example
+ * ```ts
+ * import { toCSV } from "@johnmorrisdotca/korokoro";
+ * import { normalizeSpec, rollFrom } from "@johnmorrisdotca/korokoro";
+ * const spec = normalizeSpec({ count: 2, sides: 6 });
+ * const sample = rollFrom(spec, [2, 5], "saved", 0, null)!;
+ * console.log(toCSV([sample]).split("\r\n")[0]);
+ * ```
  */
 export function toCSV(rolls: readonly Roll[]): string {
   const rows = rolls.map((roll) => {

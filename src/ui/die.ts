@@ -22,13 +22,36 @@ import { injectStyle } from "./style.ts";
  * for reduced motion gets no tumble.
  */
 
-/** How big the die is drawn: 48, 96 or 150 pixels across. The same three names as everywhere in the family. */
+/** How big the die is drawn: 48, 96 or 150 pixels across. The same three names as everywhere in the family.
+ *
+ * @example
+ * ```ts
+ * import type { DieSize } from "@johnmorrisdotca/korokoro";
+ * const value: DieSize = "small";
+ * console.log(value);
+ * ```
+ */
 export type DieSize = "small" | "medium" | "large";
 
-/** The pixels of each size. */
+/** The pixels of each size.
+ *
+ * @example
+ * ```ts
+ * import { DIE_SIZE_PX } from "@johnmorrisdotca/korokoro";
+ * console.log(Object.keys(DIE_SIZE_PX));
+ * ```
+ */
 export const DIE_SIZE_PX: Readonly<Record<DieSize, number>> = { small: 48, medium: 96, large: 150 };
 
-/** What a lone die is told when it is made. Everything may be left out. */
+/** What a lone die is told when it is made. Everything may be left out.
+ *
+ * @example
+ * ```ts
+ * import type { DieOptions } from "@johnmorrisdotca/korokoro";
+ * const value: DieOptions = { sides: 20, face: 6, sound: false };
+ * console.log(value.sides);
+ * ```
+ */
 export type DieOptions = {
   /** The kind of die: 2 to 1000 sides, or "F" for a Fate die. 6 when left out. */
   sides?: Sides;
@@ -64,7 +87,16 @@ export type DieOptions = {
   onRoll?: (face: number) => void;
 };
 
-/** What `mountDie` hands back. */
+/** What `mountDie` hands back.
+ *
+ * @example
+ * ```ts no-run
+ * import type { DieHandle } from "@johnmorrisdotca/korokoro";
+ * import { mountDie } from "@johnmorrisdotca/korokoro";
+ * const value: DieHandle = mountDie(document.createElement("div"), { sides: 6, sound: false });
+ * console.log(Object.keys(value));
+ * ```
+ */
 export type DieHandle = {
   /** The die's own element, a button if it rolls. */
   readonly element: HTMLElement;
@@ -113,8 +145,13 @@ function restingFace(group: DiceGroup): number {
  * that rolls.
  *
  * @example
+ * ```ts no-run
+ * import { mountDie } from "@johnmorrisdotca/korokoro";
+ * const box = document.createElement("div");
+ * document.body.append(box);
  * const die = mountDie(box, { sides: 20, size: "large", onRoll: (face) => console.log(face) });
  * die.roll();
+ * ```
  * @param target - The HTMLElement that owns the native interface.
  * @param options - Native settings and callbacks for this mounted interface.
  * @returns The native mounted handle, including controls and destroy() cleanup.

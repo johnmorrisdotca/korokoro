@@ -15,7 +15,15 @@ import { VERSION } from "./version.ts";
  * network, so every line of it is tested as plain data.
  */
 
-/** What the command line is run in. All of it is optional. */
+/** What the command line is run in. All of it is optional.
+ *
+ * @example
+ * ```ts
+ * import type { CliSurroundings } from "@johnmorrisdotca/korokoro";
+ * const value: CliSurroundings = { env: {}, locale: "en" };
+ * console.log(value.locale);
+ * ```
+ */
 export type CliSurroundings = {
   /** The environment, for the language (`LC_ALL`, `LC_MESSAGES`, `LANG`) and `NO_COLOR`. */
   env?: Record<string, string | undefined>;
@@ -31,7 +39,16 @@ export type CliSurroundings = {
   source?: RandomSource;
 };
 
-/** What the command line came to. */
+/** What the command line came to.
+ *
+ * @example
+ * ```ts
+ * import type { CliResult } from "@johnmorrisdotca/korokoro";
+ * import { runCli } from "@johnmorrisdotca/korokoro";
+ * const value: CliResult = runCli(["2d6", "--seed", "docs"]);
+ * console.log(value.code);
+ * ```
+ */
 export type CliResult = {
   /** 0 when all went well, 1 when something asked for could not be rolled, 2 when the command itself was wrong. */
   code: 0 | 1 | 2;
@@ -162,7 +179,20 @@ With no dice, rolls 2d6. Exit codes: 0 done, 1 something could not be rolled,
   },
 } as const;
 
-/** The language the command line speaks: `--lang`, or the environment's, or the system's; Japanese for `ja…`, English for anything else. */
+/** The language the command line speaks: `--lang`, or the environment's, or the system's; Japanese for `ja…`, English for anything else.
+ *
+ * @param flag - Explicit language flag, when supplied.
+ * @param env - Environment variables used to choose the language.
+ * @param locale - Locale to use when no explicit language is supplied.
+ * @returns The language the command line speaks: `--lang`, or the environment's, or the system's; Japanese for `ja…`, English for anything else.
+
+ *
+ * @example
+ * ```ts
+ * import { cliLanguage } from "@johnmorrisdotca/korokoro";
+ * console.log(cliLanguage(undefined, { LANG: "ja_JP.UTF-8" }));
+ * ```
+ */
 export function cliLanguage(flag: string | undefined, env: Record<string, string | undefined> = {}, locale?: string): Language {
   const named = [flag, env.LC_ALL, env.LC_MESSAGES, env.LANG].find((value) => value !== undefined && value !== "" && value !== "C" && value !== "POSIX" && !value.startsWith("C."));
   return (named ?? locale ?? "en").toLowerCase().startsWith("ja") ? "ja" : "en";
@@ -230,6 +260,17 @@ function oddsText(spec: RollSpec, language: Language): string {
  * Run the command line. See `koro --help` for what it takes. One seed serves
  * the whole run: the rolls are drawn from it one after another, in the order
  * asked for, so the same command prints the same dice.
+ *
+ * @param args - Command-line arguments, without the executable name.
+ * @param around - Environment, locale, clock and input supplied by the host.
+ * @returns Run the command line. See `koro --help` for what it takes. One seed serves the whole run: the rolls are drawn from it one after another, in the order asked for, so the same command prints the same dice.
+
+ *
+ * @example
+ * ```ts
+ * import { runCli } from "@johnmorrisdotca/korokoro";
+ * console.log(runCli(["2d6", "--seed", "table"]).code);
+ * ```
  */
 export function runCli(args: readonly string[], around: CliSurroundings = {}): CliResult {
   const asked = sortArguments(args);

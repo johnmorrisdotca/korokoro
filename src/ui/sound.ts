@@ -5,6 +5,13 @@
  * never fetches them. Where they cannot be loaded or decoded, a short knock
  * made in the browser stands in. Nothing here throws: a platform with no
  * audio, a blocked context or a failed decode is simply silent.
+ *
+ * @example
+ * ```ts
+ * import type { SoundThrow } from "@johnmorrisdotca/korokoro";
+ * const value: SoundThrow = { dice: 2, ms: 300, landings: [150, 300] };
+ * console.log(value.landings);
+ * ```
  */
 export type SoundThrow = {
   /** How many dice were thrown. */
@@ -15,10 +22,27 @@ export type SoundThrow = {
   landings: number[];
 };
 
-/** Anything that makes a roll's sound: the built-in one, or a page's own. */
+/** Anything that makes a roll's sound: the built-in one, or a page's own.
+ *
+ * @example
+ * ```ts
+ * import type { PlaySound } from "@johnmorrisdotca/korokoro";
+ * const value: PlaySound = (thrown) => console.log(thrown.dice);
+ * console.log(typeof value);
+ * ```
+ */
 export type PlaySound = (thrown: SoundThrow) => void;
 
-/** The tray's own sound: `play` for each throw, `close` when the tray goes. */
+/** The tray's own sound: `play` for each throw, `close` when the tray goes.
+ *
+ * @example
+ * ```ts
+ * import type { RollSound } from "@johnmorrisdotca/korokoro";
+ * import { createRollSound } from "@johnmorrisdotca/korokoro";
+ * const value: RollSound = createRollSound(undefined);
+ * console.log(Object.keys(value));
+ * ```
+ */
 export type RollSound = { play: PlaySound; close(): void };
 
 /** The recordings, by name, as base64. */
@@ -61,6 +85,20 @@ export function knockTimes(landings: readonly number[]): number[] {
 /**
  * The tray's sound for one window. `load` fetches the recordings; it is the
  * package's own lazy import unless a test hands in another.
+ *
+ * @param win - An audio-capable window, or undefined for a silent host.
+ * @param load - A lazy loader for the recorded sounds.
+ * @returns The tray's sound for one window. `load` fetches the recordings; it is the package's own lazy import unless a test hands in another.
+
+ *
+ * @example
+ * ```ts
+ * import { createRollSound } from "@johnmorrisdotca/korokoro";
+ * const sound = createRollSound(undefined);
+ * sound.play({ dice: 2, ms: 0, landings: [0, 0] });
+ * sound.close();
+ * console.log(typeof sound.play);
+ * ```
  */
 export function createRollSound(
   win: AudioWindow | undefined,

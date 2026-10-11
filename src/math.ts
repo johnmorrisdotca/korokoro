@@ -8,6 +8,13 @@
  * point, so `floor(7/3*3)` is 7 and not 6 or 8, in a roll and in its odds
  * alike. A formula must come to a whole number: a division has to be rounded
  * (`floor`, `ceil` or `round`) before it reaches the total.
+ *
+ * @example
+ * ```ts
+ * import type { MathNode } from "@johnmorrisdotca/korokoro";
+ * const value: MathNode = { kind: "dice", group: 0 };
+ * console.log(value.kind);
+ * ```
  */
 export type MathNode =
   /** The total of one kind of dice: the roll's kind at this place, from 0. */
@@ -19,20 +26,70 @@ export type MathNode =
   /** A function of one amount (`floor`, `ceil`, `round`, `abs`) or of several (`max`, `min`). */
   | { kind: "call"; name: MathFunction; args: MathNode[] };
 
-/** The functions a formula may call. `round` rounds a half up, as JavaScript's `Math.round` does. */
+/** The functions a formula may call. `round` rounds a half up, as JavaScript's `Math.round` does.
+ *
+ * @example
+ * ```ts
+ * import type { MathFunction } from "@johnmorrisdotca/korokoro";
+ * const value: MathFunction = "floor";
+ * console.log(value);
+ * ```
+ */
 export type MathFunction = "floor" | "ceil" | "round" | "abs" | "max" | "min";
 
-/** The most pairs of amounts any one step of a formula's odds may have to put together. */
+/** The most pairs of amounts any one step of a formula's odds may have to put together.
+ *
+ * @example
+ * ```ts
+ * import { MAX_MATH_PAIRS } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_MATH_PAIRS);
+ * ```
+ */
 export const MAX_MATH_PAIRS = 4_000_000;
-/** The widest span of totals a formula may have. */
+/** The widest span of totals a formula may have.
+ *
+ * @example
+ * ```ts
+ * import { MAX_MATH_TOTALS } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_MATH_TOTALS);
+ * ```
+ */
 export const MAX_MATH_TOTALS = 1_000_000;
-/** The largest whole number written in a formula. */
+/** The largest whole number written in a formula.
+ *
+ * @example
+ * ```ts
+ * import { MAX_MATH_NUMBER } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_MATH_NUMBER);
+ * ```
+ */
 export const MAX_MATH_NUMBER = 9999;
-/** The largest amount, either way, any step of a formula may come to. */
+/** The largest amount, either way, any step of a formula may come to.
+ *
+ * @example
+ * ```ts
+ * import { MAX_MATH_AMOUNT } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_MATH_AMOUNT);
+ * ```
+ */
 export const MAX_MATH_AMOUNT = 1_000_000;
-/** The largest bottom of a fraction any step may have: what it may be divided by, all told. It keeps every step exact in whole numbers. */
+/** The largest bottom of a fraction any step may have: what it may be divided by, all told. It keeps every step exact in whole numbers.
+ *
+ * @example
+ * ```ts
+ * import { MAX_MATH_DIVISOR } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_MATH_DIVISOR);
+ * ```
+ */
 export const MAX_MATH_DIVISOR = 1000;
-/** The most steps a formula may have. */
+/** The most steps a formula may have.
+ *
+ * @example
+ * ```ts
+ * import { MAX_MATH_NODES } from "@johnmorrisdotca/korokoro";
+ * console.log(MAX_MATH_NODES);
+ * ```
+ */
 export const MAX_MATH_NODES = 40;
 
 /** A fraction in lowest terms, its sign on top. */
@@ -75,13 +132,36 @@ function value(node: MathNode, totals: readonly number[]): Q {
   );
 }
 
-/** What a formula comes to, given each kind's total. A sound formula (`checkMath`) always comes to a whole number. */
+/** What a formula comes to, given each kind's total. A sound formula (`checkMath`) always comes to a whole number.
+ *
+ * @param node - The arithmetic expression tree.
+ * @param totals - One total per dice group, in group order.
+ * @returns What a formula comes to, given each kind's total. A sound formula (`checkMath`) always comes to a whole number.
+
+ *
+ * @example
+ * ```ts
+ * import { evaluateMath } from "@johnmorrisdotca/korokoro";
+ * console.log(evaluateMath({ kind: "dice", group: 0 }, [7]));
+ * ```
+ */
 export function evaluateMath(node: MathNode, totals: readonly number[]): number {
   const result = value(node, totals);
   return result.d === 1 ? result.n : exactFloor(result);
 }
 
-/** Which kinds of dice a formula uses, in the order it names them. */
+/** Which kinds of dice a formula uses, in the order it names them.
+ *
+ * @param node - The arithmetic expression tree.
+ * @returns Which kinds of dice a formula uses, in the order it names them.
+
+ *
+ * @example
+ * ```ts
+ * import { mathGroups } from "@johnmorrisdotca/korokoro";
+ * console.log(mathGroups({ kind: "dice", group: 0 }));
+ * ```
+ */
 export function mathGroups(node: MathNode): number[] {
   if (node.kind === "dice") return [node.group];
   if (node.kind === "number") return [];
@@ -97,7 +177,19 @@ function count(node: MathNode): number {
 
 const FUNCTIONS: readonly string[] = ["floor", "ceil", "round", "abs", "max", "min"];
 
-/** A formula given by hand, checked for its shape alone: the nodes are what they say they are. Undefined when it is not a formula. */
+/** A formula given by hand, checked for its shape alone: the nodes are what they say they are. Undefined when it is not a formula.
+ *
+ * @param given - The candidate arithmetic tree to validate.
+ * @param depth - The current recursive depth; normally omitted.
+ * @returns A formula given by hand, checked for its shape alone: the nodes are what they say they are. undefined when it is not a formula.
+
+ *
+ * @example
+ * ```ts
+ * import { soundMath } from "@johnmorrisdotca/korokoro";
+ * console.log(soundMath({ kind: "dice", group: 0 }));
+ * ```
+ */
 export function soundMath(given: unknown, depth = 0): MathNode | undefined {
   if (typeof given !== "object" || given === null || depth > MAX_MATH_NODES) return undefined;
   const node = given as Record<string, unknown>;
@@ -118,7 +210,15 @@ export function soundMath(given: unknown, depth = 0): MathNode | undefined {
   return undefined;
 }
 
-/** Why a formula cannot be used, when it cannot. */
+/** Why a formula cannot be used, when it cannot.
+ *
+ * @example
+ * ```ts
+ * import type { MathProblem } from "@johnmorrisdotca/korokoro";
+ * const value: MathProblem = "fraction";
+ * console.log(value);
+ * ```
+ */
 export type MathProblem =
   /** It does not name each kind of dice exactly once, or has too many steps. */
   | "shape"
@@ -196,6 +296,17 @@ function span(node: MathNode, ranges: readonly { min: number; max: number }[]): 
  * these ranges: the problem, or null when there is none. It has to name each
  * kind exactly once (so the kinds stay independent and the odds exact), come
  * to a whole number, never divide by nothing, and stay small enough to count.
+ *
+ * @param node - The arithmetic expression tree.
+ * @param ranges - The minimum and maximum for each dice group.
+ * @returns Whether a formula can be used with kinds of dice whose totals run over these ranges: the problem, or null when there is none. It has to name each kind exactly once (so the kinds stay independent and the odds exact), come to a whole number, never divide by nothing, and stay small enough to count.
+
+ *
+ * @example
+ * ```ts
+ * import { checkMath } from "@johnmorrisdotca/korokoro";
+ * console.log(checkMath({ kind: "dice", group: 0 }, [{ min: 1, max: 6 }]));
+ * ```
  */
 export function checkMath(node: MathNode, ranges: readonly { min: number; max: number }[]): MathProblem | null {
   const used = mathGroups(node);
@@ -205,7 +316,19 @@ export function checkMath(node: MathNode, ranges: readonly { min: number; max: n
   return made.whole ? null : "fraction";
 }
 
-/** The least and the most a sound formula can come to, given each kind's range. */
+/** The least and the most a sound formula can come to, given each kind's range.
+ *
+ * @param node - The arithmetic expression tree.
+ * @param ranges - The minimum and maximum for each dice group.
+ * @returns The least and the most a sound formula can come to, given each kind's range.
+
+ *
+ * @example
+ * ```ts
+ * import { mathRange } from "@johnmorrisdotca/korokoro";
+ * console.log(mathRange({ kind: "dice", group: 0 }, [{ min: 1, max: 6 }]));
+ * ```
+ */
 export function mathRange(node: MathNode, ranges: readonly { min: number; max: number }[]): { min: number; max: number } {
   const made = span(node, ranges);
   if (typeof made === "string") return { min: 0, max: 0 };
@@ -245,6 +368,17 @@ function spread(node: MathNode, leaves: readonly Map<number, number>[]): Spread 
  * The odds of a formula: the chance of each whole number it can come to,
  * given the chance of each total of each kind of dice. Exact in its
  * arithmetic, because the kinds share no dice and each is named once.
+ *
+ * @param node - The arithmetic expression tree.
+ * @param leaves - One map of outcome weights per dice group.
+ * @returns The odds of a formula: the chance of each whole number it can come to, given the chance of each total of each kind of dice. Exact in its arithmetic, because the kinds share no dice and each is named once.
+
+ *
+ * @example
+ * ```ts
+ * import { spreadMath } from "@johnmorrisdotca/korokoro";
+ * console.log([...spreadMath({ kind: "dice", group: 0 }, [new Map([[1, 0.5], [2, 0.5]])])]);
+ * ```
  */
 export function spreadMath(node: MathNode, leaves: readonly Map<number, number>[]): Map<number, number> {
   const out = new Map<number, number>();
@@ -257,7 +391,19 @@ export function spreadMath(node: MathNode, leaves: readonly Map<number, number>[
 
 const RANK = { "+": 1, "-": 1, "*": 2, "/": 2 } as const;
 
-/** A formula as notation writes it, with brackets only where they are needed. `dice` writes the kind at a place. */
+/** A formula as notation writes it, with brackets only where they are needed. `dice` writes the kind at a place.
+ *
+ * @param node - The arithmetic expression tree.
+ * @param dice - Dice notation, or a callback giving notation for a formula group.
+ * @returns A formula as notation writes it, with brackets only where they are needed. `dice` writes the kind at a place.
+
+ *
+ * @example
+ * ```ts
+ * import { mathText } from "@johnmorrisdotca/korokoro";
+ * console.log(mathText({ kind: "dice", group: 0 }, () => "2d6"));
+ * ```
+ */
 export function mathText(node: MathNode, dice: (group: number) => string): string {
   if (node.kind === "dice") return dice(node.group);
   if (node.kind === "number") return String(node.value);
