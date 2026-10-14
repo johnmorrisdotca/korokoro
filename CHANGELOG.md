@@ -5,6 +5,8 @@ All notable changes to this project are written here. The format follows
 [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
+
+- Keep large documentation resource catalogues on the entry index and the active resource beside core navigation, preserving every reference page; render valid default imports in HTML and Markdown.
 ### Added
 
 - Add the shared English/Japanese documentation site, per-export reference with checked examples, guides, local search and machine-readable pages.
