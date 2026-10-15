@@ -6,22 +6,23 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
-- Synchronize documentation tooling for repository layouts, generated type references, Node entry points and repository-specific README links.
+## [1.16.0] - 2026-10-14
 
-- Keep large documentation resource catalogues on the entry index and the active resource beside core navigation, preserving every reference page; render valid default imports in HTML and Markdown.
+The tray and the single die take the family's standard embed attributes, the package has an English and Japanese documentation site, and every public export has a checked example. Rolls, odds, notation, seeds and shared links are unchanged.
+
 ### Added
 
-- Add the shared English/Japanese documentation site, per-export reference with checked examples, guides, local search and machine-readable pages.
-
-- Add the shared roller/die builder, standard element properties and display options, and validated iframe parameters without stored history, preserving existing links and messages.
-
-- Share a package-independent embed builder for option controls, preview adapters, code tabs and shareable links.
+- A documentation site in English and Japanese at https://johnmorrisdotca.github.io/korokoro/docs/: ten guides in each language, a page for every export with an example that is run on every change, local search, Markdown copies of every page and `llms.txt`. The old `/api.html` anchors and the previous reference addresses redirect to it.
+- A shared embed builder at `/builder.html` that previews the tray or one die and writes the tag, the iframe address and a link to the settings.
+- The tray and the die elements reflect every watched attribute as a property (`tray.size = "small"`, with camel-case aliases for hyphenated names), and take `width`, `theme`, `label` and `seed`; a tray inside a shadow root gets its own styles.
+- A README section on installing under another name, and the minified and gzipped size and the npm provenance as badges.
 
 ### Changed
 
-- Group the package family by kind, alphabetize each group, and include the geography packages and REST in Pieces in the shared footer and README.
-
-- Update the shared family description for addresses in all seven supported countries, including France and Germany.
+- Every export has a summary, parameter and return documentation and an example in its doc comment. The compiled code of the existing functions is unchanged.
+- The family's list, in the README and in the demo's footer, is grouped by kind and alphabetical within each group, and names thirty-two packages, the geography packages, REST in Pieces and the sports packages among them.
+- The npm description is shorter and starts with the name in English and Japanese.
+- The documentation tooling is the family's shared version `2026-10-13-workspaces`; large catalogues stay on the entry index so that the published site stays small.
 
 ## [1.15.2] - 2026-10-06
 
@@ -605,7 +606,9 @@ Nothing that was exported has changed.
 - `DiceRoller`, a React component, from `@johnmorrisdotca/korokoro/react`.
 - A static demo, published to GitHub Pages.
 
-[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.15.1...HEAD
+[Unreleased]: https://github.com/johnmorrisdotca/korokoro/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/johnmorrisdotca/korokoro/compare/v1.15.2...v1.16.0
+[1.15.2]: https://github.com/johnmorrisdotca/korokoro/compare/v1.15.1...v1.15.2
 [1.15.1]: https://github.com/johnmorrisdotca/korokoro/compare/v1.15.0...v1.15.1
 [1.14.1]: https://github.com/johnmorrisdotca/korokoro/compare/v1.14.0...v1.14.1
 [1.14.0]: https://github.com/johnmorrisdotca/korokoro/compare/v1.13.0...v1.14.0

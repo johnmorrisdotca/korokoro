@@ -35,8 +35,8 @@ const words = {
 const row = (id, kind, names, en, ja, extra = {}) => ({ id, group: "dice", kind, names, say: { en: { label: en[0], help: en[1] }, ja: { label: ja[0], help: ja[1] } }, ...extra });
 const both = (id) => ({ roller: id, die: id });
 const options = [
-  row("notation", "text", { roller: "notation" }, ["Notation", "The dice expression, such as 2d6+3."], ["ダイス表記", "2d6+3 のように、振るダイスを書きます。"], { default: "2d6" }),
-  row("sides", "choice", { die: "sides" }, ["Sides", "The number of faces, or F for Fate dice."], ["面の数", "面の数、または Fate ダイスの F です。"], { default: "6", choices: ["2", "4", "6", "8", "10", "12", "20", "100", "F"] }),
+  row("notation", "text", { roller: "notation" }, ["Notation", "The dice expression, such as 2d6+3."], ["ダイス表記", "2d6+3のように、振るダイスを書きます。"], { default: "2d6" }),
+  row("sides", "choice", { die: "sides" }, ["Sides", "The number of faces, or F for Fate dice."], ["面の数", "面の数、またはFateダイスの「F」です。"], { default: "6", choices: ["2", "4", "6", "8", "10", "12", "20", "100", "F"] }),
   row("face", "number", { die: "face" }, ["Face", "A fixed face to show when opening."], ["表示する面", "開いたときに表示する面です。"], { range: { min: -1, max: 1000, step: 1 } }),
   row("tray-size", "choice", { roller: "size" }, ["Display size", "Small, medium or large."], ["表示の大きさ", "小・中・大を選びます。"], { default: "large", choices: ["small", "medium", "large"], choiceLabels: { en: { small: "Small", medium: "Medium", large: "Large" }, ja: { small: "小", medium: "中", large: "大" } } }),
   row("size", "choice", { die: "size" }, ["Display size", "Small, medium or large."], ["表示の大きさ", "小・中・大を選びます。"], { default: "medium", choices: ["small", "medium", "large"] }),

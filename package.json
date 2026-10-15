@@ -1,6 +1,6 @@
 {
   "name": "@johnmorrisdotca/korokoro",
-  "version": "1.15.2",
+  "version": "1.16.0",
   "description": "Korokoro コロコロ — Dice roller with notation and exact odds: mixed dice, seeded rolls, history and a browser tray. Zero dependencies.",
   "keywords": [
     "dice",

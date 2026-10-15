@@ -13,6 +13,6 @@ Use [the element entry](entry:element) when the host wants custom tags, [React](
 
 ## Language and persistence
 
-The UI has English and Japanese words. Locale or explicit strings select the native wording; pure record fields stay stable across languages. The [word list](../strings-ja.md) preserves the keys and both texts. The new Japanese guides need review before release.
+The UI has English and Japanese words. Locale or explicit strings select the native wording; pure record fields stay stable across languages. The [word list](../strings-ja.md) preserves the keys and both texts.
 
 History and named sets are local to storage supplied by the host. Storage readers validate records, and storage refusal is returned as a result. Frames opt out of storage. [Architecture](../../README.md#architecture), [other-language examples](../other-languages.md) and the [conformance data](../../conformance/korokoro-conformance.json) describe the implementation and ports without hiding detail from the README.
