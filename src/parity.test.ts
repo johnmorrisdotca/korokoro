@@ -6,16 +6,16 @@ import {
   groupsOf,
   isSuccessRoll,
   normalizeSpec,
+  type RollSpec,
   rangeOf,
   readDice,
   roll,
   rollFrom,
   rulesText,
-  type RollSpec,
 } from "./dice.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
 import { chanceAtLeast, distributionOf, exactCounts, expectedTotal } from "./odds.ts";
-import { seededSource, type RandomSource } from "./random.ts";
+import { type RandomSource, seededSource } from "./random.ts";
 import { readShared, shareQuery } from "./share.ts";
 
 /** A source that throws the faces it is handed, in order, on numbered dice. */

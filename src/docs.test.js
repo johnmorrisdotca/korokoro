@@ -1,38 +1,47 @@
-import { FAMILY, familyRepo } from "../scripts/family-template.mjs";
 // The documents that are made from the source, or that quote it, checked against it.
 // Plain JavaScript, so that reading files needs no Node types. `pnpm docs:make` rewrites what is made.
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
-
 import { describe, expect, it } from "vitest";
-
-import { MAX_TIMES, chancesOf, groupsOf, hasTotal, isFair, roll, rollHeld, rollMany } from "./dice.ts";
+import { FAMILY, familyRepo } from "../scripts/family-template.mjs";
+import { fullReadme } from "../scripts/full-readme.mjs";
 import { runCli } from "./cli.ts";
+import {
+  chancesOf,
+  groupsOf,
+  hasTotal,
+  isFair,
+  MAX_TIMES,
+  normalizeSpec,
+  rangeOf,
+  roll,
+  rollHeld,
+  rollMany,
+} from "./dice.ts";
 import { toCSV, toJSON, toText } from "./export.ts";
 import { chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "./games/odds.ts";
-import { PRESETS, getPreset, presetOdds, presetSpec, rollPreset } from "./games/presets.ts";
-import { LOADED_PRESETS, faceChances, loadingOf } from "./loaded.ts";
-import { makeSet, readSet, setQuery } from "./sets.ts";
-import { fairnessTest, readResults } from "./stats.ts";
+import { getPreset, PRESETS, presetOdds, presetSpec, rollPreset } from "./games/presets.ts";
+import { faceChances, LOADED_PRESETS, loadingOf } from "./loaded.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
-import { chanceAnyAtLeast, expectedHighest } from "./odds.ts";
-import { normalizeSpec, rangeOf } from "./dice.ts";
 import {
+  chanceAnyAtLeast,
   chanceAtLeast,
   chanceExactly,
   distributionHolding,
   distributionOf,
   exactCounts,
+  expectedHighest,
   expectedTotal,
   luckOf,
   mostLikely,
   spreadOf,
 } from "./odds.ts";
 import { seededSource } from "./random.ts";
+import { makeSet, readSet, setQuery } from "./sets.ts";
 import { shareQuery } from "./share.ts";
+import { fairnessTest, readResults } from "./stats.ts";
 import { STRINGS } from "./ui/strings.ts";
-import { fullReadme } from "../scripts/full-readme.mjs";
 
 // The README with the sections that moved to pages under docs/ put back: the tests hold the whole of what it says to the code.
 const readme = fullReadme();

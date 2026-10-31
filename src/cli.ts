@@ -1,22 +1,22 @@
 import {
   hasTotal,
   isSuccessRoll,
-  roll,
-  rollMany,
-  setOf,
   MAX_DICE,
   MAX_DICE_BY_CODE,
   MAX_TIMES,
   type Roll,
   type RollSpec,
+  roll,
+  rollMany,
+  setOf,
 } from "./dice.ts";
-import { diceText, exportedRoll, formulaText, resultText, toCSV, EXPORT_FORMAT, type ExportedRoll } from "./export.ts";
-import { PRESETS, getPreset, presetOdds, presetSpec, readPreset, type Preset } from "./games/presets.ts";
+import { diceText, EXPORT_FORMAT, type ExportedRoll, exportedRoll, formulaText, resultText, toCSV } from "./export.ts";
+import { getPreset, PRESETS, type Preset, presetOdds, presetSpec, readPreset } from "./games/presets.ts";
 import { checkNotation, formatNotation, type NotationProblem } from "./notation.ts";
 import { distributionOf, expectedTotal, mostLikely, spreadOf } from "./odds.ts";
-import { cryptoSource, seededSource, type RandomSource } from "./random.ts";
+import { cryptoSource, type RandomSource, seededSource } from "./random.ts";
 import { fairnessTest, readResults } from "./stats.ts";
-import { REFUSALS, STRINGS, fillIn } from "./ui/strings.ts";
+import { fillIn, REFUSALS, STRINGS } from "./ui/strings.ts";
 import { VERSION } from "./version.ts";
 
 /**

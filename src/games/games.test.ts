@@ -2,19 +2,19 @@ import { describe, expect, it } from "vitest";
 
 import { canHold, diceCount, groupsOf, isFair, isLoaded, roll } from "../dice.ts";
 import { formatNotation, parseNotation } from "../notation.ts";
-import { seededSource, type RandomSource } from "../random.ts";
+import { type RandomSource, seededSource } from "../random.ts";
 import { asChance, chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "./odds.ts";
 import {
-  PRESETS,
   findPresets,
   getPreset,
+  PRESETS,
+  type Preset,
   presetOdds,
   presetSpec,
   readPreset,
   rollPreset,
-  type Preset,
 } from "./presets.ts";
-import { READERS, patternsOf, waysToShut } from "./readings.ts";
+import { patternsOf, READERS, waysToShut } from "./readings.ts";
 import { READING_WORDS } from "./words.ts";
 
 /** A source that throws the faces it is handed, in order, on numbered dice. */
@@ -284,7 +284,12 @@ describe("board games", () => {
     ] as const) {
       const counted = new Map<string, number>();
       const walk = (dice: number[]) => {
-        if (dice.length < attack + defence) return void [1, 2, 3, 4, 5, 6].forEach((f) => walk([...dice, f]));
+        if (dice.length < attack + defence) {
+          [1, 2, 3, 4, 5, 6].forEach((f) => {
+            walk([...dice, f]);
+          });
+          return;
+        }
         const a = dice.slice(0, attack).sort((x, y) => y - x);
         const d = dice.slice(attack).sort((x, y) => y - x);
         let lostA = 0;
@@ -352,7 +357,12 @@ describe("dice games", () => {
     // Dice from 2, 3, 4 and 6 with no three alike: counted by hand as 4^6 less those with a triple.
     let none = 0;
     const walk = (dice: number[]) => {
-      if (dice.length < 6) return void [2, 3, 4, 6].forEach((f) => walk([...dice, f]));
+      if (dice.length < 6) {
+        [2, 3, 4, 6].forEach((f) => {
+          walk([...dice, f]);
+        });
+        return;
+      }
       if ([2, 3, 4, 6].every((f) => dice.filter((d) => d === f).length < 3)) none += 1;
     };
     walk([]);

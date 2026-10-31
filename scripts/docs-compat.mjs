@@ -30,7 +30,7 @@ const guideAliases = {
   migrating: "upgrading",
   "strings-ja": "design",
 };
-const escape = (text) => text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
+const escapeHtml = (text) => text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;");
 
 /** Restore the old documentation URLs after the shared generator builds its pages. */
 export default function docsCompatibility() {
@@ -59,7 +59,7 @@ export default function docsCompatibility() {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(
       file,
-      `<!doctype html>\n<html lang="${old.startsWith("ja/") ? "ja" : "en"}"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Korokoro documentation</title><link rel="canonical" href="${escape(address)}"><script>location.replace(${JSON.stringify(address)} + location.hash);</script></head><body><main><h1>Korokoro documentation</h1><p><a href="${escape(address)}">${continuing}</a></p></main></body></html>\n`,
+      `<!doctype html>\n<html lang="${old.startsWith("ja/") ? "ja" : "en"}"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Korokoro documentation</title><link rel="canonical" href="${escapeHtml(address)}"><script>location.replace(${JSON.stringify(address)} + location.hash);</script></head><body><main><h1>Korokoro documentation</h1><p><a href="${escapeHtml(address)}">${escapeHtml(continuing)}</a></p></main></body></html>\n`,
     );
   }
   console.log(`ok   ${aliases.size} published documentation addresses retained`);

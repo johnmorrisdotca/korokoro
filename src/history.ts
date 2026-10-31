@@ -1,4 +1,4 @@
-import { MAX_DICE_BY_CODE, canHold, isSides, normalizeSpec, rollFrom, type Roll } from "./dice.ts";
+import { canHold, isSides, MAX_DICE_BY_CODE, normalizeSpec, type Roll, rollFrom } from "./dice.ts";
 
 /** A history keeps the latest rolls and forgets the oldest past this many.
  *

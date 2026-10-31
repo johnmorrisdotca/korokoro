@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createSSRApp, h } from "vue";
 import { renderToString } from "vue/server-renderer";
 
-import { DIE_TAG, KorokoroDie, KorokoroRoller, ROLLER_TAG, defineDie, defineRoller } from "./element.ts";
+import { DIE_TAG, defineDie, defineRoller, KorokoroDie, KorokoroRoller, ROLLER_TAG } from "./element.ts";
 import { DiceRoller } from "./vue.ts";
 
 describe("the custom element, where there is no browser", () => {

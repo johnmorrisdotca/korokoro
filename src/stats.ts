@@ -1,15 +1,15 @@
 import {
+  type DiceGroup,
   diceCount,
   diceOf,
   dieName,
   faceRange,
   groupOf,
   hasTotal,
-  sidesOf,
-  type DiceGroup,
   type Roll,
   type RollSpec,
   type Sides,
+  sidesOf,
 } from "./dice.ts";
 import { formatNotation } from "./notation.ts";
 import { distributionOf, expectedTotal, luckOf } from "./odds.ts";

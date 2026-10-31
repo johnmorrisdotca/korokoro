@@ -1,20 +1,20 @@
 import {
-  MAX_EXPLOSIONS,
-  MAX_REROLLS,
   canHold,
   chancesOf,
+  type DiceGroup,
   dieName,
   dieOutcomes,
   faceRange,
   groupRange,
   groupsOf,
   keptCount,
+  MAX_EXPLOSIONS,
+  MAX_REROLLS,
   playsByNewRules,
+  type RollSpec,
   rangeOf,
   rulesText,
   valueOfFace,
-  type DiceGroup,
-  type RollSpec,
 } from "./dice.ts";
 import { mathText, spreadMath } from "./math.ts";
 
@@ -227,9 +227,9 @@ function outcomesOfDie(group: DiceGroup): { least: number; ways: bigint[] } {
   const worth = Array.from({ length: count }, (_, i) => valueOfFace(group, low + i));
   const least = Math.min(...worth);
   const ways = new Array<bigint>(Math.max(...worth) - least + 1).fill(0n);
-  worth.forEach(
-    (value, i) => (ways[value - least] = (ways[value - least] as bigint) + BigInt(group.weights?.[i] ?? 1)),
-  );
+  worth.forEach((value, i) => {
+    ways[value - least] = (ways[value - least] as bigint) + BigInt(group.weights?.[i] ?? 1);
+  });
   return { least, ways };
 }
 

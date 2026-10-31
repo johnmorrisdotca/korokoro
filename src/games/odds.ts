@@ -82,7 +82,9 @@ export function yahtzeeWithin(rolls: number): Fraction {
     for (let held = 1; held <= 5; held++) {
       const here = state[held] as Fraction;
       if (here[0] === 0n) continue;
-      afterReroll(held).forEach((chance, most) => (next[most] = add(next[most] as Fraction, times(here, chance))));
+      afterReroll(held).forEach((chance, most) => {
+        next[most] = add(next[most] as Fraction, times(here, chance));
+      });
     }
     state = next;
   }

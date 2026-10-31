@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  MAX_DICE,
-  MAX_GROUPS,
-  MAX_REROLLS,
   canHold,
   diceCount,
   diceOf,
   groupsOf,
+  MAX_DICE,
+  MAX_GROUPS,
+  MAX_REROLLS,
   normalizeSpec,
+  type RollSpec,
   rangeOf,
   readDice,
   roll,
   rollHeld,
   sidesOf,
   specOf,
-  type RollSpec,
 } from "./dice.ts";
 import { parseHistory, serializeHistory } from "./history.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
@@ -30,8 +30,8 @@ import {
   mostLikely,
   spreadOf,
 } from "./odds.ts";
-import { seededSource, type RandomSource } from "./random.ts";
-import { SHARE_VERSION, readShared, shareQuery } from "./share.ts";
+import { type RandomSource, seededSource } from "./random.ts";
+import { readShared, SHARE_VERSION, shareQuery } from "./share.ts";
 import { statsOf } from "./stats.ts";
 import { STRINGS } from "./ui/strings.ts";
 
@@ -453,7 +453,9 @@ describe("holding dice", () => {
     expect(play()).toEqual(play());
     expect(play()[0]).toEqual([3, 3, 6, 3, 6]);
     const [one, two] = play() as number[][];
-    one!.forEach((face, i) => face >= 5 && expect(two![i]).toBe(face));
+    one!.forEach((face, i) => {
+      if (face >= 5) expect(two![i]).toBe(face);
+    });
   });
 
   it("is kept and shared with which dice were held", () => {
@@ -495,7 +497,9 @@ describe("holding dice", () => {
     expect(distributionHolding(spec, [1, 2, 3], [true, true, true])).toEqual({ min: 8, max: 8, probabilities: [1] });
     const none = distributionHolding(spec, [1, 2, 3], [false, false, false]);
     expect(none.min).toBe(5);
-    none.probabilities.forEach((p, i) => expect(p).toBeCloseTo(distributionOf(spec).probabilities[i] as number, 14));
+    none.probabilities.forEach((p, i) => {
+      expect(p).toBeCloseTo(distributionOf(spec).probabilities[i] as number, 14);
+    });
     expect(() => distributionHolding(dice("4d6kh3"), [1, 2, 3, 4], [true, false, false, false])).toThrow(RangeError);
   });
 

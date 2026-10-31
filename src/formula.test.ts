@@ -1,27 +1,27 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  MAX_DICE,
-  MAX_DICE_BY_CODE,
   canHold,
   diceCount,
   diceOf,
   groupsOf,
   groupTotals,
   isSuccessRoll,
+  MAX_DICE,
+  MAX_DICE_BY_CODE,
   normalizeSpec,
+  type RollSpec,
   rangeOf,
   readDice,
   roll,
   rollFrom,
   rollMany,
-  type RollSpec,
 } from "./dice.ts";
 import { fromJSON, toJSON } from "./export.ts";
-import { checkMath, evaluateMath, mathText, type MathNode } from "./math.ts";
+import { checkMath, evaluateMath, type MathNode, mathText } from "./math.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
 import { chanceAtLeast, chanceExactly, distributionOf, exactCounts, expectedTotal } from "./odds.ts";
-import { seededSource, type RandomSource } from "./random.ts";
+import { type RandomSource, seededSource } from "./random.ts";
 import { readShared, shareQuery } from "./share.ts";
 
 function scripted(faces: number[]): RandomSource {

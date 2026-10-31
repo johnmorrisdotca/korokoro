@@ -12,7 +12,7 @@
  */
 import { defineDie, defineRoller } from "./element.ts";
 
-export { DIE_TAG, KorokoroDie, KorokoroRoller, ROLLER_TAG, defineDie, defineRoller } from "./element.ts";
+export { DIE_TAG, defineDie, defineRoller, KorokoroDie, KorokoroRoller, ROLLER_TAG } from "./element.ts";
 
 defineRoller();
 defineDie();

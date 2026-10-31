@@ -1,12 +1,10 @@
 import { describe, expect, it } from "vitest";
-
-import { MAX_TIMES, normalizeSpec, rollMany, setOf, type RollSpec } from "./dice.ts";
+import { MAX_TIMES, normalizeSpec, type RollSpec, roll, rollMany, setOf } from "./dice.ts";
 import { parseHistory, serializeHistory } from "./history.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
 import { chanceAnyAtLeast, chanceAtLeast, distributionOf, expectedHighest, expectedTotal } from "./odds.ts";
 import { seededSource } from "./random.ts";
 import { readShared, readSharedMany, shareQueryMany } from "./share.ts";
-import { roll } from "./dice.ts";
 
 const dice = (text: string): RollSpec => parseNotation(text) as RollSpec;
 

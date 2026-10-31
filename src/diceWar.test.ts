@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   DICE_WAR_LIMITS,
+  type DiceWarGame,
+  type DiceWarOptions,
   decodeDiceWar,
   diceWarComputerFaces,
   diceWarOdds,
@@ -12,8 +14,6 @@ import {
   encodeDiceWar,
   playDiceWar,
   startDiceWar,
-  type DiceWarGame,
-  type DiceWarOptions,
 } from "./diceWar.ts";
 import { chanceAtLeast, distributionOf } from "./odds.ts";
 

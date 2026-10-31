@@ -1,15 +1,15 @@
 import {
   DICE_WAR_LIMITS,
-  diceWarOdds,
-  encodeDiceWar,
-  diceWarOver,
-  diceWarPeopleToRoll,
-  diceWarWinners,
-  playDiceWar,
-  startDiceWar,
   type DiceWarGame,
   type DiceWarGoal,
   type DiceWarThrow,
+  diceWarOdds,
+  diceWarOver,
+  diceWarPeopleToRoll,
+  diceWarWinners,
+  encodeDiceWar,
+  playDiceWar,
+  startDiceWar,
 } from "../diceWar.ts";
 import { newSeed } from "../random.ts";
 import { h } from "./dom.ts";

@@ -1,6 +1,6 @@
 // Plain JavaScript, so that reading files needs no Node types in a package that has none.
 import { Buffer } from "node:buffer";
-import { readFileSync, readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 

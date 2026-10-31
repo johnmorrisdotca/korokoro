@@ -1,7 +1,7 @@
-import { cryptoSource, type RandomSource } from "../random.ts";
-import { roll, rollMany, type Roll, type RollSpec } from "../dice.ts";
+import { type Roll, type RollSpec, roll, rollMany } from "../dice.ts";
 import { parseNotation } from "../notation.ts";
-import { READERS, diceFor, patternsOf, readDiceAs, type Outcome, type ReadingId } from "./readings.ts";
+import { cryptoSource, type RandomSource } from "../random.ts";
+import { type diceFor, type Outcome, patternsOf, READERS, type ReadingId, readDiceAs } from "./readings.ts";
 import { READING_WORDS } from "./words.ts";
 
 /** The shelves the games are kept on.

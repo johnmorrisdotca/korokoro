@@ -1,4 +1,4 @@
-import { isDieSides, type DiceGroup, type DieSides, type Sides } from "../dice.ts";
+import { type DiceGroup, type DieSides, isDieSides, type Sides } from "../dice.ts";
 import { s } from "./dom.ts";
 
 /**

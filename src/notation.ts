@@ -1,14 +1,20 @@
-import { MAX_MATH_NUMBER, checkMath, mathText, type MathFunction, type MathNode } from "./math.ts";
 import {
+  type Compare,
+  type CustomFace,
+  customFaces,
+  type DiceGroup,
+  diceCount,
+  dieName,
+  faceRange,
+  groupRange,
+  groupsOf,
+  isPlainDice,
+  loadedWeights,
   MAX_DICE,
   MAX_DICE_BY_CODE,
-  MAX_UNIQUE_SIDES,
-  diceCount,
-  groupRange,
-  isPlainDice,
   MAX_EXPLODING_SIDES,
-  MAX_FACES,
   MAX_FACE_VALUE,
+  MAX_FACES,
   MAX_GROUPS,
   MAX_LABEL,
   MAX_LOADED_SIDES,
@@ -17,24 +23,18 @@ import {
   MAX_ROLL_LABEL,
   MAX_SIDES,
   MAX_TIMES,
+  MAX_UNIQUE_SIDES,
   MAX_WEIGHT,
   MIN_DICE,
   MIN_SIDES,
-  customFaces,
-  dieName,
-  faceRange,
-  groupsOf,
-  loadedWeights,
   meets,
   normalizeSpec,
+  type RollSpec,
   rollLabel,
   rulesText,
-  type Compare,
-  type CustomFace,
-  type DiceGroup,
-  type RollSpec,
   type Sides,
 } from "./dice.ts";
+import { checkMath, MAX_MATH_NUMBER, type MathFunction, type MathNode, mathText } from "./math.ts";
 
 /**
  * Dice notation, the way a character sheet writes it.
@@ -177,12 +177,10 @@ const HEAD = /^\s*(\d*)\s*d\s*(\d+|%|f|\[[^\]]*\])(\s*\{[^}]*\})?/i;
 /** A comparison: an operator and a number. */
 const COMPARE = "(<=|>=|<>|!=|=|<|>)\\s*(\\d+)";
 /** Any one modifier, to tell where a kind's modifiers end. */
-const MODIFIER = new RegExp(
-  `^\\s*(?:!|ro?\\s*[<>=!\\d]|ro?(?![\\w[%])|[kd]\\s*[hl]|[kdbw]\\s*\\d|[kdbw](?![\\w[%])|min\\s*\\d|max\\s*\\d|[<>=]|f\\s*[<>=!\\d]|c[sf]|s[ad]|s(?![\\w[%])|u)`,
-  "i",
-);
+const MODIFIER =
+  /^\s*(?:!|ro?\s*[<>=!\d]|ro?(?![\w[%])|[kd]\s*[hl]|[kdbw]\s*\d|[kdbw](?![\w[%])|min\s*\d|max\s*\d|[<>=]|f\s*[<>=!\d]|c[sf]|s[ad]|s(?![\w[%])|u)/i;
 const UNIQUE = /^\s*u(o?)/i;
-const EXPLODE = new RegExp(`^\\s*(!!?)(p?)(?:\\s*(<=|>=|<>|=|<|>)\\s*(\\d+))?`, "i");
+const EXPLODE = /^\s*(!!?)(p?)(?:\s*(<=|>=|<>|=|<|>)\s*(\d+))?/i;
 const REROLL = new RegExp(`^\\s*(ro?)\\s*(?:${COMPARE}|(\\d+)|(?![\\w[%]))`, "i");
 const KEEP = /^\s*(?:([kd])\s*([hl])\s*(\d*)|([kdbw])\s*(\d*))/i;
 const CLAMP = /^\s*(min|max)\s*(\d+)/i;
@@ -354,8 +352,8 @@ function readGroup(
           : { op: op as "=" | "<=" | ">=", n: at };
   };
   while (MODIFIER.test(rest)) {
-    let match: RegExpExecArray | null;
-    if ((match = EXPLODE.exec(rest)) !== null) {
+    let match: RegExpExecArray | null = EXPLODE.exec(rest);
+    if (match !== null) {
       if (parts.explode !== undefined) return refuse("twice", match[0]);
       parts.explode = match[0];
       group.explode = true;
@@ -364,69 +362,93 @@ function readGroup(
       if (compound || penetrating)
         group.explodeKind = compound && penetrating ? "compound-penetrating" : compound ? "compound" : "penetrating";
       if (match[3] !== undefined) group.explodeWhen = compare(match[3], match[4] as string);
-    } else if ((match = REROLL.exec(rest)) !== null) {
-      if (parts.reroll !== undefined) return refuse("twice", match[0]);
-      parts.reroll = match[0];
-      const once = (match[1] as string).toLowerCase() === "ro" || options.legacyReroll === true;
-      const op = match[2] ?? "=";
-      // r alone rerolls the die's lowest face.
-      const at = Number(match[3] ?? match[4] ?? low);
-      if (op === "<" || op === "<=") {
-        // The reroll this package has always had: a run of faces from the lowest.
-        const reroll = at - (op === "<" ? 1 : 0);
-        if (reroll < low || reroll >= high) return refuse("reroll", match[0]);
-        if (!once && (reroll - low + 1) * 2 > high - low + 1) return refuse("reroll", match[0]);
-        group[once ? "reroll" : "rerollUntil"] = reroll;
-      } else group[once ? "rerollWhen" : "rerollUntilWhen"] = compare(op, String(at));
-    } else if ((match = CLAMP.exec(rest)) !== null) {
-      const which = (match[1] as string).toLowerCase() === "min" ? "floor" : "ceiling";
-      if (parts[which] !== undefined) return refuse("twice", match[0]);
-      parts[which] = match[0];
-      group[which] = Number(match[2]);
-    } else if ((match = MARK.exec(rest)) !== null) {
-      const which = (match[1] as string).toLowerCase() === "s" ? "critical" : "fumble";
-      if (parts[which] !== undefined) return refuse("twice", match[0]);
-      parts[which] = match[0];
-      // cs alone marks the highest face, and cf alone the lowest.
-      group[which] = compare(match[2] ?? "=", match[3] ?? match[4] ?? String(which === "critical" ? high : low));
-    } else if ((match = UNIQUE.exec(rest)) !== null) {
-      if (parts.unique !== undefined) return refuse("twice", match[0]);
-      if ((match[1] as string) !== "") return refuse("unique", match[0]);
-      parts.unique = match[0];
-      group.unique = true;
-    } else if ((match = SORT.exec(rest)) !== null) {
-      if (parts.sort !== undefined) return refuse("twice", match[0]);
-      parts.sort = match[0];
-      group.sort = match[1]?.toLowerCase() === "d" ? "descending" : "ascending";
-    } else if ((match = KEEP.exec(rest)) !== null) {
-      if (parts.keep !== undefined) return refuse("twice", match[0]);
-      parts.keep = match[0];
-      // kh3, dl1; k3 and b3 keep the highest; d1 drops the lowest; w1 keeps the lowest.
-      const letter = (match[1] ?? match[4] ?? "").toLowerCase();
-      const end = match[2]?.toLowerCase();
-      const digits = (match[3] ?? match[5]) as string;
-      const n = digits === "" ? 1 : Number(digits);
-      if (n < 1 || n >= count) return refuse("keep", match[0]);
-      const keeps = letter !== "d";
-      const highest = end !== undefined ? end === "h" : letter === "k" || letter === "b";
-      // Dropping the lowest two of five is keeping the highest three.
-      if (keeps) {
-        group.keep = highest ? "highest" : "lowest";
-        group.keepCount = n;
+    } else {
+      match = REROLL.exec(rest);
+      if (match !== null) {
+        if (parts.reroll !== undefined) return refuse("twice", match[0]);
+        parts.reroll = match[0];
+        const once = (match[1] as string).toLowerCase() === "ro" || options.legacyReroll === true;
+        const op = match[2] ?? "=";
+        // r alone rerolls the die's lowest face.
+        const at = Number(match[3] ?? match[4] ?? low);
+        if (op === "<" || op === "<=") {
+          // The reroll this package has always had: a run of faces from the lowest.
+          const reroll = at - (op === "<" ? 1 : 0);
+          if (reroll < low || reroll >= high) return refuse("reroll", match[0]);
+          if (!once && (reroll - low + 1) * 2 > high - low + 1) return refuse("reroll", match[0]);
+          group[once ? "reroll" : "rerollUntil"] = reroll;
+        } else group[once ? "rerollWhen" : "rerollUntilWhen"] = compare(op, String(at));
       } else {
-        const dropsHighest = end === "h";
-        group.keep = dropsHighest ? "lowest" : "highest";
-        group.keepCount = count - n;
+        match = CLAMP.exec(rest);
+        if (match !== null) {
+          const which = (match[1] as string).toLowerCase() === "min" ? "floor" : "ceiling";
+          if (parts[which] !== undefined) return refuse("twice", match[0]);
+          parts[which] = match[0];
+          group[which] = Number(match[2]);
+        } else {
+          match = MARK.exec(rest);
+          if (match !== null) {
+            const which = (match[1] as string).toLowerCase() === "s" ? "critical" : "fumble";
+            if (parts[which] !== undefined) return refuse("twice", match[0]);
+            parts[which] = match[0];
+            // cs alone marks the highest face, and cf alone the lowest.
+            group[which] = compare(match[2] ?? "=", match[3] ?? match[4] ?? String(which === "critical" ? high : low));
+          } else {
+            match = UNIQUE.exec(rest);
+            if (match !== null) {
+              if (parts.unique !== undefined) return refuse("twice", match[0]);
+              if ((match[1] as string) !== "") return refuse("unique", match[0]);
+              parts.unique = match[0];
+              group.unique = true;
+            } else {
+              match = SORT.exec(rest);
+              if (match !== null) {
+                if (parts.sort !== undefined) return refuse("twice", match[0]);
+                parts.sort = match[0];
+                group.sort = match[1]?.toLowerCase() === "d" ? "descending" : "ascending";
+              } else {
+                match = KEEP.exec(rest);
+                if (match !== null) {
+                  if (parts.keep !== undefined) return refuse("twice", match[0]);
+                  parts.keep = match[0];
+                  // kh3, dl1; k3 and b3 keep the highest; d1 drops the lowest; w1 keeps the lowest.
+                  const letter = (match[1] ?? match[4] ?? "").toLowerCase();
+                  const end = match[2]?.toLowerCase();
+                  const digits = (match[3] ?? match[5]) as string;
+                  const n = digits === "" ? 1 : Number(digits);
+                  if (n < 1 || n >= count) return refuse("keep", match[0]);
+                  const keeps = letter !== "d";
+                  const highest = end !== undefined ? end === "h" : letter === "k" || letter === "b";
+                  // Dropping the lowest two of five is keeping the highest three.
+                  if (keeps) {
+                    group.keep = highest ? "highest" : "lowest";
+                    group.keepCount = n;
+                  } else {
+                    const dropsHighest = end === "h";
+                    group.keep = dropsHighest ? "lowest" : "highest";
+                    group.keepCount = count - n;
+                  }
+                } else {
+                  match = FAILURE.exec(rest);
+                  if (match !== null) {
+                    if (parts.failure !== undefined) return refuse("twice", match[0]);
+                    parts.failure = match[0];
+                    group.failure = compare(match[1] ?? "=", (match[2] ?? match[3]) as string);
+                  } else {
+                    match = SUCCESS.exec(rest);
+                    if (match !== null) {
+                      if (parts.success !== undefined) return refuse("twice", match[0]);
+                      parts.success = match[0];
+                      group.success = compare(match[1] as string, match[2] as string);
+                    } else break;
+                  }
+                }
+              }
+            }
+          }
+        }
       }
-    } else if ((match = FAILURE.exec(rest)) !== null) {
-      if (parts.failure !== undefined) return refuse("twice", match[0]);
-      parts.failure = match[0];
-      group.failure = compare(match[1] ?? "=", (match[2] ?? match[3]) as string);
-    } else if ((match = SUCCESS.exec(rest)) !== null) {
-      if (parts.success !== undefined) return refuse("twice", match[0]);
-      parts.success = match[0];
-      group.success = compare(match[1] as string, match[2] as string);
-    } else break;
+    }
     rest = rest.slice(match[0].length);
   }
   if (parts.explode !== undefined && (sides === "F" || sides > MAX_EXPLODING_SIDES || parts.keep !== undefined))

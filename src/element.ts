@@ -1,9 +1,9 @@
 import type { Roll, RollSpec } from "./dice.ts";
-import { parseNotation } from "./notation.ts";
-import { isCloth, type Cloth } from "./ui/cloth.ts";
-import { mountDie, type DieHandle, type DieOptions, type DieSize } from "./ui/die.ts";
-import { seededSource } from "./random.ts";
 import { isSides } from "./dice.ts";
+import { parseNotation } from "./notation.ts";
+import { seededSource } from "./random.ts";
+import { type Cloth, isCloth } from "./ui/cloth.ts";
+import { type DieHandle, type DieOptions, type DieSize, mountDie } from "./ui/die.ts";
 import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
 
 /**
@@ -188,10 +188,10 @@ export class KorokoroRoller extends Base {
   set languageChooser(value: boolean | string | null | undefined) {
     writeAttribute(this, "language-chooser", value, true);
   }
-  get ["language-chooser"](): boolean {
+  get "language-chooser"(): boolean {
     return booleanAttribute(this, "language-chooser", false);
   }
-  set ["language-chooser"](value: boolean | string | null | undefined) {
+  set "language-chooser"(value: boolean | string | null | undefined) {
     writeAttribute(this, "language-chooser", value, true);
   }
   get diceWar(): boolean {
@@ -200,10 +200,10 @@ export class KorokoroRoller extends Base {
   set diceWar(value: boolean | string | null | undefined) {
     writeAttribute(this, "dice-war", value, true);
   }
-  get ["dice-war"](): boolean {
+  get "dice-war"(): boolean {
     return booleanAttribute(this, "dice-war", false);
   }
-  set ["dice-war"](value: boolean | string | null | undefined) {
+  set "dice-war"(value: boolean | string | null | undefined) {
     writeAttribute(this, "dice-war", value, true);
   }
   get storage(): string | null {
@@ -218,10 +218,10 @@ export class KorokoroRoller extends Base {
   set storageKey(value: string | number | null | undefined) {
     writeAttribute(this, "storage-key", value);
   }
-  get ["storage-key"](): string | null {
+  get "storage-key"(): string | null {
     return this.getAttribute("storage-key");
   }
-  set ["storage-key"](value: string | number | null | undefined) {
+  set "storage-key"(value: string | number | null | undefined) {
     writeAttribute(this, "storage-key", value);
   }
   get animationMs(): string | null {
@@ -230,10 +230,10 @@ export class KorokoroRoller extends Base {
   set animationMs(value: string | number | null | undefined) {
     writeAttribute(this, "animation-ms", value);
   }
-  get ["animation-ms"](): string | null {
+  get "animation-ms"(): string | null {
     return this.getAttribute("animation-ms");
   }
-  set ["animation-ms"](value: string | number | null | undefined) {
+  set "animation-ms"(value: string | number | null | undefined) {
     writeAttribute(this, "animation-ms", value);
   }
   get shareBase(): string | null {
@@ -242,10 +242,10 @@ export class KorokoroRoller extends Base {
   set shareBase(value: string | number | null | undefined) {
     writeAttribute(this, "share-base", value);
   }
-  get ["share-base"](): string | null {
+  get "share-base"(): string | null {
     return this.getAttribute("share-base");
   }
-  set ["share-base"](value: string | number | null | undefined) {
+  set "share-base"(value: string | number | null | undefined) {
     writeAttribute(this, "share-base", value);
   }
   get query(): string | null {
@@ -266,10 +266,10 @@ export class KorokoroRoller extends Base {
   set onePip(value: string | number | null | undefined) {
     writeAttribute(this, "one-pip", value);
   }
-  get ["one-pip"](): string | null {
+  get "one-pip"(): string | null {
     return this.getAttribute("one-pip");
   }
-  set ["one-pip"](value: string | number | null | undefined) {
+  set "one-pip"(value: string | number | null | undefined) {
     writeAttribute(this, "one-pip", value);
   }
   get width(): string | null {
@@ -494,10 +494,10 @@ export class KorokoroDie extends Base {
   set onePip(value: string | number | null | undefined) {
     writeAttribute(this, "one-pip", value);
   }
-  get ["one-pip"](): string | null {
+  get "one-pip"(): string | null {
     return this.getAttribute("one-pip");
   }
-  set ["one-pip"](value: string | number | null | undefined) {
+  set "one-pip"(value: string | number | null | undefined) {
     writeAttribute(this, "one-pip", value);
   }
   get seed(): string | null {
@@ -518,10 +518,10 @@ export class KorokoroDie extends Base {
   set animationMs(value: string | number | null | undefined) {
     writeAttribute(this, "animation-ms", value);
   }
-  get ["animation-ms"](): string | null {
+  get "animation-ms"(): string | null {
     return this.getAttribute("animation-ms");
   }
-  set ["animation-ms"](value: string | number | null | undefined) {
+  set "animation-ms"(value: string | number | null | undefined) {
     writeAttribute(this, "animation-ms", value);
   }
   get cloth(): string | null {

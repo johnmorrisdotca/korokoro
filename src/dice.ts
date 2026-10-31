@@ -1,5 +1,5 @@
-import { checkMath, evaluateMath, mathRange, soundMath, type MathNode } from "./math.ts";
-import { cryptoSource, randomInt, type RandomSource } from "./random.ts";
+import { checkMath, evaluateMath, type MathNode, mathRange, soundMath } from "./math.ts";
+import { cryptoSource, type RandomSource, randomInt } from "./random.ts";
 
 /**
  * The dice the tray offers as buttons: the polyhedral set, the thirty-sided
@@ -698,7 +698,7 @@ export function isFair(spec: RollSpec): boolean {
  * ```
  */
 export function hasTotal(spec: RollSpec): boolean {
-  return !groupsOf(spec).every((g) => g.faces !== undefined && g.faces.every((f) => f.value === undefined));
+  return !groupsOf(spec).every((g) => g.faces?.every((f) => f.value === undefined) ?? false);
 }
 
 /** How many dice of one group count towards the total. For a roll of several kinds, ask each of `groupsOf`.
@@ -1884,7 +1884,10 @@ export function rollMany(
   const rolls: Roll[] = [];
   for (let index = 0; index < many; index++) rolls.push(made(fair, play(fair, draws(source)) as DieRoll[], source, at));
   const id = rolls[0]?.id ?? "";
-  if (many > 1) rolls.forEach((r, index) => (r.set = { id, index, of: many }));
+  if (many > 1)
+    rolls.forEach((r, index) => {
+      r.set = { id, index, of: many };
+    });
   return setOf(rolls);
 }
 

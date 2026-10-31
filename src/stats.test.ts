@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { keptFaces, normalizeSpec, roll, totalOf, type Roll } from "./dice.ts";
+import { keptFaces, normalizeSpec, type Roll, roll, totalOf } from "./dice.ts";
 import { addToHistory, loadHistory, parseHistory, saveHistory, serializeHistory } from "./history.ts";
 import { seededSource } from "./random.ts";
 import { readShared, shareQuery } from "./share.ts";

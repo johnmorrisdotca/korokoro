@@ -13,7 +13,11 @@ onMounted(async () => {
   handles.push(mountDie(rolls.value, { sides: 20, size: "large", onRoll: (face) => (said.value = `Rolled ${face}.`) }));
   handles.push(mountDie(shows.value, { sides: 6, face: 5, size: "large", rollable: false }));
 });
-onBeforeUnmount(() => handles.forEach((handle) => handle.destroy()));
+onBeforeUnmount(() => {
+  handles.forEach((handle) => {
+    handle.destroy();
+  });
+});
 </script>
 
 <template>

@@ -1,4 +1,4 @@
-import { canHold, rollFrom, type Roll } from "./dice.ts";
+import { canHold, type Roll, rollFrom } from "./dice.ts";
 import { formatNotation, parseNotation } from "./notation.ts";
 
 /**

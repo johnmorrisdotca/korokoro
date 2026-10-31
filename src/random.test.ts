@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cryptoSource, newSeed, randomInt, seededSource, type RandomSource } from "./random.ts";
+import { cryptoSource, newSeed, type RandomSource, randomInt, seededSource } from "./random.ts";
 
 describe("randomInt", () => {
   it("is never biased by a modulo: values past the last whole block are thrown away", () => {

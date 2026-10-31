@@ -38,7 +38,7 @@ for (const width of [390, 1280]) {
     await page.locator(`[data-testid="kk-tab-${tab}"]`).click();
     await page.screenshot({
       path: join(folder, `${name}-${step}-${width}.png`),
-      fullPage: width === 1280 ? false : true,
+      fullPage: width !== 1280,
     });
   }
   await context.close();

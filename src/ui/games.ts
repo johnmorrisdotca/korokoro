@@ -1,4 +1,4 @@
-import { PRESETS, findPresets, type GameFamily, type Preset } from "../games/presets.ts";
+import { findPresets, type GameFamily, PRESETS, type Preset } from "../games/presets.ts";
 import { h } from "./dom.ts";
 import { fillIn, type RollerStrings } from "./strings.ts";
 

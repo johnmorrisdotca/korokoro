@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { DIE_SIDES, MAX_DICE, isDieSides, keptFaces, normalizeSpec, rangeOf, roll } from "./dice.ts";
+import { DIE_SIDES, isDieSides, keptFaces, MAX_DICE, normalizeSpec, rangeOf, roll } from "./dice.ts";
 import { formatNotation, parseNotation } from "./notation.ts";
 import { seededSource } from "./random.ts";
 

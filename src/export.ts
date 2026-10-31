@@ -1,8 +1,8 @@
-import { diceOf, groupOf, hasTotal, isSuccessRoll, valueOfFace, type DieRoll, type Roll } from "./dice.ts";
+import { type DieRoll, diceOf, groupOf, hasTotal, isSuccessRoll, type Roll, valueOfFace } from "./dice.ts";
 import { parseHistory } from "./history.ts";
 import { mathText } from "./math.ts";
 import { formatNotation } from "./notation.ts";
-import { statsOf, type Stats } from "./stats.ts";
+import { type Stats, statsOf } from "./stats.ts";
 import { VERSION } from "./version.ts";
 
 /**

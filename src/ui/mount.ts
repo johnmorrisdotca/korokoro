@@ -1,10 +1,10 @@
 import {
+  canHold,
   DEFAULT_SPEC,
   DIE_SIDES,
-  MAX_DICE,
-  MAX_GROUPS,
-  MIN_DICE,
-  canHold,
+  type DiceGroup,
+  type DieRoll,
+  type DieSides,
   diceCount,
   diceOf,
   dieName,
@@ -14,42 +14,42 @@ import {
   hasTotal,
   isLoaded,
   isSuccessRoll,
+  type Keep,
+  MAX_DICE,
+  MAX_GROUPS,
+  MIN_DICE,
   normalizeSpec,
+  type Roll,
+  type RollSpec,
   rangeOf,
   roll,
   rollHeld,
   rollMany,
+  type Sides,
   setOf,
   sidesOf,
   specOf,
-  type DiceGroup,
-  type DieRoll,
-  type DieSides,
-  type Keep,
-  type Roll,
-  type RollSpec,
-  type Sides,
 } from "../dice.ts";
-import { HISTORY_LIMIT, addToHistory, loadHistory, saveHistory, type StorageLike } from "../history.ts";
-import { checkNotation, formatNotation } from "../notation.ts";
-import { chanceExactly, distributionHolding, expectedTotal, luckOf, type Distribution } from "../odds.ts";
-import { cryptoSource, newSeed, seededSource, type RandomSource } from "../random.ts";
-import { loadSets, makeSet, readSet, setQuery, storeSets, withSet, withoutSet, type DiceSet } from "../sets.ts";
-import { readShared, readSharedMany, shareQuery, shareQueryMany } from "../share.ts";
-import { getPreset, presetSpec, readPreset, type Preset } from "../games/presets.ts";
 import { diceWarOver } from "../diceWar.ts";
 import { formulaText, fromJSON, toCSV, toJSON, toText } from "../export.ts";
-import { gamesPanel, type GamesState } from "./games.ts";
-import { WAR_DEFAULTS, newWar, throwWar, warNames, warPanel, type WarSession, type WarSettings } from "./war.ts";
+import { getPreset, type Preset, presetSpec, readPreset } from "../games/presets.ts";
+import { addToHistory, HISTORY_LIMIT, loadHistory, type StorageLike, saveHistory } from "../history.ts";
+import { checkNotation, formatNotation } from "../notation.ts";
+import { chanceExactly, type Distribution, distributionHolding, expectedTotal, luckOf } from "../odds.ts";
+import { cryptoSource, newSeed, type RandomSource, seededSource } from "../random.ts";
+import { type DiceSet, loadSets, makeSet, readSet, setQuery, storeSets, withoutSet, withSet } from "../sets.ts";
+import { readShared, readSharedMany, shareQuery, shareQueryMany } from "../share.ts";
+import { type Cloth, clothVars, isCloth } from "./cloth.ts";
 import { h, refill, s } from "./dom.ts";
 import { dieFace, dieIcon, faceText, minusMark } from "./faces.ts";
-import { morePanel, type MoreState } from "./more.ts";
-import { historyPanel, oddsPanel, percent, statsPanel, type RealDie } from "./panels.ts";
-import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
-import { clothVars, isCloth, type Cloth } from "./cloth.ts";
-import { injectStyle } from "./style.ts";
+import { type GamesState, gamesPanel } from "./games.ts";
 import { helpMarks } from "./help.ts";
-import { REFUSALS, STRINGS, fillIn, type RollerStrings } from "./strings.ts";
+import { type MoreState, morePanel } from "./more.ts";
+import { historyPanel, oddsPanel, percent, type RealDie, statsPanel } from "./panels.ts";
+import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
+import { fillIn, REFUSALS, type RollerStrings, STRINGS } from "./strings.ts";
+import { injectStyle } from "./style.ts";
+import { newWar, throwWar, WAR_DEFAULTS, type WarSession, type WarSettings, warNames, warPanel } from "./war.ts";
 
 /** Everything a tray can be told when it is mounted. All of it is optional.
  *
@@ -1062,8 +1062,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
       const joiner =
         group.sides === "F"
           ? " "
-          : group.success !== undefined ||
-              (group.faces !== undefined && group.faces.every((f) => f.value === undefined))
+          : group.success !== undefined || (group.faces?.every((f) => f.value === undefined) ?? false)
             ? " · "
             : " + ";
       if (index > 0) line.append(" + ");
@@ -1493,7 +1492,7 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     const shown = showing();
     const keeping = shown !== null && holdable() && heldCount() > 0 ? held.slice(0, shown.faces.length) : null;
     // With every die held there is nothing to throw.
-    if (keeping !== null && keeping.every(Boolean)) return;
+    if (keeping?.every(Boolean) === true) return;
     // The generator throws the dice here, before anything moves; the tumble and the sound only show what it threw.
     const many = (spec.times ?? 1) > 1 ? rollMany(spec, Math.min(TRAY_TIMES, spec.times ?? 1), source).rolls : null;
     const thrown =

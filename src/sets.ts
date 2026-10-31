@@ -1,7 +1,7 @@
+import type { RollSpec } from "./dice.ts";
 import type { StorageLike } from "./history.ts";
 import { formatNotation, parseNotation } from "./notation.ts";
 import { SHARE_VERSION } from "./share.ts";
-import type { RollSpec } from "./dice.ts";
 
 /**
  * A set of dice with a name: a roll somebody wants to find again, such as

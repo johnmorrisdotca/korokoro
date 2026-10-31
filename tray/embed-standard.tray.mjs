@@ -58,7 +58,7 @@ test("reflected properties update the tray and retain on-by-default boolean beha
 test("the iframe accepts canonical parameter names and writes no stored history", async ({ page }) => {
   await page.addInitScript(() => {
     window.__stored = [];
-    globalThis.Storage.prototype.setItem = function (key) {
+    globalThis.Storage.prototype.setItem = (key) => {
       window.__stored.push(key);
     };
   });
@@ -78,15 +78,13 @@ test("the standalone die iframe validates attributes and honours false spellings
     "http://korokoro.test/embed/die/?sides=20&face=7&width=120&rollable=off&sound=no&lang=ja&label=One%20die",
   );
   await expect(page.locator(".kk-die")).toBeVisible();
-  const state = await page
-    .locator("korokoro-die")
-    .evaluate((element) => ({
-      face: element.face,
-      width: element.width,
-      rollable: element.rollable,
-      sound: element.sound,
-      label: element.getAttribute("aria-label"),
-    }));
+  const state = await page.locator("korokoro-die").evaluate((element) => ({
+    face: element.face,
+    width: element.width,
+    rollable: element.rollable,
+    sound: element.sound,
+    label: element.getAttribute("aria-label"),
+  }));
   expect(state).toEqual({ face: 7, width: "120", rollable: false, sound: false, label: "One die" });
   expect(
     await page.evaluate(

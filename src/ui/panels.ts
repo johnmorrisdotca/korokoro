@@ -1,10 +1,13 @@
 import type { Roll, RollSpec } from "../dice.ts";
-import { diceOf, dieName, faceRange, groupOf, groupsOf, hasTotal, isLoaded, type DiceGroup } from "../dice.ts";
+import { type DiceGroup, diceOf, dieName, faceRange, groupOf, groupsOf, hasTotal, isLoaded } from "../dice.ts";
+import { chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "../games/odds.ts";
+import { type Preset, presetOdds } from "../games/presets.ts";
 import { faceChances, loadingOf } from "../loaded.ts";
 import { formatNotation } from "../notation.ts";
 import {
   chanceAnyAtLeast,
   chanceAtLeast,
+  type Distribution,
   distributionHolding,
   distributionOf,
   expectedHighest,
@@ -12,11 +15,8 @@ import {
   luckOf,
   mostLikely,
   spreadOf,
-  type Distribution,
 } from "../odds.ts";
-import { chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "../games/odds.ts";
-import { presetOdds, type Preset } from "../games/presets.ts";
-import { fairnessTest, readResults, statsOf, type Fairness } from "../stats.ts";
+import { type Fairness, fairnessTest, readResults, statsOf } from "../stats.ts";
 import { h } from "./dom.ts";
 import { faceText } from "./faces.ts";
 import { fillIn, type RollerStrings } from "./strings.ts";
@@ -138,7 +138,9 @@ const MOST_BARS = 80;
 function gathered(values: number[], width: number): number[] {
   if (width === 1) return values;
   const out = new Array<number>(Math.ceil(values.length / width)).fill(0);
-  values.forEach((v, i) => (out[Math.floor(i / width)] = (out[Math.floor(i / width)] as number) + v));
+  values.forEach((v, i) => {
+    out[Math.floor(i / width)] = (out[Math.floor(i / width)] as number) + v;
+  });
   return out;
 }
 
@@ -220,7 +222,7 @@ export function fairnessWords(test: Fairness, t: RollerStrings, locale: string):
   // Past a million to one the exact figure stops meaning anything to anybody.
   const odds =
     p < 1e-6
-      ? new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 0 }).format(1e6) + "+"
+      ? `${new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 0 }).format(1e6)}+`
       : new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(1 / p);
   return fillIn(t.fairnessLopsided, { odds });
 }

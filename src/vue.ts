@@ -1,4 +1,4 @@
-import { defineComponent, h, onBeforeUnmount, onMounted, ref, watch, type PropType } from "vue";
+import { defineComponent, h, onBeforeUnmount, onMounted, type PropType, ref, watch } from "vue";
 
 import type { Roll, RollSpec } from "./dice.ts";
 import { parseNotation } from "./notation.ts";

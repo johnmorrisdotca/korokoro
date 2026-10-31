@@ -1,20 +1,20 @@
 import {
-  faceRange,
+  type CustomFace,
+  type DiceGroup,
   dieName,
+  faceRange,
   groupsOf,
   isSides,
   normalizeSpec,
   roll,
-  type CustomFace,
-  type DiceGroup,
   type Sides,
 } from "../dice.ts";
 import { cryptoSource, type RandomSource } from "../random.ts";
-import { clothVars, isCloth, type Cloth } from "./cloth.ts";
+import { type Cloth, clothVars, isCloth } from "./cloth.ts";
 import { h } from "./dom.ts";
 import { dieFace, faceText } from "./faces.ts";
 import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
-import { STRINGS, fillIn, type RollerStrings } from "./strings.ts";
+import { fillIn, type RollerStrings, STRINGS } from "./strings.ts";
 import { injectStyle } from "./style.ts";
 
 /**
@@ -252,8 +252,10 @@ export function mountDie(target: HTMLElement, options: DieOptions = {}): DieHand
   function ring(): void {
     if (options.sound !== true) return;
     try {
-      if (options.playSound !== undefined)
-        return options.playSound({ dice: 1, ms: animationMs, landings: [animationMs] });
+      if (options.playSound !== undefined) {
+        options.playSound({ dice: 1, ms: animationMs, landings: [animationMs] });
+        return;
+      }
       sound ??= createRollSound(win ?? undefined);
       sound.play({ dice: 1, ms: animationMs, landings: [animationMs] });
     } catch {

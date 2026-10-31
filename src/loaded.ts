@@ -1,4 +1,4 @@
-import { chancesOf, faceRange, type DiceGroup } from "./dice.ts";
+import { chancesOf, type DiceGroup, faceRange } from "./dice.ts";
 
 /**
  * Loaded dice, kept in one place and in plain sight. Korokoro's own dice are

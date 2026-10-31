@@ -43,7 +43,11 @@ for (const width of [390, 1280]) {
         await page.addStyleTag({ content: `${above}, ${above} ~ * { display: none !important; }` });
       const shot = async (state) => {
         // The time of a roll is the one thing that differs from run to run.
-        await page.evaluate(() => document.querySelectorAll("time").forEach((time) => (time.textContent = "12:00:00")));
+        await page.evaluate(() =>
+          document.querySelectorAll("time").forEach((time) => {
+            time.textContent = "12:00:00";
+          }),
+        );
         const name = `${width}-${scheme}-${lang}-${state}.png`;
         names.push(name);
         await page.screenshot({ path: join(into, name), fullPage: true });
@@ -108,16 +112,16 @@ if (after !== undefined) {
           return c.getImageData(0, 0, image.width, image.height).data;
         };
         const [p, q] = [data(x), data(y)];
-        let count = 0,
-          left = x.width,
-          top = x.height,
-          right = 0,
-          bottom = 0;
+        let count = 0;
+        let left = x.width;
+        let top = x.height;
+        let right = 0;
+        let bottom = 0;
         for (let i = 0; i < p.length; i += 4) {
           if (p[i] === q[i] && p[i + 1] === q[i + 1] && p[i + 2] === q[i + 2] && p[i + 3] === q[i + 3]) continue;
           count += 1;
-          const px = (i / 4) % x.width,
-            py = Math.floor(i / 4 / x.width);
+          const px = (i / 4) % x.width;
+          const py = Math.floor(i / 4 / x.width);
           left = Math.min(left, px);
           right = Math.max(right, px);
           top = Math.min(top, py);

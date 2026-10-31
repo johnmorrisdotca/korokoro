@@ -1,4 +1,4 @@
-import { MAX_DICE, MAX_SIDES, MIN_SIDES, normalizeSpec, roll, type RollSpec } from "./dice.ts";
+import { MAX_DICE, MAX_SIDES, MIN_SIDES, normalizeSpec, type RollSpec, roll } from "./dice.ts";
 import { distributionOf } from "./odds.ts";
 import { newSeed, seededSource } from "./random.ts";
 
@@ -458,7 +458,9 @@ export function diceWarOdds(
   }
   const others = players - 1;
   let outright = 0;
-  probabilities.forEach((chance, i) => (outright += players * chance * (below[i] as number) ** others));
+  probabilities.forEach((chance, i) => {
+    outright += players * chance * (below[i] as number) ** others;
+  });
   const index = total === undefined ? -1 : total - min;
   const known = total !== undefined && index >= 0 && index < probabilities.length;
   const atMost = known ? (below[index] as number) + (probabilities[index] as number) : 0;

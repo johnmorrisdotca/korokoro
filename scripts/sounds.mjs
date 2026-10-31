@@ -1,7 +1,7 @@
 // Writes src/ui/sounds-data.ts from the recordings in ./sounds, so the tray can
 // load them as one module with nothing for a bundler to configure. Run it after
 // changing a recording: `pnpm sounds`. A test fails if the two fall out of step.
-import { readFileSync, readdirSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const files = readdirSync("sounds")
   .filter((name) => name.endsWith(".m4a"))

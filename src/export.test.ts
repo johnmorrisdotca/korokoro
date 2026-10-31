@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { roll, rollHeld, rollMany, type Roll } from "./dice.ts";
+import { type Roll, roll, rollHeld, rollMany } from "./dice.ts";
 import {
   CSV_COLUMNS,
-  EXPORT_FORMAT,
   csvCell,
   diceText,
+  EXPORT_FORMAT,
+  type Exported,
   fromJSON,
   rollText,
   toCSV,
   toJSON,
   toText,
-  type Exported,
 } from "./export.ts";
 import { serializeHistory } from "./history.ts";
 import { parseNotation } from "./notation.ts";

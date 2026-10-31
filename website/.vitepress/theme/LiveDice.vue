@@ -2,6 +2,7 @@
 // A tray on a documentation page: the real one, from the package as built, for the reader to roll.
 // It is folded away until asked for, so that the page is its words first; it is drawn in the
 // browser only, leaves the page its Space key, and keeps its history apart from the demo's.
+// biome-ignore lint/correctness/noUnusedImports: the template below uses DiceRoller
 import { DiceRoller } from "../../../dist/vue.js";
 
 defineProps({ notation: String, query: String, open: Boolean });

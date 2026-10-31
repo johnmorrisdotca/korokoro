@@ -1,4 +1,4 @@
-import { diceOf, groupsOf, playsByNewRules, valueOfFace, type DiceGroup, type Roll, type RollSpec } from "../dice.ts";
+import { type DiceGroup, diceOf, groupsOf, playsByNewRules, type Roll, type RollSpec, valueOfFace } from "../dice.ts";
 
 /**
  * How a roll is read in a game. A reading is one of a small, fixed set of

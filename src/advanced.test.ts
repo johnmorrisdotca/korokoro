@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  diceOf,
+  faceRange,
   MAX_DICE,
   MAX_EXPLODING_SIDES,
   MAX_EXPLOSIONS,
   MAX_MODIFIER,
   MAX_SIDES,
-  diceOf,
-  faceRange,
   normalizeSpec,
+  type Roll,
+  type RollSpec,
   rangeOf,
   readDice,
   roll,
-  type Roll,
-  type RollSpec,
 } from "./dice.ts";
 import { parseHistory, serializeHistory } from "./history.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
@@ -26,7 +26,7 @@ import {
   luckOf,
   mostLikely,
 } from "./odds.ts";
-import { seededSource, type RandomSource } from "./random.ts";
+import { type RandomSource, seededSource } from "./random.ts";
 import { readShared, shareQuery } from "./share.ts";
 import { faceStats, statsOf } from "./stats.ts";
 import { STRINGS } from "./ui/strings.ts";
@@ -699,7 +699,9 @@ describe("ten dice", () => {
     ] as const) {
       const counted = exactCounts(dice(`${n}d${s}`));
       expect(counted?.outcomes).toBe(BigInt(s) ** BigInt(n));
-      counted?.counts.forEach((c, i) => expect(c, `${n}d${s} = ${n + i}`).toBe(ways(n, s, n + i)));
+      counted?.counts.forEach((c, i) => {
+        expect(c, `${n}d${s} = ${n + i}`).toBe(ways(n, s, n + i));
+      });
     }
   });
 

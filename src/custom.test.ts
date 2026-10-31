@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  MAX_FACES,
-  MAX_LABEL,
-  MAX_LOADED_SIDES,
-  MAX_WEIGHT,
   chancesOf,
   customFaces,
   dieName,
@@ -13,15 +9,19 @@ import {
   isFair,
   isLoaded,
   loadedWeights,
+  MAX_FACES,
+  MAX_LABEL,
+  MAX_LOADED_SIDES,
+  MAX_WEIGHT,
   normalizeSpec,
+  type RollSpec,
   rangeOf,
   readDice,
   roll,
   rollHeld,
-  type RollSpec,
 } from "./dice.ts";
 import { parseHistory, serializeHistory } from "./history.ts";
-import { LOADED_PRESETS, faceChances, loadingOf } from "./loaded.ts";
+import { faceChances, LOADED_PRESETS, loadingOf } from "./loaded.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
 import {
   chanceAtLeast,
@@ -34,17 +34,17 @@ import {
 } from "./odds.ts";
 import { seededSource } from "./random.ts";
 import {
-  MAX_SETS,
-  MAX_SET_NAME,
   loadSets,
+  MAX_SET_NAME,
+  MAX_SETS,
   makeSet,
   parseSets,
   readSet,
   serializeSets,
   setQuery,
   storeSets,
-  withSet,
   withoutSet,
+  withSet,
 } from "./sets.ts";
 import { readShared, shareQuery } from "./share.ts";
 import { chiSquareTail, faceStats, fairnessTest, readResults, statsOf } from "./stats.ts";

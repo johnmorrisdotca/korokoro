@@ -1,4 +1,4 @@
-import { useEffect, useRef, type HTMLAttributes } from "react";
+import { type HTMLAttributes, useEffect, useRef } from "react";
 
 import { parseNotation } from "./notation.ts";
 import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
