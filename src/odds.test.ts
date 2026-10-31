@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import { DIE_SIDES, MAX_DICE, normalizeSpec } from "./dice.ts";
-import { chanceAtLeast, chanceAtMost, chanceExactly, distributionOf, expectedTotal, luckOf, mostLikely, spreadOf } from "./odds.ts";
+import {
+  chanceAtLeast,
+  chanceAtMost,
+  chanceExactly,
+  distributionOf,
+  expectedTotal,
+  luckOf,
+  mostLikely,
+  spreadOf,
+} from "./odds.ts";
 
 const spec = (text: Parameters<typeof normalizeSpec>[0]) => normalizeSpec(text);
 

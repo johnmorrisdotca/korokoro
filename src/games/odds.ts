@@ -67,7 +67,14 @@ function afterReroll(held: number): Fraction[] {
  */
 export function yahtzeeWithin(rolls: number): Fraction {
   // state[m] is the chance of holding a largest group of m dice.
-  let state: Fraction[] = [[0n, 1n], [0n, 1n], [0n, 1n], [0n, 1n], [0n, 1n], [0n, 1n]];
+  let state: Fraction[] = [
+    [0n, 1n],
+    [0n, 1n],
+    [0n, 1n],
+    [0n, 1n],
+    [0n, 1n],
+    [0n, 1n],
+  ];
   // The first roll is a reroll with one die in hand: every die is its own group of one.
   state = afterReroll(1);
   for (let r = 1; r < rolls; r++) {
@@ -99,7 +106,8 @@ export function crapsPass(): Fraction {
   const ways = (total: number): bigint => BigInt(6 - Math.abs(7 - total));
   let pass: Fraction = [ways(7) + ways(11), 36n];
   // A point comes again before a seven with the chance its ways bear to its ways and the seven's together.
-  for (const point of [4, 5, 6, 8, 9, 10]) pass = add(pass, times([ways(point), 36n], [ways(point), ways(point) + ways(7)]));
+  for (const point of [4, 5, 6, 8, 9, 10])
+    pass = add(pass, times([ways(point), 36n], [ways(point), ways(point) + ways(7)]));
   return pass;
 }
 

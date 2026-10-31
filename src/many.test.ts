@@ -33,7 +33,9 @@ describe("a roll thrown several times as a set", () => {
     expect(b.rolls.map((r) => r.faces)).toEqual(a.rolls.map((r) => r.faces));
     // The same dice as six rolls made one after another.
     const source = seededSource("scores");
-    expect(a.rolls.map((r) => r.faces)).toEqual(Array.from({ length: 6 }, (_, i) => roll(dice("4d6dl1"), source, i).faces));
+    expect(a.rolls.map((r) => r.faces)).toEqual(
+      Array.from({ length: 6 }, (_, i) => roll(dice("4d6dl1"), source, i).faces),
+    );
     expect(a.sum).toBe(a.rolls.reduce((s, r) => s + r.total, 0));
     expect(a.highest).toBe(Math.max(...a.rolls.map((r) => r.total)));
     expect(a.lowest).toBe(Math.min(...a.rolls.map((r) => r.total)));
@@ -67,7 +69,9 @@ describe("a roll thrown several times as a set", () => {
     expect(readSharedMany("roll=2d6&faces=1,2&v=2")).toBeNull();
     // A single roll's link is still a single roll.
     expect(readShared("roll=2d6&faces=1,2&v=2")).toMatchObject({ total: 3 });
-    expect(parseHistory(JSON.stringify([{ ...set[0], set: { id: "x", index: 5, of: 3 } }]))[0]).not.toHaveProperty("set");
+    expect(parseHistory(JSON.stringify([{ ...set[0], set: { id: "x", index: 5, of: 3 } }]))[0]).not.toHaveProperty(
+      "set",
+    );
   });
 
   it("has exact odds for the set: at least one roll reaching a target, and the expected highest", () => {
@@ -84,7 +88,10 @@ describe("a roll thrown several times as a set", () => {
     // By counting: the highest of three rolls of 2d4.
     const d = distributionOf(dice("2d4"));
     let mean = 0;
-    for (let a = 0; a < 7; a++) for (let b = 0; b < 7; b++) for (let c = 0; c < 7; c++) mean += Math.max(a, b, c) * d.probabilities[a]! * d.probabilities[b]! * d.probabilities[c]!;
+    for (let a = 0; a < 7; a++)
+      for (let b = 0; b < 7; b++)
+        for (let c = 0; c < 7; c++)
+          mean += Math.max(a, b, c) * d.probabilities[a]! * d.probabilities[b]! * d.probabilities[c]!;
     expect(expectedHighest(dice("2d4"), 3)).toBeCloseTo(mean + 2, 12);
     // And by throwing them.
     const source = seededSource("highest");

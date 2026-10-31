@@ -53,7 +53,8 @@ export function fullReadme(read = (file) => readFileSync(file, "utf8")) {
       const file = MOVED.exec(part.text)?.[1];
       if (file === undefined || part.heading === null) return part.text;
       const found = pages.get(file).find((candidate) => candidate.heading === part.heading);
-      if (found === undefined) throw new Error(`${file} has no “## ${part.heading}”, which the README says moved there`);
+      if (found === undefined)
+        throw new Error(`${file} has no “## ${part.heading}”, which the README says moved there`);
       return fromDocs(found.text, moved).replace(/\n+$/, "\n");
     })
     .join("\n");

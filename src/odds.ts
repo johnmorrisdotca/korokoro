@@ -1,4 +1,21 @@
-import { MAX_EXPLOSIONS, MAX_REROLLS, canHold, chancesOf, dieName, dieOutcomes, faceRange, groupRange, groupsOf, keptCount, playsByNewRules, rangeOf, rulesText, valueOfFace, type DiceGroup, type RollSpec } from "./dice.ts";
+import {
+  MAX_EXPLOSIONS,
+  MAX_REROLLS,
+  canHold,
+  chancesOf,
+  dieName,
+  dieOutcomes,
+  faceRange,
+  groupRange,
+  groupsOf,
+  keptCount,
+  playsByNewRules,
+  rangeOf,
+  rulesText,
+  valueOfFace,
+  type DiceGroup,
+  type RollSpec,
+} from "./dice.ts";
 import { mathText, spreadMath } from "./math.ts";
 
 /**
@@ -210,7 +227,9 @@ function outcomesOfDie(group: DiceGroup): { least: number; ways: bigint[] } {
   const worth = Array.from({ length: count }, (_, i) => valueOfFace(group, low + i));
   const least = Math.min(...worth);
   const ways = new Array<bigint>(Math.max(...worth) - least + 1).fill(0n);
-  worth.forEach((value, i) => (ways[value - least] = (ways[value - least] as bigint) + BigInt(group.weights?.[i] ?? 1)));
+  worth.forEach(
+    (value, i) => (ways[value - least] = (ways[value - least] as bigint) + BigInt(group.weights?.[i] ?? 1)),
+  );
   return { least, ways };
 }
 
@@ -237,7 +256,8 @@ function multiply(a: bigint[], b: bigint[]): bigint[] {
  * at their least.
  */
 function waysOf(group: DiceGroup): { ways: bigint[]; outcomes: bigint } | null {
-  if (group.reroll !== undefined || group.rerollUntil !== undefined || group.explode === true || playsByNewRules(group)) return null;
+  if (group.reroll !== undefined || group.rerollUntil !== undefined || group.explode === true || playsByNewRules(group))
+    return null;
   if (group.unique === true) return waysToDiffer(group.count, group.sides as number);
   const kept = keptCount(group);
   if (group.keep !== "all" && kept !== 1) return null;
@@ -245,7 +265,13 @@ function waysOf(group: DiceGroup): { ways: bigint[]; outcomes: bigint } | null {
     const { low, high } = faceRange(group.sides);
     const faces = high - low + 1;
     const outcomes = BigInt(faces) ** BigInt(group.count);
-    return { ways: group.keep === "all" ? waysToSum(group.count, faces) : waysToKeepOne(group.count, faces, group.keep === "highest"), outcomes };
+    return {
+      ways:
+        group.keep === "all"
+          ? waysToSum(group.count, faces)
+          : waysToKeepOne(group.count, faces, group.keep === "highest"),
+      outcomes,
+    };
   }
   // A loaded or custom die: the same counting, with each face standing for as many outcomes as it weighs.
   const die = outcomesOfDie(group).ways;
@@ -287,7 +313,8 @@ function waysToDiffer(count: number, sides: number): { ways: bigint[]; outcomes:
     for (let j = Math.min(count, face); j >= 1; j--) {
       const from = sets[j - 1] as bigint[];
       const to = sets[j] as bigint[];
-      for (let sum = most; sum >= face; sum--) if (from[sum - face] !== 0n) to[sum] = (to[sum] as bigint) + (from[sum - face] as bigint);
+      for (let sum = most; sum >= face; sum--)
+        if (from[sum - face] !== 0n) to[sum] = (to[sum] as bigint) + (from[sum - face] as bigint);
     }
   }
   const least = (count * (count + 1)) / 2;
@@ -306,7 +333,14 @@ function trimmed<T extends number | bigint>(min: number, values: T[]): { min: nu
 
 /** The least total a spec could make if every face of every die could come up: where its odds are counted from. */
 function anchorOf(spec: RollSpec): number {
-  return groupsOf(spec).reduce((sum, group) => sum + (group.unique === true ? groupRange(group).min : keptCount(group) * (playsByNewRules(group) ? dieOutcomes(group).least : leastOf(group))), spec.modifier);
+  return groupsOf(spec).reduce(
+    (sum, group) =>
+      sum +
+      (group.unique === true
+        ? groupRange(group).min
+        : keptCount(group) * (playsByNewRules(group) ? dieOutcomes(group).least : leastOf(group))),
+    spec.modifier,
+  );
 }
 
 /**
@@ -410,7 +444,10 @@ function keyOf(group: DiceGroup): string {
  */
 export function distributionOf(spec: RollSpec): Distribution {
   const groups = groupsOf(spec);
-  const key = spec.math !== undefined ? mathText(spec.math, (i) => keyOf(groups[i] as DiceGroup)) : `${groups.map(keyOf).join("+")}m${spec.modifier}`;
+  const key =
+    spec.math !== undefined
+      ? mathText(spec.math, (i) => keyOf(groups[i] as DiceGroup))
+      : `${groups.map(keyOf).join("+")}m${spec.modifier}`;
   const known = cache.get(key);
   if (known !== undefined) return known;
   let made: Distribution;
@@ -439,7 +476,10 @@ export function distributionOf(spec: RollSpec): Distribution {
   } else {
     // Loaded and custom dice: counted from the least their faces are worth, and the totals that cannot come up taken off the ends.
     const exact = exactCounts(spec);
-    const all = exact !== null ? { min: exact.min, values: exact.counts.map((c) => share(c, exact.outcomes)) } : trimmed(anchorOf(spec), groups.map(probabilitiesOf).reduce(convolve));
+    const all =
+      exact !== null
+        ? { min: exact.min, values: exact.counts.map((c) => share(c, exact.outcomes)) }
+        : trimmed(anchorOf(spec), groups.map(probabilitiesOf).reduce(convolve));
     made = { min: all.min, max: all.min + all.values.length - 1, probabilities: all.values };
   }
   if (cache.size > 200) cache.clear();
@@ -623,7 +663,8 @@ export function expectedHighest(spec: Odds, times: number): number {
   const d = odds(spec);
   const { below } = summedOf(d);
   let mean = 0;
-  for (let i = 0; i < d.probabilities.length; i++) mean += (d.min + i) * ((below[i + 1] as number) ** times - (below[i] as number) ** times);
+  for (let i = 0; i < d.probabilities.length; i++)
+    mean += (d.min + i) * ((below[i + 1] as number) ** times - (below[i] as number) ** times);
   return mean;
 }
 

@@ -33,16 +33,34 @@ test("reflected properties update the tray and retain on-by-default boolean beha
     element.seed = "repeat";
     const first = element.hold;
     element.hold = null;
-    return { notation: element.getAttribute("notation"), width: element.getAttribute("width"), label: element.getAttribute("aria-label"), theme: element.querySelector(".kk-root").dataset.theme, sound: element.sound, first, restored: element.hold };
+    return {
+      notation: element.getAttribute("notation"),
+      width: element.getAttribute("width"),
+      label: element.getAttribute("aria-label"),
+      theme: element.querySelector(".kk-root").dataset.theme,
+      sound: element.sound,
+      first,
+      restored: element.hold,
+    };
   });
-  expect(state).toEqual({ notation: "3d6+2", width: "320", label: "My dice", theme: "dark", sound: false, first: false, restored: true });
+  expect(state).toEqual({
+    notation: "3d6+2",
+    width: "320",
+    label: "My dice",
+    theme: "dark",
+    sound: false,
+    first: false,
+    restored: true,
+  });
   expect(errors).toEqual([]);
 });
 
 test("the iframe accepts canonical parameter names and writes no stored history", async ({ page }) => {
   await page.addInitScript(() => {
     window.__stored = [];
-    globalThis.Storage.prototype.setItem = function (key) { window.__stored.push(key); };
+    globalThis.Storage.prototype.setItem = function (key) {
+      window.__stored.push(key);
+    };
   });
   const errors = await open(page, "/embed/?notation=2d6%2B3&one-pip=black&size=large&theme=dark&sound=off&seed=repeat");
   await expect(page.locator("korokoro-roller")).toHaveAttribute("notation", "2d6+3");
@@ -56,9 +74,25 @@ test("the iframe accepts canonical parameter names and writes no stored history"
 
 test("the standalone die iframe validates attributes and honours false spellings", async ({ page }) => {
   await open(page, "/embed/?size=small&sound=off");
-  await page.goto("http://korokoro.test/embed/die/?sides=20&face=7&width=120&rollable=off&sound=no&lang=ja&label=One%20die");
+  await page.goto(
+    "http://korokoro.test/embed/die/?sides=20&face=7&width=120&rollable=off&sound=no&lang=ja&label=One%20die",
+  );
   await expect(page.locator(".kk-die")).toBeVisible();
-  const state = await page.locator("korokoro-die").evaluate((element) => ({ face: element.face, width: element.width, rollable: element.rollable, sound: element.sound, label: element.getAttribute("aria-label") }));
+  const state = await page
+    .locator("korokoro-die")
+    .evaluate((element) => ({
+      face: element.face,
+      width: element.width,
+      rollable: element.rollable,
+      sound: element.sound,
+      label: element.getAttribute("aria-label"),
+    }));
   expect(state).toEqual({ face: 7, width: "120", rollable: false, sound: false, label: "One die" });
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth && document.documentElement.scrollHeight <= window.innerHeight)).toBe(true);
+  expect(
+    await page.evaluate(
+      () =>
+        document.documentElement.scrollWidth <= window.innerWidth &&
+        document.documentElement.scrollHeight <= window.innerHeight,
+    ),
+  ).toBe(true);
 });

@@ -151,7 +151,7 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "lint": "eslint .",
+    "lint": "biome check .",
     "typecheck": "tsc -p tsconfig.check.json",
     "test": "vitest run",
     "docs:site": "pnpm build && node scripts/docs-site.mjs build",
@@ -169,6 +169,7 @@
     "prepublishOnly": "pnpm check && pnpm build",
     "docs:check": "pnpm build && node scripts/docs-site.mjs check",
     "size": "node scripts/docs-site.mjs size",
+    "format": "biome check --write .",
     "test:demo": "pnpm site && node scripts/docs-site.mjs build && playwright test"
   },
   "peerDependencies": {
@@ -184,22 +185,20 @@
     }
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
+    "@biomejs/biome": "2.6.4",
     "@playwright/test": "^1.63.0",
     "@types/react": "^19.0.0",
-    "eslint": "^9.0.0",
+    "esbuild": "^0.28.0",
+    "marked": "^18.0.0",
+    "pagefind": "^1.5.2",
     "react": "^19.0.0",
     "typedoc": "^0.28.20",
     "typedoc-plugin-markdown": "^4.13.1",
     "typescript": "^5.9.0",
-    "typescript-eslint": "^8.0.0",
     "vite": "^8.3.1",
     "vitepress": "^1.6.4",
     "vitest": "^5.0.0",
-    "vue": "^3.5.43",
-    "pagefind": "^1.5.2",
-    "marked": "^18.0.0",
-    "esbuild": "^0.28.0"
+    "vue": "^3.5.43"
   },
   "publishConfig": {
     "access": "public"

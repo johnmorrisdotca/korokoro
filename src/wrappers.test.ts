@@ -15,11 +15,47 @@ describe("the custom element, where there is no browser", () => {
   });
 
   it("watches the attributes it documents", () => {
-    expect(KorokoroRoller.observedAttributes).toEqual(["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth", "one-pip", "dice-war", "width", "theme", "label", "seed"]);
+    expect(KorokoroRoller.observedAttributes).toEqual([
+      "notation",
+      "lang",
+      "size",
+      "wide",
+      "sound",
+      "hold",
+      "placeholder",
+      "keyboard",
+      "language-chooser",
+      "storage",
+      "storage-key",
+      "animation-ms",
+      "share-base",
+      "query",
+      "cloth",
+      "one-pip",
+      "dice-war",
+      "width",
+      "theme",
+      "label",
+      "seed",
+    ]);
   });
 
   it("has a die of its own, under its own tag, that is safe where there is no browser", () => {
-    expect(KorokoroDie.observedAttributes).toEqual(["sides", "face", "rollable", "size", "width", "one-pip", "lang", "seed", "sound", "animation-ms", "cloth", "theme", "label"]);
+    expect(KorokoroDie.observedAttributes).toEqual([
+      "sides",
+      "face",
+      "rollable",
+      "size",
+      "width",
+      "one-pip",
+      "lang",
+      "seed",
+      "sound",
+      "animation-ms",
+      "cloth",
+      "theme",
+      "label",
+    ]);
     expect(DIE_TAG).toBe("korokoro-die");
     expect(() => defineDie()).not.toThrow();
     expect(() => defineDie("my-die")).not.toThrow();
@@ -36,15 +72,38 @@ describe("the entry that registers the element by being imported", () => {
 
 describe("the Vue component, on a server", () => {
   it("renders an empty box and mounts nothing", async () => {
-    const html = await renderToString(createSSRApp({ render: () => h(DiceRoller, { notation: "2d20kh1+5", wide: true, class: "dice" }) }));
+    const html = await renderToString(
+      createSSRApp({ render: () => h(DiceRoller, { notation: "2d20kh1+5", wide: true, class: "dice" }) }),
+    );
     expect(html).toBe('<div class="dice"></div>');
   });
 
   it("takes the tray's options as props, and a Boolean left out stays left out", () => {
     const props = DiceRoller.props as Record<string, { default?: unknown }>;
-    for (const name of ["notation", "spec", "locale", "strings", "storage", "storageKey", "query", "shareBase", "theme", "wide", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser", "diceWar"]) expect(props, name).toHaveProperty(name);
+    for (const name of [
+      "notation",
+      "spec",
+      "locale",
+      "strings",
+      "storage",
+      "storageKey",
+      "query",
+      "shareBase",
+      "theme",
+      "wide",
+      "animationMs",
+      "sound",
+      "playSound",
+      "hold",
+      "placeholder",
+      "keyboard",
+      "languageChooser",
+      "diceWar",
+    ])
+      expect(props, name).toHaveProperty(name);
     // Vue would make a missing Boolean false, and turn the sound off for everybody who did not ask.
-    for (const name of ["wide", "sound", "hold", "placeholder", "keyboard", "languageChooser", "diceWar"]) expect(props[name]).toMatchObject({ type: Boolean, default: undefined });
+    for (const name of ["wide", "sound", "hold", "placeholder", "keyboard", "languageChooser", "diceWar"])
+      expect(props[name]).toMatchObject({ type: Boolean, default: undefined });
     expect(DiceRoller.emits).toHaveProperty("roll");
   });
 });

@@ -8,12 +8,29 @@ import { expect, test } from "@playwright/test";
 
 const site = join(dirname(fileURLToPath(import.meta.url)), "..", "site");
 const pages = join(dirname(fileURLToPath(import.meta.url)), "pages");
-const vue = join(dirname(fileURLToPath(import.meta.url)), "..", "node_modules", "vue", "dist", "vue.esm-browser.prod.js");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".jpg": "image/jpeg", ".png": "image/png", ".woff2": "font/woff2" };
+const vue = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "node_modules",
+  "vue",
+  "dist",
+  "vue.esm-browser.prod.js",
+);
+const TYPES = {
+  ".html": "text/html",
+  ".js": "text/javascript",
+  ".css": "text/css",
+  ".json": "application/json",
+  ".svg": "image/svg+xml",
+  ".jpg": "image/jpeg",
+  ".png": "image/png",
+  ".woff2": "font/woff2",
+};
 
 /** Open the demo with a query, and collect anything the page complains of. */
 export async function open(page, query = "?seed=tray") {
-  if (!existsSync(join(site, "index.html"))) throw new Error("site/ is not built: run `pnpm site` first (`pnpm test:tray` does)");
+  if (!existsSync(join(site, "index.html")))
+    throw new Error("site/ is not built: run `pnpm site` first (`pnpm test:tray` does)");
   const errors = [];
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (message) => message.type() === "error" && errors.push(message.text()));
@@ -24,21 +41,41 @@ export async function open(page, query = "?seed=tray") {
     if (pathname.startsWith("/korokoro/")) {
       const built = join(site, pathname.slice("/korokoro/".length));
       const found = pathname.endsWith("/") ? join(built, "index.html") : built;
-      return existsSync(found) ? route.fulfill({ body: readFileSync(found), contentType: TYPES[found.slice(found.lastIndexOf("."))] ?? "application/octet-stream" }) : route.fulfill({ status: 404, body: "" });
+      return existsSync(found)
+        ? route.fulfill({
+            body: readFileSync(found),
+            contentType: TYPES[found.slice(found.lastIndexOf("."))] ?? "application/octet-stream",
+          })
+        : route.fulfill({ status: 404, body: "" });
     }
-    const file = pathname === "/vue.js" ? vue : pathname.startsWith("/pages/") ? join(pages, pathname.slice(7)) : join(site, pathname.endsWith("/") ? `${pathname}index.html` : pathname);
+    const file =
+      pathname === "/vue.js"
+        ? vue
+        : pathname.startsWith("/pages/")
+          ? join(pages, pathname.slice(7))
+          : join(site, pathname.endsWith("/") ? `${pathname}index.html` : pathname);
     if (!existsSync(file)) return route.fulfill({ status: 404, body: "" });
-    return route.fulfill({ body: readFileSync(file), contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream" });
+    return route.fulfill({
+      body: readFileSync(file),
+      contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream",
+    });
   });
   // A query opens the demo; a path opens another page.
   // The CDN's address for the package is answered from the build, so that a page written for the CDN is tried as it is written.
   await page.route("https://cdn.jsdelivr.net/npm/@johnmorrisdotca/korokoro@1/**", (route) => {
     const file = join(site, new URL(route.request().url()).pathname.replace("/npm/@johnmorrisdotca/korokoro@1/", ""));
-    return existsSync(file) ? route.fulfill({ body: readFileSync(file), contentType: "text/javascript", headers: { "access-control-allow-origin": "*" } }) : route.fulfill({ status: 404, body: "" });
+    return existsSync(file)
+      ? route.fulfill({
+          body: readFileSync(file),
+          contentType: "text/javascript",
+          headers: { "access-control-allow-origin": "*" },
+        })
+      : route.fulfill({ status: 404, body: "" });
   });
   await page.goto(`http://korokoro.test/${query.startsWith("/") ? query.slice(1) : query}`);
   // Every page has a tray but the plain-output page and the page that frames it.
-  if (!/^\/(api\/|pages\/frame|korokoro\/docs\/guide)/.test(query)) await expect(page.locator('[data-testid="kk-tray"]')).toBeVisible();
+  if (!/^\/(api\/|pages\/frame|korokoro\/docs\/guide)/.test(query))
+    await expect(page.locator('[data-testid="kk-tray"]')).toBeVisible();
   return errors;
 }
 
@@ -83,10 +120,21 @@ export function state(page) {
       total: q('[data-testid="kk-total"]')?.lastChild.textContent ?? null,
       sum: q('[data-testid="kk-sum"]')?.textContent ?? null,
       reading: q('[data-testid="kk-reading"]')?.textContent ?? null,
-      dice: all('[data-testid="kk-die"]').map((d) => ({ sides: d.dataset.sides, face: Number(d.dataset.face), held: d.getAttribute("aria-pressed") === "true", status: d.dataset.status, counts: d.dataset.counts ?? null, hit: d.dataset.hit ?? null, exploded: d.dataset.exploded === "true", button: d.tagName === "BUTTON" })),
+      dice: all('[data-testid="kk-die"]').map((d) => ({
+        sides: d.dataset.sides,
+        face: Number(d.dataset.face),
+        held: d.getAttribute("aria-pressed") === "true",
+        status: d.dataset.status,
+        counts: d.dataset.counts ?? null,
+        hit: d.dataset.hit ?? null,
+        exploded: d.dataset.exploded === "true",
+        button: d.tagName === "BUTTON",
+      })),
       hint: q(".kk-hint").textContent,
       said: q('[data-testid="kk-said"]')?.textContent ?? "",
-      dim: all('[data-testid="kk-sides"] button:disabled, [data-testid="kk-count"] button:disabled').map((b) => b.dataset.value),
+      dim: all('[data-testid="kk-sides"] button:disabled, [data-testid="kk-count"] button:disabled').map(
+        (b) => b.dataset.value,
+      ),
       suggested: q('[data-testid="kk-chip"]')?.dataset.suggested ?? null,
       game: q('[data-testid="kk-games-panel"] summary').textContent,
       games: all('[data-testid="kk-game"]').filter((g) => !g.hidden).length,
@@ -105,7 +153,10 @@ export function state(page) {
       // Anything to be tapped that is smaller than a fingertip. Links in running text are words, not targets.
       small: all(".kk-root button, .kk-root input, .kk-root textarea, .kk-root summary")
         .filter((e) => box(e).width > 0 && !e.hidden && (box(e).height < 43.5 || box(e).width < 43.5))
-        .map((e) => `${e.dataset.testid ?? e.className ?? e.tagName}: ${Math.round(box(e).width)}×${Math.round(box(e).height)}`),
+        .map(
+          (e) =>
+            `${e.dataset.testid ?? e.className ?? e.tagName}: ${Math.round(box(e).width)}×${Math.round(box(e).height)}`,
+        ),
       markup: q(".kk-root").innerHTML.includes("<img") || q(".kk-root").innerHTML.includes("<b>bold"),
     };
   });

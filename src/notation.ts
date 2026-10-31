@@ -177,7 +177,10 @@ const HEAD = /^\s*(\d*)\s*d\s*(\d+|%|f|\[[^\]]*\])(\s*\{[^}]*\})?/i;
 /** A comparison: an operator and a number. */
 const COMPARE = "(<=|>=|<>|!=|=|<|>)\\s*(\\d+)";
 /** Any one modifier, to tell where a kind's modifiers end. */
-const MODIFIER = new RegExp(`^\\s*(?:!|ro?\\s*[<>=!\\d]|ro?(?![\\w[%])|[kd]\\s*[hl]|[kdbw]\\s*\\d|[kdbw](?![\\w[%])|min\\s*\\d|max\\s*\\d|[<>=]|f\\s*[<>=!\\d]|c[sf]|s[ad]|s(?![\\w[%])|u)`, "i");
+const MODIFIER = new RegExp(
+  `^\\s*(?:!|ro?\\s*[<>=!\\d]|ro?(?![\\w[%])|[kd]\\s*[hl]|[kdbw]\\s*\\d|[kdbw](?![\\w[%])|min\\s*\\d|max\\s*\\d|[<>=]|f\\s*[<>=!\\d]|c[sf]|s[ad]|s(?![\\w[%])|u)`,
+  "i",
+);
 const UNIQUE = /^\s*u(o?)/i;
 const EXPLODE = new RegExp(`^\\s*(!!?)(p?)(?:\\s*(<=|>=|<>|=|<|>)\\s*(\\d+))?`, "i");
 const REROLL = new RegExp(`^\\s*(ro?)\\s*(?:${COMPARE}|(\\d+)|(?![\\w[%]))`, "i");
@@ -206,7 +209,8 @@ const REASONS: Record<NotationProblem, string> = {
   minus: "dice are added together; only the bonus can be taken away",
   times: `a roll is thrown 1 to ${MAX_TIMES} times`,
   custom: `a custom die has 2 to ${MAX_FACES} faces, each up to ${MAX_LABEL} characters with an optional =value (a whole number up to ${MAX_FACE_VALUE} either way) and #colour, and takes no modifiers`,
-  successes: "successes are counted over all the dice of a kind: the comparison must be one some dice meet and some do not, a failure (f) needs a success to take from and must not overlap it, and counting does not go with keep or drop",
+  successes:
+    "successes are counted over all the dice of a kind: the comparison must be one some dice meet and some do not, a failure (f) needs a success to take from and must not overlap it, and counting does not go with keep or drop",
   clamp: "min and max take a face of the die: min above its lowest, max below its highest, and min no greater than max",
   marks: "cs and cf take a comparison that some dice meet and some do not",
   unique: `dice that all differ (u) are fair dice of ${MAX_UNIQUE_SIDES} sides or fewer, no more of them than the die has faces, all added, with no reroll or explosion; uo (reroll a duplicate once) is not read`,
@@ -272,10 +276,18 @@ function tooMany(part: string, options: NotationOptions): NotationCheck {
   const most = mostDice(options);
   if (most === MAX_DICE) return refuse("count", part);
   const shown = part.trim();
-  return { ok: false, problem: "count", part: shown, message: `“${shown}”: roll ${MIN_DICE} to ${most} dice at a time, and past ${MAX_DICE} only plain dice, all added or one kept` };
+  return {
+    ok: false,
+    problem: "count",
+    part: shown,
+    message: `“${shown}”: roll ${MIN_DICE} to ${most} dice at a time, and past ${MAX_DICE} only plain dice, all added or one kept`,
+  };
 }
 
-function readGroup(text: string, options: NotationOptions): { group: Partial<DiceGroup> & { count: number }; rest: string; countText: string } | NotationCheck {
+function readGroup(
+  text: string,
+  options: NotationOptions,
+): { group: Partial<DiceGroup> & { count: number }; rest: string; countText: string } | NotationCheck {
   const head = HEAD.exec(text);
   if (head === null) return refuse("shape", text);
   const [whole, countText, sidesText] = head as unknown as [string, string, string];
@@ -286,7 +298,20 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
     const faces = readFaces(sidesText.slice(1, -1));
     if (faces === null || head[3] !== undefined) return refuse("custom", `d${sidesText}${head[3] ?? ""}`);
     const after = text.slice(whole.length);
-    if (MODIFIER.test(after)) return refuse("custom", (EXPLODE.exec(after) ?? REROLL.exec(after) ?? CLAMP.exec(after) ?? MARK.exec(after) ?? UNIQUE.exec(after) ?? SORT.exec(after) ?? KEEP.exec(after) ?? FAILURE.exec(after) ?? SUCCESS.exec(after) ?? MODIFIER.exec(after) ?? [after])[0]);
+    if (MODIFIER.test(after))
+      return refuse(
+        "custom",
+        (EXPLODE.exec(after) ??
+          REROLL.exec(after) ??
+          CLAMP.exec(after) ??
+          MARK.exec(after) ??
+          UNIQUE.exec(after) ??
+          SORT.exec(after) ??
+          KEEP.exec(after) ??
+          FAILURE.exec(after) ??
+          SUCCESS.exec(after) ??
+          MODIFIER.exec(after) ?? [after])[0],
+      );
     return { group: { count, sides: faces.length, keep: "all", faces }, rest: after, countText };
   }
   const sides: Sides = sidesText === "%" ? 100 : sidesText.toLowerCase() === "f" ? "F" : Number(sidesText);
@@ -302,10 +327,31 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
   let rest = text.slice(whole.length);
   const group: Partial<DiceGroup> & { count: number } = { count, sides, keep: "all" };
   /** The text of each modifier read, by what it is, so a refusal can name it. */
-  const parts: Partial<Record<"explode" | "reroll" | "keep" | "floor" | "ceiling" | "success" | "failure" | "critical" | "fumble" | "sort" | "unique", string>> = {};
+  const parts: Partial<
+    Record<
+      | "explode"
+      | "reroll"
+      | "keep"
+      | "floor"
+      | "ceiling"
+      | "success"
+      | "failure"
+      | "critical"
+      | "fumble"
+      | "sort"
+      | "unique",
+      string
+    >
+  > = {};
   const compare = (op: string, n: string): Compare => {
     const at = Number(n);
-    return op === "<" ? { op: "<=", n: at - 1 } : op === ">" ? { op: ">=", n: at + 1 } : op === "!=" || op === "<>" ? { op: "<>", n: at } : { op: op as "=" | "<=" | ">=", n: at };
+    return op === "<"
+      ? { op: "<=", n: at - 1 }
+      : op === ">"
+        ? { op: ">=", n: at + 1 }
+        : op === "!=" || op === "<>"
+          ? { op: "<>", n: at }
+          : { op: op as "=" | "<=" | ">=", n: at };
   };
   while (MODIFIER.test(rest)) {
     let match: RegExpExecArray | null;
@@ -315,7 +361,8 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
       group.explode = true;
       const compound = match[1] === "!!";
       const penetrating = (match[2] as string) !== "";
-      if (compound || penetrating) group.explodeKind = compound && penetrating ? "compound-penetrating" : compound ? "compound" : "penetrating";
+      if (compound || penetrating)
+        group.explodeKind = compound && penetrating ? "compound-penetrating" : compound ? "compound" : "penetrating";
       if (match[3] !== undefined) group.explodeWhen = compare(match[3], match[4] as string);
     } else if ((match = REROLL.exec(rest)) !== null) {
       if (parts.reroll !== undefined) return refuse("twice", match[0]);
@@ -382,7 +429,8 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
     } else break;
     rest = rest.slice(match[0].length);
   }
-  if (parts.explode !== undefined && (sides === "F" || sides > MAX_EXPLODING_SIDES || parts.keep !== undefined)) return refuse("explode", parts.explode);
+  if (parts.explode !== undefined && (sides === "F" || sides > MAX_EXPLODING_SIDES || parts.keep !== undefined))
+    return refuse("explode", parts.explode);
   if (parts.failure !== undefined && parts.success === undefined) return refuse("successes", parts.failure);
   if (parts.success !== undefined && parts.keep !== undefined) return refuse("successes", parts.success);
   if (weights !== undefined) group.weights = weights;
@@ -390,8 +438,23 @@ function readGroup(text: string, options: NotationOptions): { group: Partial<Dic
   const kept = normalizeSpec({ ...group, modifier: 0 });
   const lost = (
     [
-      ["explode", "explode", kept.explode !== true || (group.explodeKind !== kept.explodeKind) || (group.explodeWhen !== undefined && kept.explodeWhen === undefined && !onlyTheHighest(group.explodeWhen, sides))],
-      ["reroll", "reroll", kept.reroll === undefined && kept.rerollUntil === undefined && kept.rerollWhen === undefined && kept.rerollUntilWhen === undefined],
+      [
+        "explode",
+        "explode",
+        kept.explode !== true ||
+          group.explodeKind !== kept.explodeKind ||
+          (group.explodeWhen !== undefined &&
+            kept.explodeWhen === undefined &&
+            !onlyTheHighest(group.explodeWhen, sides)),
+      ],
+      [
+        "reroll",
+        "reroll",
+        kept.reroll === undefined &&
+          kept.rerollUntil === undefined &&
+          kept.rerollWhen === undefined &&
+          kept.rerollUntilWhen === undefined,
+      ],
       ["floor", "clamp", kept.floor === undefined],
       ["ceiling", "clamp", kept.ceiling === undefined],
       ["success", "successes", kept.success === undefined],
@@ -490,7 +553,10 @@ function readFlat(text: string, options: NotationOptions, times: number, label: 
     if (Math.abs(modifier) > MAX_MODIFIER) return refuse("bonus", rest);
   }
   const [first, ...more] = groups;
-  const spec = normalizeSpec({ ...first, modifier, more: more as DiceGroup[], times, label }, { maxDice: mostDice(options) });
+  const spec = normalizeSpec(
+    { ...first, modifier, more: more as DiceGroup[], times, label },
+    { maxDice: mostDice(options) },
+  );
   // Past ten dice only plain dice are rolled: a roll that was brought back to ten is refused, not shortened.
   if (diceCount(spec) < dice) return tooMany(text, options);
   return { ok: true, spec };
@@ -500,7 +566,14 @@ function readFlat(text: string, options: NotationOptions, times: number, label: 
 function looksLikeMath(text: string): boolean {
   // Custom faces and loaded weights are set aside: what is inside them is not arithmetic.
   const bare = text.replace(/d\s*\[[^\]]*\]/gi, "d6").replace(/(d\s*\d+)\s*\{[^}]*\}/gi, "$1");
-  return /[*/()×{]/.test(bare) || /^\s*\d+\s*[-+]/.test(bare) || /\d\s*x\s*[\d(]/i.test(bare) || /[)\d]\s*x\s*\d*\s*d/i.test(bare) || /-\s*\d*\s*d\s*[\d%f[]/i.test(bare) || /[+-]\s*\d+\s*[+-]/.test(bare);
+  return (
+    /[*/()×{]/.test(bare) ||
+    /^\s*\d+\s*[-+]/.test(bare) ||
+    /\d\s*x\s*[\d(]/i.test(bare) ||
+    /[)\d]\s*x\s*\d*\s*d/i.test(bare) ||
+    /-\s*\d*\s*d\s*[\d%f[]/i.test(bare) ||
+    /[+-]\s*\d+\s*[+-]/.test(bare)
+  );
 }
 
 const FUNCTION = /^\s*(floor|ceil|round|abs|max|min)\s*\(/i;
@@ -561,7 +634,8 @@ function readMath(text: string, options: NotationOptions, times: number, label: 
       }
       if (eat(/^\s*\}/) === null) return refuse("math", rest === "" ? "{" : rest);
       const keep = GROUP_KEEP.exec(rest);
-      if (keep === null || rolls.length < 2 || rolls.length > MAX_GROUPS) return refuse("math", rest === "" ? "}" : rest);
+      if (keep === null || rolls.length < 2 || rolls.length > MAX_GROUPS)
+        return refuse("math", rest === "" ? "}" : rest);
       rest = rest.slice(keep[0].length);
       const n = keep[3] === "" ? 1 : Number(keep[3]);
       const keeps = (keep[1] as string).toLowerCase() === "k";
@@ -592,7 +666,9 @@ function readMath(text: string, options: NotationOptions, times: number, label: 
     if (eat(/^\s*-/) !== null) {
       const inside = unary();
       if (failed(inside)) return inside;
-      return inside.kind === "number" ? { kind: "number", value: -inside.value } : { kind: "op", op: "-", left: { kind: "number", value: 0 }, right: inside };
+      return inside.kind === "number"
+        ? { kind: "number", value: -inside.value }
+        : { kind: "op", op: "-", left: { kind: "number", value: 0 }, right: inside };
     }
     return primary();
   }
@@ -641,7 +717,8 @@ function readMath(text: string, options: NotationOptions, times: number, label: 
     // Each kind on its own, so that two kinds that are the same dice stay two.
     const kinds = groups.map((group) => groupsOf(normalizeSpec({ ...group, modifier: 0 }, limits))[0] as DiceGroup);
     const problem = checkMath(math, kinds.map(groupRange));
-    if (diceCount(spec) < dice || !kinds.every((g) => dice <= MAX_DICE || isPlainDice(g))) return tooMany(text, options);
+    if (diceCount(spec) < dice || !kinds.every((g) => dice <= MAX_DICE || isPlainDice(g)))
+      return tooMany(text, options);
     return refuse(problem === "fraction" ? "fraction" : problem === "zero" ? "zero" : "math", text);
   }
   if (diceCount(spec) < dice) return tooMany(text, options);
@@ -701,6 +778,9 @@ export function formatNotation(spec: RollSpec): string {
   const modifier = spec.modifier === 0 ? "" : spec.modifier > 0 ? `+${spec.modifier}` : `${spec.modifier}`;
   const times = spec.times !== undefined && spec.times > 1 ? `${spec.times}#` : "";
   const groups = groupsOf(spec);
-  const dice = spec.math !== undefined ? mathText(spec.math, (i) => formatGroup(groups[i] as DiceGroup)) : `${groups.map(formatGroup).join("+")}${modifier}`;
+  const dice =
+    spec.math !== undefined
+      ? mathText(spec.math, (i) => formatGroup(groups[i] as DiceGroup))
+      : `${groups.map(formatGroup).join("+")}${modifier}`;
   return `${times}${dice}${spec.label === undefined ? "" : ` # ${spec.label}`}`;
 }

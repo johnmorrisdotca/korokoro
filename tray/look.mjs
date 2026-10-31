@@ -21,15 +21,26 @@ const names = [];
 for (const width of [390, 1280]) {
   for (const scheme of ["light", "dark"]) {
     for (const lang of ["en", "ja"]) {
-      const context = await browser.newContext({ viewport: { width, height: 900 }, colorScheme: scheme, reducedMotion: "reduce", locale: "en-US" });
+      const context = await browser.newContext({
+        viewport: { width, height: 900 },
+        colorScheme: scheme,
+        reducedMotion: "reduce",
+        locale: "en-US",
+      });
       const page = await context.newPage();
       await page.route("http://korokoro.test/**", (route) => {
         const { pathname } = new URL(route.request().url());
         const file = join(site, pathname === "/" ? "index.html" : pathname);
-        return existsSync(file) ? route.fulfill({ body: readFileSync(file), contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream" }) : route.fulfill({ status: 404, body: "" });
+        return existsSync(file)
+          ? route.fulfill({
+              body: readFileSync(file),
+              contentType: TYPES[file.slice(file.lastIndexOf("."))] ?? "application/octet-stream",
+            })
+          : route.fulfill({ status: 404, body: "" });
       });
       await page.goto(`http://korokoro.test/?seed=look&lang=${lang}`);
-      if (above !== undefined) await page.addStyleTag({ content: `${above}, ${above} ~ * { display: none !important; }` });
+      if (above !== undefined)
+        await page.addStyleTag({ content: `${above}, ${above} ~ * { display: none !important; }` });
       const shot = async (state) => {
         // The time of a roll is the one thing that differs from run to run.
         await page.evaluate(() => document.querySelectorAll("time").forEach((time) => (time.textContent = "12:00:00")));
@@ -76,26 +87,54 @@ if (after !== undefined) {
   const page = await browser.newPage();
   let moved = 0;
   for (const name of names) {
-    const [a, b] = [before, after].map((folder) => `data:image/png;base64,${readFileSync(join(folder, name)).toString("base64")}`);
-    const found = await page.evaluate(async ([one, two]) => {
-      const load = (src) => new Promise((resolve) => { const image = new Image(); image.onload = () => resolve(image); image.src = src; });
-      const [x, y] = [await load(one), await load(two)];
-      if (x.width !== y.width || x.height !== y.height) return `sizes differ: ${x.width}×${x.height} and ${y.width}×${y.height}`;
-      const data = (image) => { const canvas = new OffscreenCanvas(image.width, image.height); const c = canvas.getContext("2d"); c.drawImage(image, 0, 0); return c.getImageData(0, 0, image.width, image.height).data; };
-      const [p, q] = [data(x), data(y)];
-      let count = 0, left = x.width, top = x.height, right = 0, bottom = 0;
-      for (let i = 0; i < p.length; i += 4) {
-        if (p[i] === q[i] && p[i + 1] === q[i + 1] && p[i + 2] === q[i + 2] && p[i + 3] === q[i + 3]) continue;
-        count += 1;
-        const px = (i / 4) % x.width, py = Math.floor(i / 4 / x.width);
-        left = Math.min(left, px); right = Math.max(right, px); top = Math.min(top, py); bottom = Math.max(bottom, py);
-      }
-      return count === 0 ? null : `${count} pixels differ, within x ${left} to ${right}, y ${top} to ${bottom}`;
-    }, [a, b]);
+    const [a, b] = [before, after].map(
+      (folder) => `data:image/png;base64,${readFileSync(join(folder, name)).toString("base64")}`,
+    );
+    const found = await page.evaluate(
+      async ([one, two]) => {
+        const load = (src) =>
+          new Promise((resolve) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.src = src;
+          });
+        const [x, y] = [await load(one), await load(two)];
+        if (x.width !== y.width || x.height !== y.height)
+          return `sizes differ: ${x.width}×${x.height} and ${y.width}×${y.height}`;
+        const data = (image) => {
+          const canvas = new OffscreenCanvas(image.width, image.height);
+          const c = canvas.getContext("2d");
+          c.drawImage(image, 0, 0);
+          return c.getImageData(0, 0, image.width, image.height).data;
+        };
+        const [p, q] = [data(x), data(y)];
+        let count = 0,
+          left = x.width,
+          top = x.height,
+          right = 0,
+          bottom = 0;
+        for (let i = 0; i < p.length; i += 4) {
+          if (p[i] === q[i] && p[i + 1] === q[i + 1] && p[i + 2] === q[i + 2] && p[i + 3] === q[i + 3]) continue;
+          count += 1;
+          const px = (i / 4) % x.width,
+            py = Math.floor(i / 4 / x.width);
+          left = Math.min(left, px);
+          right = Math.max(right, px);
+          top = Math.min(top, py);
+          bottom = Math.max(bottom, py);
+        }
+        return count === 0 ? null : `${count} pixels differ, within x ${left} to ${right}, y ${top} to ${bottom}`;
+      },
+      [a, b],
+    );
     if (found !== null) moved += 1;
     console.log(`${found === null ? "same" : "MOVED"} ${name}${found === null ? "" : `: ${found}`}`);
   }
-  console.log(moved === 0 ? `all ${names.length} pictures are the same, pixel for pixel` : `${moved} of ${names.length} pictures differ`);
+  console.log(
+    moved === 0
+      ? `all ${names.length} pictures are the same, pixel for pixel`
+      : `${moved} of ${names.length} pictures differ`,
+  );
   process.exitCode = moved === 0 ? 0 : 1;
 }
 await browser.close();

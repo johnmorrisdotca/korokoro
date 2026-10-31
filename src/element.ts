@@ -50,11 +50,33 @@ import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.t
 export const ROLLER_TAG = "korokoro-roller";
 
 /** The attributes the element watches. */
-const WATCHED = ["notation", "lang", "size", "wide", "sound", "hold", "placeholder", "keyboard", "language-chooser", "storage", "storage-key", "animation-ms", "share-base", "query", "cloth", "one-pip", "dice-war", "width", "theme", "label", "seed"] as const;
+const WATCHED = [
+  "notation",
+  "lang",
+  "size",
+  "wide",
+  "sound",
+  "hold",
+  "placeholder",
+  "keyboard",
+  "language-chooser",
+  "storage",
+  "storage-key",
+  "animation-ms",
+  "share-base",
+  "query",
+  "cloth",
+  "one-pip",
+  "dice-war",
+  "width",
+  "theme",
+  "label",
+  "seed",
+] as const;
 
 // On a server there is no HTMLElement to extend: the class is still defined, so that importing this module never throws, and is simply never used.
-const Base: typeof HTMLElement = typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
-
+const Base: typeof HTMLElement =
+  typeof HTMLElement === "undefined" ? (class {} as unknown as typeof HTMLElement) : HTMLElement;
 
 const booleanAttribute = (element: Element, name: string, fallback: boolean): boolean => {
   const value = element.getAttribute(name);
@@ -62,7 +84,13 @@ const booleanAttribute = (element: Element, name: string, fallback: boolean): bo
 };
 const writeAttribute = (element: Element, name: string, value: unknown, flag = false): void => {
   if (value === null || value === undefined) element.removeAttribute(name);
-  else if (flag) element.setAttribute(name, value === false || ["off", "false", "no", "none", "0"].includes(String(value).trim().toLowerCase()) ? "false" : "");
+  else if (flag)
+    element.setAttribute(
+      name,
+      value === false || ["off", "false", "no", "none", "0"].includes(String(value).trim().toLowerCase())
+        ? "false"
+        : "",
+    );
   else element.setAttribute(name, String(value));
 };
 const widthStyles = new WeakMap<HTMLElement, [string, string]>();
@@ -71,24 +99,36 @@ const appearance = (element: HTMLElement): void => {
   const width = Number(element.getAttribute("width"));
   if (Number.isFinite(width) && width > 0) {
     if (!widthStyles.has(element)) widthStyles.set(element, [element.style.width, element.style.maxWidth]);
-    element.style.width = `${width}px`; element.style.maxWidth = "100%";
+    element.style.width = `${width}px`;
+    element.style.maxWidth = "100%";
   } else if (widthStyles.has(element)) {
     const [before, maximum] = widthStyles.get(element)!;
-    element.style.width = before; element.style.maxWidth = maximum; widthStyles.delete(element);
+    element.style.width = before;
+    element.style.maxWidth = maximum;
+    widthStyles.delete(element);
   }
   const root = element.querySelector<HTMLElement>(".kk-root");
   const theme = element.getAttribute("theme");
-  if (root && (theme === "light" || theme === "dark")) { root.dataset.theme = theme; themedRoots.add(root); }
-  else if (root && themedRoots.has(root)) { delete root.dataset.theme; themedRoots.delete(root); }
+  if (root && (theme === "light" || theme === "dark")) {
+    root.dataset.theme = theme;
+    themedRoots.add(root);
+  } else if (root && themedRoots.has(root)) {
+    delete root.dataset.theme;
+    themedRoots.delete(root);
+  }
   const label = element.getAttribute("label");
   if (label !== null) {
     element.setAttribute("aria-label", label);
-    if (!element.hasAttribute("role")) { element.setAttribute("role", "group"); element.dataset.kkLabelRole = "group"; }
+    if (!element.hasAttribute("role")) {
+      element.setAttribute("role", "group");
+      element.dataset.kkLabelRole = "group";
+    }
     element.dataset.kkLabel = "set";
   } else if (element.dataset.kkLabel === "set") {
     element.removeAttribute("aria-label");
     if (element.dataset.kkLabelRole === "group") element.removeAttribute("role");
-    delete element.dataset.kkLabel; delete element.dataset.kkLabelRole;
+    delete element.dataset.kkLabel;
+    delete element.dataset.kkLabelRole;
   }
 };
 
@@ -100,58 +140,162 @@ const appearance = (element: HTMLElement): void => {
  * ```
  */
 export class KorokoroRoller extends Base {
-  get notation(): string | null { return this.getAttribute("notation"); }
-  set notation(value: string | number | null | undefined) { writeAttribute(this, "notation", value); }
-  get size(): string | null { return this.getAttribute("size"); }
-  set size(value: string | number | null | undefined) { writeAttribute(this, "size", value); }
-  get wide(): boolean { return booleanAttribute(this, "wide", false); }
-  set wide(value: boolean | string | null | undefined) { writeAttribute(this, "wide", value, true); }
-  get sound(): boolean { return booleanAttribute(this, "sound", true); }
-  set sound(value: boolean | string | null | undefined) { writeAttribute(this, "sound", value, true); }
-  get hold(): boolean { return booleanAttribute(this, "hold", true); }
-  set hold(value: boolean | string | null | undefined) { writeAttribute(this, "hold", value, true); }
-  get placeholder(): boolean { return booleanAttribute(this, "placeholder", true); }
-  set placeholder(value: boolean | string | null | undefined) { writeAttribute(this, "placeholder", value, true); }
-  get keyboard(): boolean { return booleanAttribute(this, "keyboard", true); }
-  set keyboard(value: boolean | string | null | undefined) { writeAttribute(this, "keyboard", value, true); }
-  get languageChooser(): boolean { return booleanAttribute(this, "language-chooser", false); }
-  set languageChooser(value: boolean | string | null | undefined) { writeAttribute(this, "language-chooser", value, true); }
-  get ["language-chooser"](): boolean { return booleanAttribute(this, "language-chooser", false); }
-  set ["language-chooser"](value: boolean | string | null | undefined) { writeAttribute(this, "language-chooser", value, true); }
-  get diceWar(): boolean { return booleanAttribute(this, "dice-war", false); }
-  set diceWar(value: boolean | string | null | undefined) { writeAttribute(this, "dice-war", value, true); }
-  get ["dice-war"](): boolean { return booleanAttribute(this, "dice-war", false); }
-  set ["dice-war"](value: boolean | string | null | undefined) { writeAttribute(this, "dice-war", value, true); }
-  get storage(): string | null { return this.getAttribute("storage"); }
-  set storage(value: string | number | null | undefined) { writeAttribute(this, "storage", value); }
-  get storageKey(): string | null { return this.getAttribute("storage-key"); }
-  set storageKey(value: string | number | null | undefined) { writeAttribute(this, "storage-key", value); }
-  get ["storage-key"](): string | null { return this.getAttribute("storage-key"); }
-  set ["storage-key"](value: string | number | null | undefined) { writeAttribute(this, "storage-key", value); }
-  get animationMs(): string | null { return this.getAttribute("animation-ms"); }
-  set animationMs(value: string | number | null | undefined) { writeAttribute(this, "animation-ms", value); }
-  get ["animation-ms"](): string | null { return this.getAttribute("animation-ms"); }
-  set ["animation-ms"](value: string | number | null | undefined) { writeAttribute(this, "animation-ms", value); }
-  get shareBase(): string | null { return this.getAttribute("share-base"); }
-  set shareBase(value: string | number | null | undefined) { writeAttribute(this, "share-base", value); }
-  get ["share-base"](): string | null { return this.getAttribute("share-base"); }
-  set ["share-base"](value: string | number | null | undefined) { writeAttribute(this, "share-base", value); }
-  get query(): string | null { return this.getAttribute("query"); }
-  set query(value: string | number | null | undefined) { writeAttribute(this, "query", value); }
-  get cloth(): string | null { return this.getAttribute("cloth"); }
-  set cloth(value: string | number | null | undefined) { writeAttribute(this, "cloth", value); }
-  get onePip(): string | null { return this.getAttribute("one-pip"); }
-  set onePip(value: string | number | null | undefined) { writeAttribute(this, "one-pip", value); }
-  get ["one-pip"](): string | null { return this.getAttribute("one-pip"); }
-  set ["one-pip"](value: string | number | null | undefined) { writeAttribute(this, "one-pip", value); }
-  get width(): string | null { return this.getAttribute("width"); }
-  set width(value: string | number | null | undefined) { writeAttribute(this, "width", value); }
-  get theme(): string | null { return this.getAttribute("theme"); }
-  set theme(value: string | number | null | undefined) { writeAttribute(this, "theme", value); }
-  get label(): string | null { return this.getAttribute("label"); }
-  set label(value: string | number | null | undefined) { writeAttribute(this, "label", value); }
-  get seed(): string | null { return this.getAttribute("seed"); }
-  set seed(value: string | number | null | undefined) { writeAttribute(this, "seed", value); }
+  get notation(): string | null {
+    return this.getAttribute("notation");
+  }
+  set notation(value: string | number | null | undefined) {
+    writeAttribute(this, "notation", value);
+  }
+  get size(): string | null {
+    return this.getAttribute("size");
+  }
+  set size(value: string | number | null | undefined) {
+    writeAttribute(this, "size", value);
+  }
+  get wide(): boolean {
+    return booleanAttribute(this, "wide", false);
+  }
+  set wide(value: boolean | string | null | undefined) {
+    writeAttribute(this, "wide", value, true);
+  }
+  get sound(): boolean {
+    return booleanAttribute(this, "sound", true);
+  }
+  set sound(value: boolean | string | null | undefined) {
+    writeAttribute(this, "sound", value, true);
+  }
+  get hold(): boolean {
+    return booleanAttribute(this, "hold", true);
+  }
+  set hold(value: boolean | string | null | undefined) {
+    writeAttribute(this, "hold", value, true);
+  }
+  get placeholder(): boolean {
+    return booleanAttribute(this, "placeholder", true);
+  }
+  set placeholder(value: boolean | string | null | undefined) {
+    writeAttribute(this, "placeholder", value, true);
+  }
+  get keyboard(): boolean {
+    return booleanAttribute(this, "keyboard", true);
+  }
+  set keyboard(value: boolean | string | null | undefined) {
+    writeAttribute(this, "keyboard", value, true);
+  }
+  get languageChooser(): boolean {
+    return booleanAttribute(this, "language-chooser", false);
+  }
+  set languageChooser(value: boolean | string | null | undefined) {
+    writeAttribute(this, "language-chooser", value, true);
+  }
+  get ["language-chooser"](): boolean {
+    return booleanAttribute(this, "language-chooser", false);
+  }
+  set ["language-chooser"](value: boolean | string | null | undefined) {
+    writeAttribute(this, "language-chooser", value, true);
+  }
+  get diceWar(): boolean {
+    return booleanAttribute(this, "dice-war", false);
+  }
+  set diceWar(value: boolean | string | null | undefined) {
+    writeAttribute(this, "dice-war", value, true);
+  }
+  get ["dice-war"](): boolean {
+    return booleanAttribute(this, "dice-war", false);
+  }
+  set ["dice-war"](value: boolean | string | null | undefined) {
+    writeAttribute(this, "dice-war", value, true);
+  }
+  get storage(): string | null {
+    return this.getAttribute("storage");
+  }
+  set storage(value: string | number | null | undefined) {
+    writeAttribute(this, "storage", value);
+  }
+  get storageKey(): string | null {
+    return this.getAttribute("storage-key");
+  }
+  set storageKey(value: string | number | null | undefined) {
+    writeAttribute(this, "storage-key", value);
+  }
+  get ["storage-key"](): string | null {
+    return this.getAttribute("storage-key");
+  }
+  set ["storage-key"](value: string | number | null | undefined) {
+    writeAttribute(this, "storage-key", value);
+  }
+  get animationMs(): string | null {
+    return this.getAttribute("animation-ms");
+  }
+  set animationMs(value: string | number | null | undefined) {
+    writeAttribute(this, "animation-ms", value);
+  }
+  get ["animation-ms"](): string | null {
+    return this.getAttribute("animation-ms");
+  }
+  set ["animation-ms"](value: string | number | null | undefined) {
+    writeAttribute(this, "animation-ms", value);
+  }
+  get shareBase(): string | null {
+    return this.getAttribute("share-base");
+  }
+  set shareBase(value: string | number | null | undefined) {
+    writeAttribute(this, "share-base", value);
+  }
+  get ["share-base"](): string | null {
+    return this.getAttribute("share-base");
+  }
+  set ["share-base"](value: string | number | null | undefined) {
+    writeAttribute(this, "share-base", value);
+  }
+  get query(): string | null {
+    return this.getAttribute("query");
+  }
+  set query(value: string | number | null | undefined) {
+    writeAttribute(this, "query", value);
+  }
+  get cloth(): string | null {
+    return this.getAttribute("cloth");
+  }
+  set cloth(value: string | number | null | undefined) {
+    writeAttribute(this, "cloth", value);
+  }
+  get onePip(): string | null {
+    return this.getAttribute("one-pip");
+  }
+  set onePip(value: string | number | null | undefined) {
+    writeAttribute(this, "one-pip", value);
+  }
+  get ["one-pip"](): string | null {
+    return this.getAttribute("one-pip");
+  }
+  set ["one-pip"](value: string | number | null | undefined) {
+    writeAttribute(this, "one-pip", value);
+  }
+  get width(): string | null {
+    return this.getAttribute("width");
+  }
+  set width(value: string | number | null | undefined) {
+    writeAttribute(this, "width", value);
+  }
+  get theme(): string | null {
+    return this.getAttribute("theme");
+  }
+  set theme(value: string | number | null | undefined) {
+    writeAttribute(this, "theme", value);
+  }
+  get label(): string | null {
+    return this.getAttribute("label");
+  }
+  set label(value: string | number | null | undefined) {
+    writeAttribute(this, "label", value);
+  }
+  get seed(): string | null {
+    return this.getAttribute("seed");
+  }
+  set seed(value: string | number | null | undefined) {
+    writeAttribute(this, "seed", value);
+  }
 
   static get observedAttributes(): readonly string[] {
     return WATCHED;
@@ -217,7 +361,8 @@ export class KorokoroRoller extends Base {
     if (spec !== null) made.spec = spec;
     if (text("lang") !== null) made.locale = text("lang") as string;
     if (this.hasAttribute("wide")) made.wide = !off("wide");
-    if (text("size") === "small" || text("size") === "medium" || text("size") === "large") made.size = text("size") as "small" | "medium" | "large";
+    if (text("size") === "small" || text("size") === "medium" || text("size") === "large")
+      made.size = text("size") as "small" | "medium" | "large";
     if (this.hasAttribute("sound")) made.sound = !off("sound");
     if (this.hasAttribute("hold")) made.hold = !off("hold");
     if (this.hasAttribute("placeholder")) made.placeholder = !off("placeholder");
@@ -278,7 +423,21 @@ export function defineRoller(tag: string = ROLLER_TAG): void {
 export const DIE_TAG = "korokoro-die";
 
 /** The attributes the die element watches. */
-const DIE_WATCHED = ["sides", "face", "rollable", "size", "width", "one-pip", "lang", "seed", "sound", "animation-ms", "cloth", "theme", "label"] as const;
+const DIE_WATCHED = [
+  "sides",
+  "face",
+  "rollable",
+  "size",
+  "width",
+  "one-pip",
+  "lang",
+  "seed",
+  "sound",
+  "animation-ms",
+  "cloth",
+  "theme",
+  "label",
+] as const;
 
 /**
  * ONE DIE ON ITS OWN, as a custom element:
@@ -305,32 +464,84 @@ const DIE_WATCHED = ["sides", "face", "rollable", "size", "width", "one-pip", "l
  * ```
  */
 export class KorokoroDie extends Base {
-  get sides(): string | null { return this.getAttribute("sides"); }
-  set sides(value: string | number | null | undefined) { writeAttribute(this, "sides", value); }
-  get rollable(): boolean { return booleanAttribute(this, "rollable", true); }
-  set rollable(value: boolean | string | null | undefined) { writeAttribute(this, "rollable", value, true); }
-  get size(): string | null { return this.getAttribute("size"); }
-  set size(value: string | number | null | undefined) { writeAttribute(this, "size", value); }
-  get width(): string | null { return this.getAttribute("width"); }
-  set width(value: string | number | null | undefined) { writeAttribute(this, "width", value); }
-  get onePip(): string | null { return this.getAttribute("one-pip"); }
-  set onePip(value: string | number | null | undefined) { writeAttribute(this, "one-pip", value); }
-  get ["one-pip"](): string | null { return this.getAttribute("one-pip"); }
-  set ["one-pip"](value: string | number | null | undefined) { writeAttribute(this, "one-pip", value); }
-  get seed(): string | null { return this.getAttribute("seed"); }
-  set seed(value: string | number | null | undefined) { writeAttribute(this, "seed", value); }
-  get sound(): boolean { return booleanAttribute(this, "sound", false); }
-  set sound(value: boolean | string | null | undefined) { writeAttribute(this, "sound", value, true); }
-  get animationMs(): string | null { return this.getAttribute("animation-ms"); }
-  set animationMs(value: string | number | null | undefined) { writeAttribute(this, "animation-ms", value); }
-  get ["animation-ms"](): string | null { return this.getAttribute("animation-ms"); }
-  set ["animation-ms"](value: string | number | null | undefined) { writeAttribute(this, "animation-ms", value); }
-  get cloth(): string | null { return this.getAttribute("cloth"); }
-  set cloth(value: string | number | null | undefined) { writeAttribute(this, "cloth", value); }
-  get theme(): string | null { return this.getAttribute("theme"); }
-  set theme(value: string | number | null | undefined) { writeAttribute(this, "theme", value); }
-  get label(): string | null { return this.getAttribute("label"); }
-  set label(value: string | number | null | undefined) { writeAttribute(this, "label", value); }
+  get sides(): string | null {
+    return this.getAttribute("sides");
+  }
+  set sides(value: string | number | null | undefined) {
+    writeAttribute(this, "sides", value);
+  }
+  get rollable(): boolean {
+    return booleanAttribute(this, "rollable", true);
+  }
+  set rollable(value: boolean | string | null | undefined) {
+    writeAttribute(this, "rollable", value, true);
+  }
+  get size(): string | null {
+    return this.getAttribute("size");
+  }
+  set size(value: string | number | null | undefined) {
+    writeAttribute(this, "size", value);
+  }
+  get width(): string | null {
+    return this.getAttribute("width");
+  }
+  set width(value: string | number | null | undefined) {
+    writeAttribute(this, "width", value);
+  }
+  get onePip(): string | null {
+    return this.getAttribute("one-pip");
+  }
+  set onePip(value: string | number | null | undefined) {
+    writeAttribute(this, "one-pip", value);
+  }
+  get ["one-pip"](): string | null {
+    return this.getAttribute("one-pip");
+  }
+  set ["one-pip"](value: string | number | null | undefined) {
+    writeAttribute(this, "one-pip", value);
+  }
+  get seed(): string | null {
+    return this.getAttribute("seed");
+  }
+  set seed(value: string | number | null | undefined) {
+    writeAttribute(this, "seed", value);
+  }
+  get sound(): boolean {
+    return booleanAttribute(this, "sound", false);
+  }
+  set sound(value: boolean | string | null | undefined) {
+    writeAttribute(this, "sound", value, true);
+  }
+  get animationMs(): string | null {
+    return this.getAttribute("animation-ms");
+  }
+  set animationMs(value: string | number | null | undefined) {
+    writeAttribute(this, "animation-ms", value);
+  }
+  get ["animation-ms"](): string | null {
+    return this.getAttribute("animation-ms");
+  }
+  set ["animation-ms"](value: string | number | null | undefined) {
+    writeAttribute(this, "animation-ms", value);
+  }
+  get cloth(): string | null {
+    return this.getAttribute("cloth");
+  }
+  set cloth(value: string | number | null | undefined) {
+    writeAttribute(this, "cloth", value);
+  }
+  get theme(): string | null {
+    return this.getAttribute("theme");
+  }
+  set theme(value: string | number | null | undefined) {
+    writeAttribute(this, "theme", value);
+  }
+  get label(): string | null {
+    return this.getAttribute("label");
+  }
+  set label(value: string | number | null | undefined) {
+    writeAttribute(this, "label", value);
+  }
 
   static get observedAttributes(): readonly string[] {
     return DIE_WATCHED;
@@ -380,7 +591,8 @@ export class KorokoroDie extends Base {
       if (now !== null && Number.isInteger(face)) this.#die.show(face);
     } else if (name === "one-pip") this.#die.setOnePip(now === "black" ? "black" : "red");
     else if (name === "lang") this.#die.setLocale(now ?? this.ownerDocument.documentElement.lang ?? "en");
-    else if (name === "rollable") this.#die.setRollable(!["off", "false", "no", "none", "0"].includes((now ?? "").toLowerCase()));
+    else if (name === "rollable")
+      this.#die.setRollable(!["off", "false", "no", "none", "0"].includes((now ?? "").toLowerCase()));
     else this.#remount();
   }
 
@@ -407,7 +619,9 @@ export class KorokoroDie extends Base {
     const told = made.onRoll;
     made.onRoll = (landed) => {
       told?.(landed);
-      this.dispatchEvent(new CustomEvent<number>("korokoro-die-roll", { detail: landed, bubbles: true, composed: true }));
+      this.dispatchEvent(
+        new CustomEvent<number>("korokoro-die-roll", { detail: landed, bubbles: true, composed: true }),
+      );
     };
     return made;
   }

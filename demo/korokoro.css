@@ -5,16 +5,60 @@
  */
 
 /* The two ways on from this page, the documentation and the plain-output page: links a finger can find. */
-.more .ways a { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); font-weight: 600; }
+.more .ways a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--ink);
+  font-weight: 600;
+}
 
 /* Korokoro's own: the code to put the tray on another page, and a look at what it gives. */
-.embed-sizes { max-width: 22rem; }
-.embed-says { margin: 8px 0; color: var(--muted); font-size: .9rem; min-height: 1.4em; }
-.embed-preview { display: block; width: 360px; max-width: 100%; border: 1px dashed var(--rule); border-radius: var(--radius); background: var(--surface); }
-#embed pre, #one-die pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.embed-sizes {
+  max-width: 22rem;
+}
+.embed-says {
+  margin: 8px 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  min-height: 1.4em;
+}
+.embed-preview {
+  display: block;
+  width: 360px;
+  max-width: 100%;
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+#embed pre,
+#one-die pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
 
 /* One die on its own: two dice on the felt, each in the one square it keeps. */
-.solo-dice { display: flex; flex-wrap: wrap; justify-content: center; gap: 24px 40px; padding: 18px 12px; margin: 12px 0; border-radius: var(--radius); background: var(--felt); color: var(--felt-ink); }
-.solo-dice figure { margin: 0; display: grid; gap: 10px; justify-items: center; }
-.solo-dice figcaption { font-size: .85rem; opacity: .9; }
-.solo-dice .kk-die { filter: drop-shadow(0 7px 6px rgba(0,0,0,.35)); }
+.solo-dice {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 24px 40px;
+  padding: 18px 12px;
+  margin: 12px 0;
+  border-radius: var(--radius);
+  background: var(--felt);
+  color: var(--felt-ink);
+}
+.solo-dice figure {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.solo-dice figcaption {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+.solo-dice .kk-die {
+  filter: drop-shadow(0 7px 6px rgba(0, 0, 0, 0.35));
+}

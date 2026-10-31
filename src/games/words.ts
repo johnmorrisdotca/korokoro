@@ -124,7 +124,8 @@ export const READING_WORDS: { en: Words; ja: Words } = {
     "hitsAndGlitch.one": "1 hit",
     "hitsAndGlitch.none": "No hits",
     "hitsAndGlitch.glitch": "A glitch (hits: {hits}): more than half the dice show a one",
-    "percentile.under": "{total}: a success for a skill of {total} or more, hard for {hard} or more, extreme for {extreme} or more",
+    "percentile.under":
+      "{total}: a success for a skill of {total} or more, hard for {hard} or more, extreme for {extreme} or more",
     "rollUnder.under": "{total}: a success for a skill of {total} or more",
     "rollUnder.critical": "{total}: always a critical success",
     "rollUnder.fail": "17: a failure, and a critical one for a skill of 15 or less",
@@ -238,7 +239,8 @@ export const READING_WORDS: { en: Words; ja: Words } = {
     "hitsAndGlitch.one": "ヒット 1",
     "hitsAndGlitch.none": "ヒットなし",
     "hitsAndGlitch.glitch": "グリッチ（ヒット {hits}）: ダイスの半分より多くが1です",
-    "percentile.under": "{total}: 技能値 {total} 以上で成功、{hard} 以上でハード成功、{extreme} 以上でイクストリーム成功",
+    "percentile.under":
+      "{total}: 技能値 {total} 以上で成功、{hard} 以上でハード成功、{extreme} 以上でイクストリーム成功",
     "rollUnder.under": "{total}: 技能値 {total} 以上で成功",
     "rollUnder.critical": "{total}: 必ずクリティカル成功です",
     "rollUnder.fail": "17: 失敗です。技能値15以下ならクリティカル失敗です",

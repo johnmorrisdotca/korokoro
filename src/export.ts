@@ -92,7 +92,18 @@ export type Exported = {
  */
 export function exportedRoll(roll: Roll): ExportedRoll {
   const dice = diceOf(roll);
-  const out: ExportedRoll = { id: roll.id, notation: formatNotation(roll.spec), spec: roll.spec, faces: roll.faces, kept: roll.kept, total: roll.total, at: roll.at, time: new Date(roll.at).toISOString(), seed: roll.seed, dice };
+  const out: ExportedRoll = {
+    id: roll.id,
+    notation: formatNotation(roll.spec),
+    spec: roll.spec,
+    faces: roll.faces,
+    kept: roll.kept,
+    total: roll.total,
+    at: roll.at,
+    time: new Date(roll.at).toISOString(),
+    seed: roll.seed,
+    dice,
+  };
   if (isSuccessRoll(roll.spec)) out.successes = true;
   if (dice.some((d) => d.label !== undefined)) out.words = dice.map((d) => d.label ?? String(d.face));
   if (roll.held !== undefined) out.held = roll.held;
@@ -163,7 +174,10 @@ function dieText(roll: Roll, die: DieRoll): string {
   const face = die.label ?? String(die.face);
   if (die.status === "dropped") return `(${face})`;
   if (die.status === "rerolled") return `[${face}]`;
-  const worth = group.faces === undefined && die.value !== undefined && die.value !== valueOfFace(group, die.face) ? `→${die.value}` : "";
+  const worth =
+    group.faces === undefined && die.value !== undefined && die.value !== valueOfFace(group, die.face)
+      ? `→${die.value}`
+      : "";
   return `${face}${worth}${die.exploded ? "!" : ""}${die.counts === 1 ? "*" : die.counts === -1 ? "x" : ""}`;
 }
 
@@ -207,7 +221,14 @@ export function formulaText(roll: Roll): string {
   const { math } = roll.spec;
   if (math === undefined) return diceText(roll);
   const dice = diceOf(roll);
-  return mathText(math, (group) => `[${dice.filter((die) => (die.group ?? 0) === group).map((die) => dieText(roll, die)).join(" ")}]`);
+  return mathText(
+    math,
+    (group) =>
+      `[${dice
+        .filter((die) => (die.group ?? 0) === group)
+        .map((die) => dieText(roll, die))
+        .join(" ")}]`,
+  );
 }
 
 /** A roll's result as it would be said: its total, or for dice that are only words, the words.
@@ -269,7 +290,12 @@ export function rollText(roll: Roll): string {
  * ```
  */
 export function toText(rolls: readonly Roll[]): string {
-  return rolls.map((roll) => `${new Date(roll.at).toISOString()}  ${rollText(roll)}${roll.loaded === true ? "  (loaded dice)" : ""}\n`).join("");
+  return rolls
+    .map(
+      (roll) =>
+        `${new Date(roll.at).toISOString()}  ${rollText(roll)}${roll.loaded === true ? "  (loaded dice)" : ""}\n`,
+    )
+    .join("");
 }
 
 /** The columns of the CSV export, in order.
@@ -280,7 +306,18 @@ export function toText(rolls: readonly Roll[]): string {
  * console.log(Object.keys(CSV_COLUMNS));
  * ```
  */
-export const CSV_COLUMNS = ["time", "notation", "label", "total", "dice", "faces", "seed", "held", "loaded", "set"] as const;
+export const CSV_COLUMNS = [
+  "time",
+  "notation",
+  "label",
+  "total",
+  "dice",
+  "faces",
+  "seed",
+  "held",
+  "loaded",
+  "set",
+] as const;
 
 /**
  * One cell of CSV. Quoted when it holds a comma, a quote or a line break. A
@@ -340,5 +377,7 @@ export function toCSV(rolls: readonly Roll[]): string {
       roll.set === undefined ? "" : `${roll.set.index + 1}/${roll.set.of}`,
     ];
   });
-  return [CSV_COLUMNS as readonly (string | number)[], ...rows].map((row) => `${row.map(csvCell).join(",")}\r\n`).join("");
+  return [CSV_COLUMNS as readonly (string | number)[], ...rows]
+    .map((row) => `${row.map(csvCell).join(",")}\r\n`)
+    .join("");
 }

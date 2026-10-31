@@ -266,7 +266,13 @@ export type Compare = { op: "=" | "<=" | ">=" | "<>"; n: number };
  * ```
  */
 export function meets(compare: Compare, value: number): boolean {
-  return compare.op === "=" ? value === compare.n : compare.op === "<=" ? value <= compare.n : compare.op === ">=" ? value >= compare.n : value !== compare.n;
+  return compare.op === "="
+    ? value === compare.n
+    : compare.op === "<="
+      ? value <= compare.n
+      : compare.op === ">="
+        ? value >= compare.n
+        : value !== compare.n;
 }
 
 /** A comparison as notation writes it: `>=8`, `=1`, `<>3`.
@@ -543,7 +549,9 @@ export function isDieSides(value: unknown): value is DieSides {
  * ```
  */
 export function isSides(value: unknown): value is Sides {
-  return value === "F" || (typeof value === "number" && Number.isInteger(value) && value >= MIN_SIDES && value <= MAX_SIDES);
+  return (
+    value === "F" || (typeof value === "number" && Number.isInteger(value) && value >= MIN_SIDES && value <= MAX_SIDES)
+  );
 }
 
 /** The lowest and highest face of one die.
@@ -626,7 +634,8 @@ export function chancesOf(group: DiceGroup): number[] {
  */
 export function dieName(group: DiceGroup): string {
   if (group.faces !== undefined) {
-    const face = (f: CustomFace) => `${f.value !== undefined && f.label === String(f.value) ? f.label : f.value !== undefined ? `${f.label}=${f.value}` : f.label}${f.colour ?? ""}`;
+    const face = (f: CustomFace) =>
+      `${f.value !== undefined && f.label === String(f.value) ? f.label : f.value !== undefined ? `${f.label}=${f.value}` : f.label}${f.colour ?? ""}`;
     return `d[${group.faces.map(face).join(",")}]`;
   }
   if (group.weights === undefined) return `d${group.sides}`;
@@ -710,7 +719,26 @@ export function keptCount(group: DiceGroup): number {
 }
 
 /** The rules a kind of dice may carry beyond its count, sides and keep, in the order they are copied. */
-const RULES = ["keepCount", "explode", "reroll", "rerollUntil", "rerollWhen", "rerollUntilWhen", "explodeWhen", "explodeKind", "floor", "ceiling", "success", "failure", "critical", "fumble", "sort", "unique", "faces", "weights"] as const;
+const RULES = [
+  "keepCount",
+  "explode",
+  "reroll",
+  "rerollUntil",
+  "rerollWhen",
+  "rerollUntilWhen",
+  "explodeWhen",
+  "explodeKind",
+  "floor",
+  "ceiling",
+  "success",
+  "failure",
+  "critical",
+  "fumble",
+  "sort",
+  "unique",
+  "faces",
+  "weights",
+] as const;
 
 function copyRules(from: Partial<DiceGroup>, to: Partial<DiceGroup>): void {
   for (const rule of RULES) if (from[rule] !== undefined) (to as Record<string, unknown>)[rule] = from[rule];
@@ -839,7 +867,19 @@ export function mayRerollUntil(sides: Sides, reroll: unknown): reroll is number 
  * ```
  */
 export function canHold(spec: RollSpec): boolean {
-  return spec.math === undefined && groupsOf(spec).every((g) => g.keep === "all" && g.explode !== true && g.reroll === undefined && g.rerollUntil === undefined && !playsByNewRules(g) && g.sort === undefined && g.unique !== true);
+  return (
+    spec.math === undefined &&
+    groupsOf(spec).every(
+      (g) =>
+        g.keep === "all" &&
+        g.explode !== true &&
+        g.reroll === undefined &&
+        g.rerollUntil === undefined &&
+        !playsByNewRules(g) &&
+        g.sort === undefined &&
+        g.unique !== true,
+    )
+  );
 }
 
 /**
@@ -860,7 +900,15 @@ export function canHold(spec: RollSpec): boolean {
  * ```
  */
 export function playsByNewRules(g: DiceGroup): boolean {
-  return g.rerollWhen !== undefined || g.rerollUntilWhen !== undefined || g.explodeWhen !== undefined || g.explodeKind !== undefined || g.floor !== undefined || g.ceiling !== undefined || g.success !== undefined;
+  return (
+    g.rerollWhen !== undefined ||
+    g.rerollUntilWhen !== undefined ||
+    g.explodeWhen !== undefined ||
+    g.explodeKind !== undefined ||
+    g.floor !== undefined ||
+    g.ceiling !== undefined ||
+    g.success !== undefined
+  );
 }
 
 /** Whether a kind of dice is counted for successes, not added up.
@@ -912,7 +960,16 @@ export function isSuccessRoll(spec: RollSpec): boolean {
  * ```
  */
 export function isPlainDice(g: DiceGroup): boolean {
-  return g.faces === undefined && g.weights === undefined && g.explode !== true && g.reroll === undefined && g.rerollUntil === undefined && !playsByNewRules(g) && g.unique !== true && (g.keep === "all" || (g.keepCount ?? 1) === 1);
+  return (
+    g.faces === undefined &&
+    g.weights === undefined &&
+    g.explode !== true &&
+    g.reroll === undefined &&
+    g.rerollUntil === undefined &&
+    !playsByNewRules(g) &&
+    g.unique !== true &&
+    (g.keep === "all" || (g.keepCount ?? 1) === 1)
+  );
 }
 
 /** The faces of a numbered die that meet a comparison. */
@@ -927,7 +984,13 @@ function facesMeeting(sides: Sides, compare: Compare): number[] {
 function soundCompare(given: unknown): Compare | undefined {
   if (typeof given !== "object" || given === null) return undefined;
   const { op, n } = given as Record<string, unknown>;
-  if ((op !== "=" && op !== "<=" && op !== ">=" && op !== "<>") || typeof n !== "number" || !Number.isInteger(n) || Math.abs(n) > 99_999) return undefined;
+  if (
+    (op !== "=" && op !== "<=" && op !== ">=" && op !== "<>") ||
+    typeof n !== "number" ||
+    !Number.isInteger(n) ||
+    Math.abs(n) > 99_999
+  )
+    return undefined;
   return { op, n };
 }
 
@@ -972,17 +1035,33 @@ function newRules(group: Partial<DiceGroup>, fair: DiceGroup): void {
       const found = facesMeeting(sides, when);
       if (found.length > 0 && found.length < all && !(found.length === 1 && found[0] === all)) fair.explodeWhen = when;
     }
-    if (group.explodeKind === "compound" || group.explodeKind === "penetrating" || group.explodeKind === "compound-penetrating") fair.explodeKind = group.explodeKind;
+    if (
+      group.explodeKind === "compound" ||
+      group.explodeKind === "penetrating" ||
+      group.explodeKind === "compound-penetrating"
+    )
+      fair.explodeKind = group.explodeKind;
   }
   const whole = (n: unknown): n is number => typeof n === "number" && Number.isInteger(n);
   if (whole(group.floor) && group.floor > 1 && group.floor <= all) fair.floor = group.floor;
-  if (whole(group.ceiling) && group.ceiling >= 1 && group.ceiling < all && (fair.floor === undefined || fair.floor <= group.ceiling)) fair.ceiling = group.ceiling;
+  if (
+    whole(group.ceiling) &&
+    group.ceiling >= 1 &&
+    group.ceiling < all &&
+    (fair.floor === undefined || fair.floor <= group.ceiling)
+  )
+    fair.ceiling = group.ceiling;
   // Counting: over every die of the kind, so not together with keep or drop.
   const success = soundCompare(group.success);
   if (success !== undefined && fair.keep === "all" && mayCount(fair, success)) {
     fair.success = success;
     const failure = soundCompare(group.failure);
-    if (failure !== undefined && mayCount(fair, failure) && !worthsOf(fair).some((v) => meets(success, v) && meets(failure, v))) fair.failure = failure;
+    if (
+      failure !== undefined &&
+      mayCount(fair, failure) &&
+      !worthsOf(fair).some((v) => meets(success, v) && meets(failure, v))
+    )
+      fair.failure = failure;
   }
   const critical = soundCompare(group.critical);
   if (critical !== undefined && mayCount(fair, critical)) fair.critical = critical;
@@ -990,7 +1069,19 @@ function newRules(group: Partial<DiceGroup>, fair: DiceGroup): void {
   if (fumble !== undefined && mayCount(fair, fumble)) fair.fumble = fumble;
   if (group.sort === "ascending" || group.sort === "descending") fair.sort = group.sort;
   // Dice that all differ: fair dice of a hundred sides or fewer, no more of them than faces, all added, under no rule that throws a die again.
-  if (group.unique === true && all <= MAX_UNIQUE_SIDES && fair.count > 1 && fair.count <= all && fair.keep === "all" && fair.weights === undefined && fair.explode !== true && fair.reroll === undefined && fair.rerollUntil === undefined && !playsByNewRules(fair)) fair.unique = true;
+  if (
+    group.unique === true &&
+    all <= MAX_UNIQUE_SIDES &&
+    fair.count > 1 &&
+    fair.count <= all &&
+    fair.keep === "all" &&
+    fair.weights === undefined &&
+    fair.explode !== true &&
+    fair.reroll === undefined &&
+    fair.rerollUntil === undefined &&
+    !playsByNewRules(fair)
+  )
+    fair.unique = true;
 }
 
 /** Every amount one die of a kind can be worth once its rules are applied: what a success or a mark is compared with. */
@@ -1009,7 +1100,8 @@ function mayCount(group: DiceGroup, compare: Compare): boolean {
 /** Characters a custom face's words may not hold: the ones notation is written with. */
 const NOT_IN_A_LABEL = /[,[\]{}=#+]/;
 /** A control character: a new line, a tab, a bell. None belongs in a face's words. */
-const isControl = (text: string) => [...text].some((c) => (c.codePointAt(0) as number) < 32 || c.codePointAt(0) === 127);
+const isControl = (text: string) =>
+  [...text].some((c) => (c.codePointAt(0) as number) < 32 || c.codePointAt(0) === 127);
 
 /** A custom die's faces, checked: the faces as given if every one is sound, or undefined.
  *
@@ -1029,7 +1121,15 @@ export function customFaces(faces: unknown): CustomFace[] | undefined {
   for (const given of faces as unknown[]) {
     if (typeof given !== "object" || given === null) return undefined;
     const { label, value, colour } = given as Record<string, unknown>;
-    if (typeof label !== "string" || label !== label.trim() || label === "" || [...label].length > MAX_LABEL || NOT_IN_A_LABEL.test(label) || isControl(label)) return undefined;
+    if (
+      typeof label !== "string" ||
+      label !== label.trim() ||
+      label === "" ||
+      [...label].length > MAX_LABEL ||
+      NOT_IN_A_LABEL.test(label) ||
+      isControl(label)
+    )
+      return undefined;
     const face: CustomFace = { label };
     if (value !== undefined) {
       if (typeof value !== "number" || !Number.isInteger(value) || Math.abs(value) > MAX_FACE_VALUE) return undefined;
@@ -1062,8 +1162,10 @@ export function customFaces(faces: unknown): CustomFace[] | undefined {
  * ```
  */
 export function loadedWeights(sides: Sides, weights: unknown): number[] | undefined {
-  if (sides === "F" || sides > MAX_LOADED_SIDES || !Array.isArray(weights) || weights.length !== sides) return undefined;
-  if (!weights.every((w) => typeof w === "number" && Number.isInteger(w) && w >= 0 && w <= MAX_WEIGHT)) return undefined;
+  if (sides === "F" || sides > MAX_LOADED_SIDES || !Array.isArray(weights) || weights.length !== sides)
+    return undefined;
+  if (!weights.every((w) => typeof w === "number" && Number.isInteger(w) && w >= 0 && w <= MAX_WEIGHT))
+    return undefined;
   const all = weights as number[];
   if (all.filter((w) => w > 0).length < 2) return undefined;
   const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b));
@@ -1088,7 +1190,14 @@ export function rollLabel(label: unknown): string | undefined {
   if (typeof label !== "string") return undefined;
   const words = label.trim().replace(/\s+/g, " ");
   // Only digits is no label: `2d6 # 3` is somebody reaching for a repeat, which is written `3#2d6`.
-  if (words === "" || [...words].length > MAX_ROLL_LABEL || isControl(words) || /[#[\]{}]/.test(words) || /^\d+$/.test(words)) return undefined;
+  if (
+    words === "" ||
+    [...words].length > MAX_ROLL_LABEL ||
+    isControl(words) ||
+    /[#[\]{}]/.test(words) ||
+    /^\d+$/.test(words)
+  )
+    return undefined;
   return words;
 }
 
@@ -1129,9 +1238,20 @@ function normalizeGroup(group: Partial<DiceGroup>, count: number): DiceGroup {
  * ```
  */
 export function rulesText(group: DiceGroup): string {
-  const count = group.success === undefined ? "" : `${compareText(group.success)}${group.failure === undefined ? "" : `f${compareText(group.failure)}`}`;
-  const kind = group.explodeKind === undefined ? "!" : group.explodeKind === "compound" ? "!!" : group.explodeKind === "penetrating" ? "!p" : "!!p";
-  const explode = group.explode === true ? `${kind}${group.explodeWhen === undefined ? "" : compareText(group.explodeWhen)}` : "";
+  const count =
+    group.success === undefined
+      ? ""
+      : `${compareText(group.success)}${group.failure === undefined ? "" : `f${compareText(group.failure)}`}`;
+  const kind =
+    group.explodeKind === undefined
+      ? "!"
+      : group.explodeKind === "compound"
+        ? "!!"
+        : group.explodeKind === "penetrating"
+          ? "!p"
+          : "!!p";
+  const explode =
+    group.explode === true ? `${kind}${group.explodeWhen === undefined ? "" : compareText(group.explodeWhen)}` : "";
   const reroll =
     group.rerollUntil !== undefined
       ? `r<${group.rerollUntil + 1}`
@@ -1176,7 +1296,8 @@ export function normalizeSpec(spec: Partial<RollSpec>, limits: { maxDice?: numbe
   const most = Math.min(MAX_DICE_BY_CODE, Math.max(MAX_DICE, Math.trunc(Number(limits.maxDice) || MAX_DICE)));
   const made = normalized(spec, most);
   // Past ten dice every kind has to be plain; a roll that is not is brought back to ten.
-  if (most > MAX_DICE && diceCount(made) > MAX_DICE && !groupsOf(made).every(isPlainDice)) return normalized(spec, MAX_DICE);
+  if (most > MAX_DICE && diceCount(made) > MAX_DICE && !groupsOf(made).every(isPlainDice))
+    return normalized(spec, MAX_DICE);
   return made;
 }
 
@@ -1200,9 +1321,15 @@ function normalized(spec: Partial<RollSpec>, most: number): RollSpec {
     room -= group.count;
   }
   // A formula that no longer fits its dice, or cannot be used, is left out: the kinds are then simply added.
-  if (math !== undefined && (groups.length !== given.length + 1 || checkMath(math, groups.map(groupRange)) !== null)) math = undefined;
+  if (math !== undefined && (groups.length !== given.length + 1 || checkMath(math, groups.map(groupRange)) !== null))
+    math = undefined;
   const [first, ...more] = groups as [DiceGroup, ...DiceGroup[]];
-  const fair: RollSpec = { count: first.count, sides: first.sides, modifier: math === undefined ? modifier : 0, keep: first.keep };
+  const fair: RollSpec = {
+    count: first.count,
+    sides: first.sides,
+    modifier: math === undefined ? modifier : 0,
+    keep: first.keep,
+  };
   copyRules(first, fair);
   if (more.length > 0) fair.more = more;
   const times = Math.min(MAX_TIMES, Math.trunc(Number(spec.times) || 1));
@@ -1242,8 +1369,12 @@ export function groupRange(group: DiceGroup): { min: number; max: number } {
   const { low, high } = facesOf(group);
   // What the die can be worth: every face that can come up, a loaded die's weightless faces left out.
   const worth: number[] = [];
-  for (let face = low; face <= high; face++) if (group.weights?.[face - low] !== 0) worth.push(valueOfFace(group, face));
-  return { min: dice * Math.min(...worth), max: dice * (group.explode === true ? high * (MAX_EXPLOSIONS + 1) : Math.max(...worth)) };
+  for (let face = low; face <= high; face++)
+    if (group.weights?.[face - low] !== 0) worth.push(valueOfFace(group, face));
+  return {
+    min: dice * Math.min(...worth),
+    max: dice * (group.explode === true ? high * (MAX_EXPLOSIONS + 1) : Math.max(...worth)),
+  };
 }
 
 /** Which faces count towards the total when one is kept. Ties keep the first die that shows the kept value.
@@ -1285,14 +1416,26 @@ export function totalOf(faces: readonly number[], kept: readonly boolean[], modi
 }
 
 /** One kind's rules as questions asked of a face: is it thrown again, does it explode, what is it worth. */
-function rulesOf(group: DiceGroup): { once: (face: number) => boolean; until: (face: number) => boolean; explodes: (face: number) => boolean; worth: (face: number, extra: boolean) => number } {
+function rulesOf(group: DiceGroup): {
+  once: (face: number) => boolean;
+  until: (face: number) => boolean;
+  explodes: (face: number) => boolean;
+  worth: (face: number, extra: boolean) => number;
+} {
   const { high } = facesOf(group);
   const penetrating = group.explodeKind === "penetrating" || group.explodeKind === "compound-penetrating";
   return {
-    once: (face) => (group.reroll !== undefined && face <= group.reroll) || (group.rerollWhen !== undefined && meets(group.rerollWhen, face)),
-    until: (face) => (group.rerollUntil !== undefined && face <= group.rerollUntil) || (group.rerollUntilWhen !== undefined && meets(group.rerollUntilWhen, face)),
-    explodes: (face) => group.explode === true && (group.explodeWhen === undefined ? face === high : meets(group.explodeWhen, face)),
-    worth: (face, extra) => Math.min(group.ceiling ?? Infinity, Math.max(group.floor ?? -Infinity, valueOfFace(group, face))) - (extra && penetrating ? 1 : 0),
+    once: (face) =>
+      (group.reroll !== undefined && face <= group.reroll) ||
+      (group.rerollWhen !== undefined && meets(group.rerollWhen, face)),
+    until: (face) =>
+      (group.rerollUntil !== undefined && face <= group.rerollUntil) ||
+      (group.rerollUntilWhen !== undefined && meets(group.rerollUntilWhen, face)),
+    explodes: (face) =>
+      group.explode === true && (group.explodeWhen === undefined ? face === high : meets(group.explodeWhen, face)),
+    worth: (face, extra) =>
+      Math.min(group.ceiling ?? Infinity, Math.max(group.floor ?? -Infinity, valueOfFace(group, face))) -
+      (extra && penetrating ? 1 : 0),
   };
 }
 
@@ -1322,7 +1465,8 @@ export function dieOutcomes(group: DiceGroup): { least: number; chances: number[
   const thrownOnce = chancesOf(group);
   // The chance each face is the one left standing after the rerolls.
   let standing = thrownOnce;
-  const masked = (mask: (face: number) => boolean) => thrownOnce.reduce((sum, p, i) => (mask(low + i) ? sum + p : sum), 0);
+  const masked = (mask: (face: number) => boolean) =>
+    thrownOnce.reduce((sum, p, i) => (mask(low + i) ? sum + p : sum), 0);
   const againOnce = masked(rules.once);
   if (againOnce > 0) standing = thrownOnce.map((p, i) => (rules.once(low + i) ? 0 : p) + againOnce * p);
   const again = masked(rules.until);
@@ -1334,9 +1478,15 @@ export function dieOutcomes(group: DiceGroup): { least: number; chances: number[
   }
   const counted = group.success !== undefined;
   const whole = group.explodeKind === "compound" || group.explodeKind === "compound-penetrating";
-  const score = (worth: number): number => (group.success !== undefined && meets(group.success, worth) ? 1 : group.failure !== undefined && meets(group.failure, worth) ? -1 : 0);
+  const score = (worth: number): number =>
+    group.success !== undefined && meets(group.success, worth)
+      ? 1
+      : group.failure !== undefined && meets(group.failure, worth)
+        ? -1
+        : 0;
   // What one die adds by itself: its worth, or, counted die by die, its score.
-  const adds = (face: number, extra: boolean): number => (counted && !whole ? score(rules.worth(face, extra)) : rules.worth(face, extra));
+  const adds = (face: number, extra: boolean): number =>
+    counted && !whole ? score(rules.worth(face, extra)) : rules.worth(face, extra);
   type Spread = Map<number, number>;
   const put = (into: Spread, amount: number, chance: number) => into.set(amount, (into.get(amount) ?? 0) + chance);
   // chain(left, extra): what a die adds with `left` explosions still allowed.
@@ -1350,7 +1500,8 @@ export function dieOutcomes(group: DiceGroup): { least: number; chances: number[
       if (chance === 0) continue;
       const face = low + i;
       const here = adds(face, extra);
-      if (left > 0 && rules.explodes(face)) for (const [amount, further] of after) put(now, here + amount, chance * further);
+      if (left > 0 && rules.explodes(face))
+        for (const [amount, further] of after) put(now, here + amount, chance * further);
       else put(now, here, chance);
     }
     after = now;
@@ -1377,7 +1528,10 @@ export function dieOutcomes(group: DiceGroup): { least: number; chances: number[
  * throws another die, which follows the same rules. Then keep or drop picks
  * among that kind's dice left standing. Null when `draw` runs out.
  */
-function play(spec: RollSpec, draw: (group: DiceGroup, taken?: ReadonlySet<number>) => number | null): DieRoll[] | null {
+function play(
+  spec: RollSpec,
+  draw: (group: DiceGroup, taken?: ReadonlySet<number>) => number | null,
+): DieRoll[] | null {
   const groups = groupsOf(spec);
   const dice: DieRoll[] = [];
   let die = 0;
@@ -1478,7 +1632,8 @@ export function readDice(spec: RollSpec, faces: readonly unknown[]): DieRoll[] |
   const dice = play(spec, (group, taken) => {
     const { low, high } = facesOf(group);
     const face = faces[used];
-    if (used >= faces.length || typeof face !== "number" || !Number.isInteger(face) || face < low || face > high) return null;
+    if (used >= faces.length || typeof face !== "number" || !Number.isInteger(face) || face < low || face > high)
+      return null;
     // Dice that all differ cannot show a face twice.
     if (taken?.has(face) === true) return null;
     // A face weighted at nothing never comes up.
@@ -1548,7 +1703,9 @@ export function diceOf(roll: Roll): DieRoll[] {
   return (
     roll.dice ??
     readDice(roll.spec, roll.faces) ??
-    roll.faces.map((face, i): DieRoll => ({ face, status: roll.kept[i] === false ? "dropped" : "kept", exploded: false, die: i }))
+    roll.faces.map(
+      (face, i): DieRoll => ({ face, status: roll.kept[i] === false ? "dropped" : "kept", exploded: false, die: i }),
+    )
   );
 }
 
@@ -1575,7 +1732,10 @@ function draws(source: RandomSource): (group: DiceGroup, taken?: ReadonlySet<num
       return face;
     }
     if (group.weights === undefined) return randomInt(source, high - low + 1) + low;
-    let pick = randomInt(source, group.weights.reduce((a, b) => a + b, 0));
+    let pick = randomInt(
+      source,
+      group.weights.reduce((a, b) => a + b, 0),
+    );
     let face = low;
     for (const weight of group.weights) {
       if (pick < weight) break;
@@ -1594,7 +1754,9 @@ function totalOfDice(spec: RollSpec, dice: readonly DieRoll[]): number {
     if (die.status !== "kept") continue;
     const at = die.group ?? 0;
     const group = groups[at] ?? (groups[0] as DiceGroup);
-    totals[at] = (totals[at] as number) + (group.success !== undefined ? (die.counts ?? 0) : (die.value ?? valueOfFace(group, die.face)));
+    totals[at] =
+      (totals[at] as number) +
+      (group.success !== undefined ? (die.counts ?? 0) : (die.value ?? valueOfFace(group, die.face)));
   }
   if (spec.math !== undefined) return evaluateMath(spec.math, totals);
   return totals.reduce((sum, total) => sum + total, spec.modifier);
@@ -1622,7 +1784,9 @@ export function groupTotals(roll: Roll): number[] {
     if (die.status !== "kept") continue;
     const at = die.group ?? 0;
     const group = groups[at] ?? (groups[0] as DiceGroup);
-    totals[at] = (totals[at] as number) + (group.success !== undefined ? (die.counts ?? 0) : (die.value ?? valueOfFace(group, die.face)));
+    totals[at] =
+      (totals[at] as number) +
+      (group.success !== undefined ? (die.counts ?? 0) : (die.value ?? valueOfFace(group, die.face)));
   }
   return totals;
 }
@@ -1708,7 +1872,12 @@ export function setOf(rolls: Roll[]): RollSet {
  * console.log(rollMany(spec, 3, seededSource("table"), 0).rolls.length);
  * ```
  */
-export function rollMany(spec: Partial<RollSpec>, times?: number, source: RandomSource = cryptoSource(), when: number | RollOptions = Date.now()): RollSet {
+export function rollMany(
+  spec: Partial<RollSpec>,
+  times?: number,
+  source: RandomSource = cryptoSource(),
+  when: number | RollOptions = Date.now(),
+): RollSet {
   const { at, limits } = rollOptions(when);
   const fair = normalizeSpec(spec, limits);
   const many = Math.min(MAX_TIMES, Math.max(1, Math.trunc(Number(times ?? fair.times) || 1)));
@@ -1741,10 +1910,25 @@ export function rollMany(spec: Partial<RollSpec>, times?: number, source: Random
  * console.log(rollFrom(spec, [2, 5], "saved", 0, null)?.total);
  * ```
  */
-export function rollFrom(spec: RollSpec, faces: readonly unknown[], id: string, at: number, seed: string | null): Roll | null {
+export function rollFrom(
+  spec: RollSpec,
+  faces: readonly unknown[],
+  id: string,
+  at: number,
+  seed: string | null,
+): Roll | null {
   const dice = readDice(spec, faces);
   if (dice === null) return null;
-  const read: Roll = { id, spec, faces: dice.map((d) => d.face), kept: dice.map((d) => d.status === "kept"), total: totalOfDice(spec, dice), at, seed, dice };
+  const read: Roll = {
+    id,
+    spec,
+    faces: dice.map((d) => d.face),
+    kept: dice.map((d) => d.status === "kept"),
+    total: totalOfDice(spec, dice),
+    at,
+    seed,
+    dice,
+  };
   if (isLoaded(spec)) read.loaded = true;
   return read;
 }
@@ -1769,7 +1953,11 @@ export function rollFrom(spec: RollSpec, faces: readonly unknown[], id: string, 
  * console.log(roll(spec, seededSource("table"), 0).faces);
  * ```
  */
-export function roll(spec: Partial<RollSpec>, source: RandomSource = cryptoSource(), when: number | RollOptions = Date.now()): Roll {
+export function roll(
+  spec: Partial<RollSpec>,
+  source: RandomSource = cryptoSource(),
+  when: number | RollOptions = Date.now(),
+): Roll {
   const { at, limits } = rollOptions(when);
   const fair = normalizeSpec(spec, limits);
   return made(fair, play(fair, draws(source)) as DieRoll[], source, at);
@@ -1799,9 +1987,15 @@ export function roll(spec: Partial<RollSpec>, source: RandomSource = cryptoSourc
  * console.log(rollHeld(sample, [true, false], seededSource("next"), 1).faces);
  * ```
  */
-export function rollHeld(previous: Roll, held: readonly boolean[], source: RandomSource = cryptoSource(), at: number = Date.now()): Roll {
+export function rollHeld(
+  previous: Roll,
+  held: readonly boolean[],
+  source: RandomSource = cryptoSource(),
+  at: number = Date.now(),
+): Roll {
   if (!canHold(previous.spec)) throw new RangeError("korokoro: only plain dice can be held");
-  if (held.length !== previous.faces.length) throw new RangeError("korokoro: held must say yes or no for every die of the roll");
+  if (held.length !== previous.faces.length)
+    throw new RangeError("korokoro: held must say yes or no for every die of the roll");
   const draw = draws(source);
   let next = 0;
   const dice = play(previous.spec, (group) => {
@@ -1828,5 +2022,8 @@ export function rollHeld(previous: Roll, held: readonly boolean[], source: Rando
 export function rangeOf(spec: RollSpec): { min: number; max: number } {
   const ranges = groupsOf(spec).map(groupRange);
   if (spec.math !== undefined) return mathRange(spec.math, ranges);
-  return ranges.reduce((all, range) => ({ min: all.min + range.min, max: all.max + range.max }), { min: spec.modifier, max: spec.modifier });
+  return ranges.reduce((all, range) => ({ min: all.min + range.min, max: all.max + range.max }), {
+    min: spec.modifier,
+    max: spec.modifier,
+  });
 }

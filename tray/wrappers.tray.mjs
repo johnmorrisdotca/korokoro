@@ -53,7 +53,9 @@ for (const [what, path, seed] of [
   });
 }
 
-test("<korokoro-roller> reads its attributes, takes options a string cannot carry, and rolls from code", async ({ page }) => {
+test("<korokoro-roller> reads its attributes, takes options a string cannot carry, and rolls from code", async ({
+  page,
+}) => {
   const errors = await open(page, "/pages/element.html");
   // sound="off": no mute button. storage="none": nothing kept.
   await expect(page.locator('[data-testid="kk-mute"]')).toHaveCount(0);
@@ -63,10 +65,19 @@ test("<korokoro-roller> reads its attributes, takes options a string cannot carr
   expect(await page.evaluate(() => localStorage.length)).toBe(0);
   // The options property mounts the tray afresh, themed.
   await tap(page, "#theme");
-  expect(await page.evaluate(() => getComputedStyle(document.querySelector(".kk-felt")).getPropertyValue("--kk-felt").trim())).toBe("rgb(34, 51, 68)");
+  expect(
+    await page.evaluate(() =>
+      getComputedStyle(document.querySelector(".kk-felt")).getPropertyValue("--kk-felt").trim(),
+    ),
+  ).toBe("rgb(34, 51, 68)");
   expect((await state(page)).notation).toBe("1d20+5");
   // Registered once, under its own tag, as a block.
-  expect(await page.evaluate(() => [customElements.get("korokoro-roller") === window.roller.constructor, getComputedStyle(window.roller).display])).toEqual([true, "block"]);
+  expect(
+    await page.evaluate(() => [
+      customElements.get("korokoro-roller") === window.roller.constructor,
+      getComputedStyle(window.roller).display,
+    ]),
+  ).toEqual([true, "block"]);
   await tap(page, "#wide");
   await sound(page, errors);
 });

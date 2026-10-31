@@ -57,7 +57,9 @@ test("a d6's one pip is red, and black when asked, on the die and on the tray", 
   const pip = page.locator(`${shows} .kk-pip-one`);
   const fill = (locator) => locator.evaluate((el) => getComputedStyle(el).fill);
   const red = await fill(pip);
-  const ink = await pip.evaluate((el) => getComputedStyle(el.closest(".kk-root")).getPropertyValue("--kk-die-ink").trim());
+  const ink = await pip.evaluate((el) =>
+    getComputedStyle(el.closest(".kk-root")).getPropertyValue("--kk-die-ink").trim(),
+  );
   expect(red).toBe("rgb(181, 69, 44)");
   await tap(page, '[data-testid="solo-pip"] [data-pip="black"]');
   expect(await fill(pip)).toBe("rgb(31, 35, 32)");
@@ -69,7 +71,11 @@ test("a d6's one pip is red, and black when asked, on the die and on the tray", 
 
 test("the die is one steady square, never selectable, and the page still fits", async ({ page }) => {
   await open(page, "?lang=en");
-  const box = (selector) => page.locator(selector).evaluate((el) => { const r = el.closest(".kk-solo").getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; });
+  const box = (selector) =>
+    page.locator(selector).evaluate((el) => {
+      const r = el.closest(".kk-solo").getBoundingClientRect();
+      return [Math.round(r.width), Math.round(r.height)];
+    });
   expect(await box(rolls)).toEqual([150, 150]);
   expect(await box(shows)).toEqual([150, 150]);
   expect(await page.locator(rolls).evaluate((el) => getComputedStyle(el.closest(".kk-solo")).userSelect)).toBe("none");
@@ -81,7 +87,11 @@ test.describe("with motion allowed", () => {
 
   test("it tumbles inside its square, and lands after the throw it was given", async ({ page }) => {
     await open(page, "?lang=en");
-    const square = () => page.locator(rolls).evaluate((el) => { const r = el.closest(".kk-solo").getBoundingClientRect(); return `${Math.round(r.x)},${Math.round(r.y)},${Math.round(r.width)},${Math.round(r.height)}`; });
+    const square = () =>
+      page.locator(rolls).evaluate((el) => {
+        const r = el.closest(".kk-solo").getBoundingClientRect();
+        return `${Math.round(r.x)},${Math.round(r.y)},${Math.round(r.width)},${Math.round(r.height)}`;
+      });
     await page.locator(rolls).scrollIntoViewIfNeeded();
     const before = await square();
     await page.locator(rolls).click();
@@ -119,7 +129,12 @@ test("a seeded die throws the same faces every time", async ({ page }) => {
       const box = document.createElement("div");
       document.body.append(box);
       const landed = [];
-      const die = mountDie(box, { sides: 20, animationMs: 0, source: seededSource("table"), onRoll: (f) => landed.push(f) });
+      const die = mountDie(box, {
+        sides: 20,
+        animationMs: 0,
+        source: seededSource("table"),
+        onRoll: (f) => landed.push(f),
+      });
       for (let at = 0; at < 8; at++) die.roll();
       die.destroy();
       return landed;
@@ -135,7 +150,8 @@ test("the element: a die by tag, one that shows a face, and an event for each th
   await page.evaluate(() => {
     const holder = document.createElement("div");
     holder.id = "tags";
-    holder.innerHTML = '<korokoro-die id="t-roll" sides="8" size="small" seed="x"></korokoro-die><korokoro-die id="t-show" sides="6" face="5" rollable="off" width="80" one-pip="black"></korokoro-die>';
+    holder.innerHTML =
+      '<korokoro-die id="t-roll" sides="8" size="small" seed="x"></korokoro-die><korokoro-die id="t-show" sides="6" face="5" rollable="off" width="80" one-pip="black"></korokoro-die>';
     document.body.append(holder);
     window.__thrown = [];
     document.addEventListener("korokoro-die-roll", (event) => window.__thrown.push(event.detail));

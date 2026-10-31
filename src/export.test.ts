@@ -1,7 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import { roll, rollHeld, rollMany, type Roll } from "./dice.ts";
-import { CSV_COLUMNS, EXPORT_FORMAT, csvCell, diceText, fromJSON, rollText, toCSV, toJSON, toText, type Exported } from "./export.ts";
+import {
+  CSV_COLUMNS,
+  EXPORT_FORMAT,
+  csvCell,
+  diceText,
+  fromJSON,
+  rollText,
+  toCSV,
+  toJSON,
+  toText,
+  type Exported,
+} from "./export.ts";
 import { serializeHistory } from "./history.ts";
 import { parseNotation } from "./notation.ts";
 import { seededSource } from "./random.ts";
@@ -9,7 +20,19 @@ import { VERSION } from "./version.ts";
 
 const at = Date.UTC(2026, 8, 30, 12, 0, 0);
 const thrown = (text: string, seed = "export"): Roll => roll(parseNotation(text)!, seededSource(seed), at);
-const some = (): Roll[] => [thrown("2d20kh1+5"), thrown("4d6dl1"), thrown("3d6!"), thrown("2d6ro<3"), thrown("6d10>=8f=1"), thrown("3d6!p"), thrown("4d6min2"), thrown("1d[Yes,No,Maybe]"), thrown("2d[Hit=1,Miss=0]"), thrown("1d6{6:3}"), thrown("2d6+3 # fire damage")];
+const some = (): Roll[] => [
+  thrown("2d20kh1+5"),
+  thrown("4d6dl1"),
+  thrown("3d6!"),
+  thrown("2d6ro<3"),
+  thrown("6d10>=8f=1"),
+  thrown("3d6!p"),
+  thrown("4d6min2"),
+  thrown("1d[Yes,No,Maybe]"),
+  thrown("2d[Hit=1,Miss=0]"),
+  thrown("1d6{6:3}"),
+  thrown("2d6+3 # fire damage"),
+];
 
 /** A small reader of RFC 4180 CSV, to read back what is written. */
 function readCSV(text: string): string[][] {
@@ -56,7 +79,11 @@ describe("JSON", () => {
   it("writes a roll as a person and a program would both want it", () => {
     const [attack] = JSON.parse(toJSON([thrown("2d20kh1+5")])).rolls;
     expect(attack).toMatchObject({ notation: "2d20kh1+5", time: "2026-09-30T12:00:00.000Z", at, seed: "export" });
-    expect(attack.total).toBe(attack.dice.filter((d: { status: string }) => d.status === "kept").reduce((sum: number, d: { face: number }) => sum + d.face, 5));
+    expect(attack.total).toBe(
+      attack.dice
+        .filter((d: { status: string }) => d.status === "kept")
+        .reduce((sum: number, d: { face: number }) => sum + d.face, 5),
+    );
     expect(JSON.parse(toJSON([thrown("6d10>=8f=1")])).rolls[0].successes).toBe(true);
     expect(JSON.parse(toJSON([thrown("1d[Yes,No,Maybe]")])).rolls[0].words).toHaveLength(1);
     expect(JSON.parse(toJSON([thrown("1d6{6:3}")])).rolls[0].loaded).toBe(true);
@@ -131,7 +158,8 @@ describe("CSV", () => {
   });
 
   it("never hands a spreadsheet a formula", () => {
-    for (const bad of ["=1+1", "+1+1", "-1+1", "@SUM(A1)", "\tx", "\rx", '=HYPERLINK("http://x","y")']) expect(csvCell(bad).replace(/^"/, "")[0]).toBe("'");
+    for (const bad of ["=1+1", "+1+1", "-1+1", "@SUM(A1)", "\tx", "\rx", '=HYPERLINK("http://x","y")'])
+      expect(csvCell(bad).replace(/^"/, "")[0]).toBe("'");
     // A number stays a number, negative ones too.
     expect(csvCell(-3)).toBe("-3");
     expect(csvCell("-3")).toBe("-3");

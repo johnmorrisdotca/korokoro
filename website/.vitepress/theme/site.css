@@ -43,28 +43,108 @@
   --vp-c-brand-2: #a6d8c0;
   --vp-c-brand-3: #7fc4a4;
 }
-.vp-doc div[class*="language-"] { border: 1px solid var(--rule); border-radius: 12px; }
-.vp-doc table { display: block; overflow-x: auto; }
+.vp-doc div[class*="language-"] {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+}
+.vp-doc table {
+  display: block;
+  overflow-x: auto;
+}
 /* A tray on a page: room for it, and a line saying what it is. */
-.live-dice { margin: 20px 0 28px; border: 1px solid var(--rule); border-radius: 16px; padding: 0 16px; background: var(--surface); }
-.live-dice[open] { padding-bottom: 16px; }
-.live-dice > summary { min-height: 44px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; list-style: none; }
-.live-dice > summary::before { content: "▸"; color: var(--felt); }
-.live-dice[open] > summary::before { content: "▾"; }
-.live-dice > summary::-webkit-details-marker { display: none; }
+.live-dice {
+  margin: 20px 0 28px;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  padding: 0 16px;
+  background: var(--surface);
+}
+.live-dice[open] {
+  padding-bottom: 16px;
+}
+.live-dice > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  list-style: none;
+}
+.live-dice > summary::before {
+  content: "▸";
+  color: var(--felt);
+}
+.live-dice[open] > summary::before {
+  content: "▾";
+}
+.live-dice > summary::-webkit-details-marker {
+  display: none;
+}
 /* The theme's own styles for a page's tables, lists and paragraphs reach into anything on the page: the tray is its own, and keeps its own. */
-.vp-doc .kk-root table { display: table; margin: 0; }
-.vp-doc .kk-root tr, .vp-doc .kk-root th, .vp-doc .kk-root td { border: 0; background: transparent; }
-.vp-doc .kk-root th, .vp-doc .kk-root td { padding: 4px 8px; }
-.vp-doc .kk-root ol, .vp-doc .kk-root ul { list-style: none; padding: 0; margin: 0; }
-.vp-doc .kk-root li + li { margin-top: 0; }
-.vp-doc .kk-root p { margin: 0; line-height: inherit; }
-.vp-doc .kk-root summary { margin: 0; }
-.vp-doc .kk-root h4 { margin: 0; }
-.vp-doc .kk-root button, .vp-doc .kk-root input { font-family: inherit; }
+.vp-doc .kk-root table {
+  display: table;
+  margin: 0;
+}
+.vp-doc .kk-root tr,
+.vp-doc .kk-root th,
+.vp-doc .kk-root td {
+  border: 0;
+  background: transparent;
+}
+.vp-doc .kk-root th,
+.vp-doc .kk-root td {
+  padding: 4px 8px;
+}
+.vp-doc .kk-root ol,
+.vp-doc .kk-root ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.vp-doc .kk-root li + li {
+  margin-top: 0;
+}
+.vp-doc .kk-root p {
+  margin: 0;
+  line-height: inherit;
+}
+.vp-doc .kk-root summary {
+  margin: 0;
+}
+.vp-doc .kk-root h4 {
+  margin: 0;
+}
+.vp-doc .kk-root button,
+.vp-doc .kk-root input {
+  font-family: inherit;
+}
 
 /* One die on a page: two dice on the felt, each in the one square it keeps. */
-.live-die { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px 40px; margin: 20px 0 28px; padding: 18px 12px; border-radius: 16px; background: var(--felt); color: var(--felt-ink); }
-.live-die figure { margin: 0; display: grid; gap: 10px; justify-items: center; }
-.live-die figcaption, .live-die-said { font-size: .85rem; margin: 0; }
-.live-die-said { flex: 1 1 100%; text-align: center; min-height: 1.4em; }
+.live-die {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px 40px;
+  margin: 20px 0 28px;
+  padding: 18px 12px;
+  border-radius: 16px;
+  background: var(--felt);
+  color: var(--felt-ink);
+}
+.live-die figure {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  justify-items: center;
+}
+.live-die figcaption,
+.live-die-said {
+  font-size: 0.85rem;
+  margin: 0;
+}
+.live-die-said {
+  flex: 1 1 100%;
+  text-align: center;
+  min-height: 1.4em;
+}

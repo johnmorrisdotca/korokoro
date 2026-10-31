@@ -4,7 +4,16 @@ import { canHold, diceCount, groupsOf, isFair, isLoaded, roll } from "../dice.ts
 import { formatNotation, parseNotation } from "../notation.ts";
 import { seededSource, type RandomSource } from "../random.ts";
 import { asChance, chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "./odds.ts";
-import { PRESETS, findPresets, getPreset, presetOdds, presetSpec, readPreset, rollPreset, type Preset } from "./presets.ts";
+import {
+  PRESETS,
+  findPresets,
+  getPreset,
+  presetOdds,
+  presetSpec,
+  readPreset,
+  rollPreset,
+  type Preset,
+} from "./presets.ts";
 import { READERS, patternsOf, waysToShut } from "./readings.ts";
 import { READING_WORDS } from "./words.ts";
 
@@ -33,7 +42,12 @@ const odds = (id: string, notation?: string) => {
 
 describe("holding dice in a game", () => {
   it("is for the games that hold dice between rolls, and for no other", () => {
-    expect(PRESETS.filter((p) => p.hold !== false).map((p) => p.id)).toEqual(["yahtzee", "farkle", "poker-dice", "ship-captain-crew"]);
+    expect(PRESETS.filter((p) => p.hold !== false).map((p) => p.id)).toEqual([
+      "yahtzee",
+      "farkle",
+      "poker-dice",
+      "ship-captain-crew",
+    ]);
     // A game with a turn of several rolls holds dice between them.
     for (const preset of PRESETS) if (preset.rolls !== undefined) expect(preset.hold, preset.id).toBeUndefined();
   });
@@ -43,8 +57,28 @@ describe("every preset", () => {
   it("there are plenty, on every shelf, each with a name of its own", () => {
     expect(PRESETS.length).toBeGreaterThanOrEqual(40);
     expect(new Set(PRESETS.map((p) => p.id)).size).toBe(PRESETS.length);
-    for (const family of ["board", "dice", "traditional", "cards", "roleplaying", "handy"]) expect(PRESETS.some((p) => p.family === family), family).toBe(true);
-    for (const named of ["risk", "craps", "yahtzee", "pachisi", "parcheesi", "ludo", "monopoly", "catan", "backgammon", "farkle", "bunco", "pig", "cho-han", "chinchirorin"]) expect(getPreset(named), named).toBeDefined();
+    for (const family of ["board", "dice", "traditional", "cards", "roleplaying", "handy"])
+      expect(
+        PRESETS.some((p) => p.family === family),
+        family,
+      ).toBe(true);
+    for (const named of [
+      "risk",
+      "craps",
+      "yahtzee",
+      "pachisi",
+      "parcheesi",
+      "ludo",
+      "monopoly",
+      "catan",
+      "backgammon",
+      "farkle",
+      "bunco",
+      "pig",
+      "cho-han",
+      "chinchirorin",
+    ])
+      expect(getPreset(named), named).toBeDefined();
   });
 
   it.each(PRESETS.map((p) => [p.id, p] as const))("%s parses, rolls, is read, and is described", (_id, preset) => {
@@ -60,7 +94,10 @@ describe("every preset", () => {
       const reading = readPreset(preset, thrown.roll, [], language);
       expect(reading.text, `${preset.id} ${reading.outcome}`).not.toContain("{");
       // Every outcome has its words, in both languages; only a die that says it all itself is silent.
-      expect(`${preset.reading}.${reading.outcome}` in READING_WORDS[language], `${preset.reading}.${reading.outcome}`).toBe(true);
+      expect(
+        `${preset.reading}.${reading.outcome}` in READING_WORDS[language],
+        `${preset.reading}.${reading.outcome}`,
+      ).toBe(true);
       if (preset.reading !== "faces") expect(reading.text.length).toBeGreaterThan(0);
     }
     // Read a thousand rolls: no outcome is without words.
@@ -69,8 +106,12 @@ describe("every preset", () => {
     for (let i = 0; i < 300; i++) {
       const r = roll(spec!, source, i);
       const reading = readPreset(preset, r, before);
-      expect(`${preset.reading}.${reading.outcome}` in READING_WORDS.en, `${preset.reading}.${reading.outcome}`).toBe(true);
-      expect(`${preset.reading}.${reading.outcome}` in READING_WORDS.ja, `${preset.reading}.${reading.outcome}`).toBe(true);
+      expect(`${preset.reading}.${reading.outcome}` in READING_WORDS.en, `${preset.reading}.${reading.outcome}`).toBe(
+        true,
+      );
+      expect(`${preset.reading}.${reading.outcome}` in READING_WORDS.ja, `${preset.reading}.${reading.outcome}`).toBe(
+        true,
+      );
       expect(reading.text).not.toContain("{");
       before.push(r);
       if (before.length > 6) before.shift();
@@ -81,9 +122,12 @@ describe("every preset", () => {
     expect(preset.saysJa.length).toBeGreaterThan(3);
     expect(preset.how.length).toBeGreaterThan(20);
     // No stakes, no betting advice, no money words: children use the site this is made for.
-    expect(`${preset.says} ${preset.how}`).not.toMatch(/\b(bets?|betting|wagers?|stakes?|payouts?|pays?|money|odds-on|casino chips|gambl\w*)\b/i);
+    expect(`${preset.says} ${preset.how}`).not.toMatch(
+      /\b(bets?|betting|wagers?|stakes?|payouts?|pays?|money|odds-on|casino chips|gambl\w*)\b/i,
+    );
     if (preset.source !== undefined) expect(preset.source).toMatch(/^https:\/\//);
-    if (preset.family !== "handy" && preset.family !== "cards" && preset.id !== "d66") expect(preset.source, `${preset.id} needs a source for its rule`).toBeDefined();
+    if (preset.family !== "handy" && preset.family !== "cards" && preset.id !== "d66")
+      expect(preset.source, `${preset.id} needs a source for its rule`).toBeDefined();
     if (preset.rolls !== undefined) expect(canHold(spec!)).toBe(true);
     const table = presetOdds(preset);
     if (table !== null) {
@@ -91,7 +135,9 @@ describe("every preset", () => {
       expect(total).toBe(table[0]!.outOf);
       expect(table.reduce((sum, line) => sum + line.chance, 0)).toBeCloseTo(1, 12);
       for (const line of table) expect(line.text, `${preset.id} ${line.outcome}`).not.toContain("{");
-      expect(presetOdds(preset, undefined, "ja")!.every((line) => line.text !== "" && !line.text.includes("{"))).toBe(true);
+      expect(presetOdds(preset, undefined, "ja")!.every((line) => line.text !== "" && !line.text.includes("{"))).toBe(
+        true,
+      );
     }
   });
 
@@ -100,7 +146,8 @@ describe("every preset", () => {
     const places = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1] as string).sort();
     for (const key of Object.keys(READING_WORDS.en) as (keyof typeof READING_WORDS.en)[]) {
       // Japanese may leave a figure out where the sentence does not need it, never add one.
-      for (const place of places(READING_WORDS.ja[key] as string)) expect(places(READING_WORDS.en[key] as string).concat(["dice", "total"]), key).toContain(place);
+      for (const place of places(READING_WORDS.ja[key] as string))
+        expect(places(READING_WORDS.en[key] as string).concat(["dice", "total"]), key).toContain(place);
     }
   });
 
@@ -119,7 +166,9 @@ describe("every preset", () => {
     expect(findPresets("")).toHaveLength(PRESETS.length);
     expect(findPresets("yacht").map((p) => p.id)).toEqual(["yahtzee"]);
     expect(findPresets("craps").map((p) => p.id)).toContain("craps");
-    expect(findPresets("two dice doubles").map((p) => p.id)).toEqual(expect.arrayContaining(["monopoly", "backgammon"]));
+    expect(findPresets("two dice doubles").map((p) => p.id)).toEqual(
+      expect.arrayContaining(["monopoly", "backgammon"]),
+    );
     expect(findPresets("zzzz")).toEqual([]);
     expect(() => rollPreset("zzzz")).toThrow(RangeError);
   });
@@ -139,11 +188,38 @@ describe("board games", () => {
   it("Monopoly: doubles roll again, and the third in a row ends the turn", () => {
     expect(read("monopoly", [3, 4])).toMatchObject({ outcome: "total", text: "7" });
     expect(read("monopoly", [4, 4])).toMatchObject({ outcome: "doubles", text: "8: doubles, so roll again" });
-    expect(read("monopoly", [2, 2], [[5, 5], [1, 1]])).toMatchObject({ outcome: "third", tone: "bad" });
-    expect(read("monopoly", [2, 2], [[5, 5], [1, 2]]).outcome).toBe("doubles");
+    expect(
+      read(
+        "monopoly",
+        [2, 2],
+        [
+          [5, 5],
+          [1, 1],
+        ],
+      ),
+    ).toMatchObject({ outcome: "third", tone: "bad" });
+    expect(
+      read(
+        "monopoly",
+        [2, 2],
+        [
+          [5, 5],
+          [1, 2],
+        ],
+      ).outcome,
+    ).toBe("doubles");
     expect(odds("monopoly").get("doubles")).toEqual([6, 36]);
     // Parcheesi has doubles too, and no fixed rule for the third.
-    expect(read("parcheesi", [2, 2], [[5, 5], [1, 1]]).outcome).toBe("doubles");
+    expect(
+      read(
+        "parcheesi",
+        [2, 2],
+        [
+          [5, 5],
+          [1, 1],
+        ],
+      ).outcome,
+    ).toBe("doubles");
   });
 
   it("Catan: a seven moves the robber, one roll in six", () => {
@@ -167,9 +243,21 @@ describe("board games", () => {
 
   it("Pachisi: the cowries' table, with its graces", () => {
     // Faces are places on the die: 1 is mouth down, 2 is mouth up.
-    const cowries = (up: number) => read("pachisi", Array.from({ length: 6 }, (_, i) => (i < up ? 2 : 1)));
+    const cowries = (up: number) =>
+      read(
+        "pachisi",
+        Array.from({ length: 6 }, (_, i) => (i < up ? 2 : 1)),
+      );
     expect([0, 1, 2, 3, 4, 5, 6].map((up) => cowries(up).values.move)).toEqual([25, 10, 2, 3, 4, 5, 6]);
-    expect([0, 1, 2, 3, 4, 5, 6].map((up) => cowries(up).outcome)).toEqual(["grace", "grace", "move", "move", "move", "move", "grace"]);
+    expect([0, 1, 2, 3, 4, 5, 6].map((up) => cowries(up).outcome)).toEqual([
+      "grace",
+      "grace",
+      "move",
+      "move",
+      "move",
+      "move",
+      "grace",
+    ]);
     // The published chances: 1.6%, 9.4%, 23.4%, 31.2% for none, one, two and three up.
     const table = presetOdds(game("pachisi"))!;
     expect(table.find((l) => l.outcome === "grace")?.ways).toBe(1n + 6n + 1n);
@@ -186,7 +274,14 @@ describe("board games", () => {
     expect(three.get("1-1")).toEqual([2611, 7776]);
     expect(three.get("2-0")).toEqual([2275, 7776]);
     // And by a count of every throw, sharing nothing with the pattern counter.
-    for (const [attack, defence] of [[3, 2], [2, 2], [1, 2], [3, 1], [2, 1], [1, 1]] as const) {
+    for (const [attack, defence] of [
+      [3, 2],
+      [2, 2],
+      [1, 2],
+      [3, 1],
+      [2, 1],
+      [1, 1],
+    ] as const) {
       const counted = new Map<string, number>();
       const walk = (dice: number[]) => {
         if (dice.length < attack + defence) return void [1, 2, 3, 4, 5, 6].forEach((f) => walk([...dice, f]));
@@ -194,12 +289,15 @@ describe("board games", () => {
         const d = dice.slice(attack).sort((x, y) => y - x);
         let lostA = 0;
         let lostD = 0;
-        for (let i = 0; i < Math.min(attack, defence); i++) if (a[i]! > d[i]!) lostD += 1; else lostA += 1;
+        for (let i = 0; i < Math.min(attack, defence); i++)
+          if (a[i]! > d[i]!) lostD += 1;
+          else lostA += 1;
         counted.set(`${lostA}-${lostD}`, (counted.get(`${lostA}-${lostD}`) ?? 0) + 1);
       };
       walk([]);
       const table = odds("risk", `${attack}d6+${defence}d[1,2,3,4,5,6]`);
-      for (const [outcome, ways] of counted) expect(table.get(outcome), `${attack} against ${defence}: ${outcome}`).toEqual([ways, 6 ** (attack + defence)]);
+      for (const [outcome, ways] of counted)
+        expect(table.get(outcome), `${attack} against ${defence}: ${outcome}`).toEqual([ways, 6 ** (attack + defence)]);
     }
     expect(odds("risk", "1d6+1d[1,2,3,4,5,6]").get("0-1")).toEqual([15, 36]);
   });
@@ -282,8 +380,23 @@ describe("dice games", () => {
     expect(read("poker-dice", [2, 3, 4, 5, 6]).text).toBe("A straight");
     expect(read("poker-dice", [1, 2, 3, 4, 6]).text).toBe("A bust");
     const table = odds("poker-dice");
-    expect([...table].map(([hand, [ways]]) => [hand, ways]).sort()).toEqual([["bust", 480], ["five", 6], ["four", 150], ["fullHouse", 300], ["pair", 3600], ["straight", 240], ["three", 1200], ["twoPair", 1800]]);
-    expect(rollPreset("poker-dice", { source: scripted([6, 6, 5, 5, 1]) }).roll.dice?.map((d) => d.label)).toEqual(["A", "A", "K", "K", "9"]);
+    expect([...table].map(([hand, [ways]]) => [hand, ways]).sort()).toEqual([
+      ["bust", 480],
+      ["five", 6],
+      ["four", 150],
+      ["fullHouse", 300],
+      ["pair", 3600],
+      ["straight", 240],
+      ["three", 1200],
+      ["twoPair", 1800],
+    ]);
+    expect(rollPreset("poker-dice", { source: scripted([6, 6, 5, 5, 1]) }).roll.dice?.map((d) => d.label)).toEqual([
+      "A",
+      "A",
+      "K",
+      "K",
+      "9",
+    ]);
   });
 
   it("Shut the box lists every set of tiles a total may shut", () => {
@@ -309,10 +422,37 @@ describe("traditional games", () => {
     expect(read("craps", [6, 6]).outcome).toBe("craps");
     expect(read("craps", [2, 2]).text).toBe("4 is the point");
     expect(read("craps", [5, 3], [[2, 2]]).text).toBe("8: roll again for the point of 4");
-    expect(read("craps", [1, 3], [[2, 2], [5, 3]]).text).toBe("4: the point is made");
-    expect(read("craps", [3, 4], [[2, 2], [5, 3]]).text).toBe("Seven before the point of 4: seven out");
+    expect(
+      read(
+        "craps",
+        [1, 3],
+        [
+          [2, 2],
+          [5, 3],
+        ],
+      ).text,
+    ).toBe("4: the point is made");
+    expect(
+      read(
+        "craps",
+        [3, 4],
+        [
+          [2, 2],
+          [5, 3],
+        ],
+      ).text,
+    ).toBe("Seven before the point of 4: seven out");
     // After the point is settled the next roll is a come-out again.
-    expect(read("craps", [3, 4], [[2, 2], [1, 3]]).outcome).toBe("natural");
+    expect(
+      read(
+        "craps",
+        [3, 4],
+        [
+          [2, 2],
+          [1, 3],
+        ],
+      ).outcome,
+    ).toBe("natural");
     const table = odds("craps");
     expect(table.get("natural")).toEqual([8, 36]);
     expect(table.get("craps")).toEqual([4, 36]);
@@ -363,7 +503,9 @@ describe("traditional games", () => {
   it("Chō-han: even is chō, odd is han, and the two are as likely", () => {
     expect(read("cho-han", [2, 4])).toMatchObject({ outcome: "cho", text: "Chō: 6 is even" });
     expect(read("cho-han", [2, 5])).toMatchObject({ outcome: "han", text: "Han: 7 is odd" });
-    expect(readPreset(game("cho-han"), roll(presetSpec(game("cho-han")), scripted([2, 5]), 1), [], "ja").text).toBe("半（2・5、合計 7）");
+    expect(readPreset(game("cho-han"), roll(presetSpec(game("cho-han")), scripted([2, 5]), 1), [], "ja").text).toBe(
+      "半（2・5、合計 7）",
+    );
     const table = odds("cho-han");
     expect(table.get("cho")).toEqual([18, 36]);
     expect(table.get("han")).toEqual([18, 36]);
@@ -378,7 +520,14 @@ describe("traditional games", () => {
     expect(read("chinchirorin", [6, 2, 2]).values).toEqual({ point: 6, pair: 2 });
     expect(read("chinchirorin", [1, 3, 6]).outcome).toBe("menashi");
     const table = odds("chinchirorin");
-    expect([...table].map(([hand, [ways]]) => [hand, ways]).sort()).toEqual([["arashi", 5], ["hifumi", 6], ["menashi", 108], ["pinzoro", 1], ["point", 90], ["shigoro", 6]]);
+    expect([...table].map(([hand, [ways]]) => [hand, ways]).sort()).toEqual([
+      ["arashi", 5],
+      ["hifumi", 6],
+      ["menashi", 108],
+      ["pinzoro", 1],
+      ["point", 90],
+      ["shigoro", 6],
+    ]);
     expect(chinchirorinHandWithin(1)).toEqual([1n, 2n]);
     expect(chinchirorinHandWithin(3)).toEqual([7n, 8n]);
   });
@@ -422,11 +571,20 @@ describe("roleplaying, and the rest", () => {
     expect(read("blades", [4, 2]).outcome).toBe("partial");
     expect(read("blades", [3, 2]).outcome).toBe("bad");
     // Two dice: a critical 1 in 36, a 6 on 10 more, a 4 or 5 on 16, and 9 at 3 or less.
-    expect([...odds("blades")].map(([o, [w]]) => [o, w]).sort()).toEqual([["bad", 9], ["critical", 1], ["partial", 16], ["six", 10]]);
+    expect([...odds("blades")].map(([o, [w]]) => [o, w]).sort()).toEqual([
+      ["bad", 9],
+      ["critical", 1],
+      ["partial", 16],
+      ["six", 10],
+    ]);
     expect(read("pbta", [6, 4]).outcome).toBe("strong");
     expect(read("pbta", [3, 4]).outcome).toBe("weak");
     expect(read("pbta", [3, 3]).outcome).toBe("miss");
-    expect([...odds("pbta")].map(([o, [w]]) => [o, w]).sort()).toEqual([["miss", 15], ["strong", 6], ["weak", 15]]);
+    expect([...odds("pbta")].map(([o, [w]]) => [o, w]).sort()).toEqual([
+      ["miss", 15],
+      ["strong", 6],
+      ["weak", 15],
+    ]);
     expect(read("d10-pool", [8, 9, 10, 1, 7]).text).toBe("3 successes");
     expect(read("d10-pool", [1, 2, 3, 4, 7]).outcome).toBe("none");
     // No successes on five d10 at 8 or more: 0.7 to the fifth.
@@ -439,7 +597,9 @@ describe("roleplaying, and the rest", () => {
 
   it("percentile, roll-under and d66", () => {
     const d100 = rollPreset("percentile", { source: scripted([42]) });
-    expect(d100.reading.text).toBe("42: a success for a skill of 42 or more, hard for 84 or more, extreme for 210 or more");
+    expect(d100.reading.text).toBe(
+      "42: a success for a skill of 42 or more, hard for 84 or more, extreme for 210 or more",
+    );
     expect(read("roll-under", [1, 1, 2]).outcome).toBe("critical");
     expect(read("roll-under", [6, 6, 6]).outcome).toBe("fumble");
     expect(read("roll-under", [6, 6, 5]).outcome).toBe("fail");

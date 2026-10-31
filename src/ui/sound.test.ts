@@ -5,7 +5,13 @@ import { SOUNDS } from "./sounds-data.ts";
 
 /** Enough of the Web Audio API to see what a roll asks of it. */
 function fakeAudio(options: { state?: string; decodeFails?: boolean; resumeFails?: boolean } = {}) {
-  const log = { contexts: 0, decoded: 0, started: [] as { at: number; rate: number; seconds: number; skip: number }[], filters: 0, closed: 0 };
+  const log = {
+    contexts: 0,
+    decoded: 0,
+    started: [] as { at: number; rate: number; seconds: number; skip: number }[],
+    filters: 0,
+    closed: 0,
+  };
   class FakeContext {
     state = options.state ?? "running";
     currentTime = 10;
@@ -37,7 +43,9 @@ function fakeAudio(options: { state?: string; decodeFails?: boolean; resumeFails
     }
     decodeAudioData(data: ArrayBuffer) {
       log.decoded += 1;
-      return options.decodeFails ? Promise.reject(new Error("cannot decode")) : Promise.resolve({ duration: data.byteLength > 5000 ? 0.78 : 0.3 });
+      return options.decodeFails
+        ? Promise.reject(new Error("cannot decode"))
+        : Promise.resolve({ duration: data.byteLength > 5000 ? 0.78 : 0.3 });
     }
     resume() {
       if (options.resumeFails) return Promise.reject(new Error("not allowed"));
@@ -53,7 +61,11 @@ function fakeAudio(options: { state?: string; decodeFails?: boolean; resumeFails
 }
 
 const settle = () => new Promise((done) => setTimeout(done, 5));
-const thrown = (dice: number, ms = 650) => ({ dice, ms, landings: Array.from({ length: dice }, (_, i) => ms - 100 + i * 10) });
+const thrown = (dice: number, ms = 650) => ({
+  dice,
+  ms,
+  landings: Array.from({ length: dice }, (_, i) => ms - 100 + i * 10),
+});
 
 describe("the sound of a roll", () => {
   it("is silence, and no error, where there is no audio at all", () => {
@@ -68,7 +80,9 @@ describe("the sound of a roll", () => {
         throw new Error("no audio device");
       }
     }
-    expect(() => createRollSound({ AudioContext: Refuses as unknown as typeof AudioContext }).play(thrown(2))).not.toThrow();
+    expect(() =>
+      createRollSound({ AudioContext: Refuses as unknown as typeof AudioContext }).play(thrown(2)),
+    ).not.toThrow();
   });
 
   it("plays one shake and a knock for each die landing", async () => {

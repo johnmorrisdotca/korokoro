@@ -1,12 +1,37 @@
 import { describe, expect, it } from "vitest";
 
-import { DICE_WAR_LIMITS, decodeDiceWar, diceWarComputerFaces, diceWarOdds, diceWarOver, diceWarPeopleToRoll, diceWarSpec, diceWarWinners, encodeDiceWar, playDiceWar, startDiceWar, type DiceWarGame, type DiceWarOptions } from "./diceWar.ts";
+import {
+  DICE_WAR_LIMITS,
+  decodeDiceWar,
+  diceWarComputerFaces,
+  diceWarOdds,
+  diceWarOver,
+  diceWarPeopleToRoll,
+  diceWarSpec,
+  diceWarWinners,
+  encodeDiceWar,
+  playDiceWar,
+  startDiceWar,
+  type DiceWarGame,
+  type DiceWarOptions,
+} from "./diceWar.ts";
 import { chanceAtLeast, distributionOf } from "./odds.ts";
 
-const table = (extra: Partial<DiceWarOptions> = {}): DiceWarGame => startDiceWar({ players: ["You", "Aiko", "Ben"], computers: [false, true, true], seed: "war-1", ...extra }) as DiceWarGame;
+const table = (extra: Partial<DiceWarOptions> = {}): DiceWarGame =>
+  startDiceWar({
+    players: ["You", "Aiko", "Ben"],
+    computers: [false, true, true],
+    seed: "war-1",
+    ...extra,
+  }) as DiceWarGame;
 /** A game of computers alone, played to its end, every move `{}`. */
 function playOut(options: Partial<DiceWarOptions> = {}) {
-  let game = startDiceWar({ players: ["A", "B", "C"], computers: [true, true, true], seed: "out", ...options }) as DiceWarGame;
+  let game = startDiceWar({
+    players: ["A", "B", "C"],
+    computers: [true, true, true],
+    seed: "out",
+    ...options,
+  }) as DiceWarGame;
   for (let at = 0; !diceWarOver(game); at += 1) {
     if (at > 5000) throw new Error("a game that does not end");
     game = playDiceWar(game, {}) as DiceWarGame;
@@ -18,7 +43,19 @@ function playOut(options: Partial<DiceWarOptions> = {}) {
 describe("a table of Dice War", () => {
   it("starts with everybody to roll, nothing scored and a stake of one", () => {
     const game = table();
-    expect(game).toMatchObject({ dice: 1, sides: 6, goal: "points", to: 5, round: 1, wars: 0, stake: 1, phase: "playing", scores: [0, 0, 0], rollers: [0, 1, 2], computers: [false, true, true] });
+    expect(game).toMatchObject({
+      dice: 1,
+      sides: 6,
+      goal: "points",
+      to: 5,
+      round: 1,
+      wars: 0,
+      stake: 1,
+      phase: "playing",
+      scores: [0, 0, 0],
+      rollers: [0, 1, 2],
+      computers: [false, true, true],
+    });
     expect(diceWarPeopleToRoll(game)).toEqual([0]);
     expect(diceWarSpec(game)).toMatchObject({ count: 1, sides: 6 });
   });
@@ -75,7 +112,13 @@ describe("a throw", () => {
   });
 
   it("adds a player's dice together and rolls as many as the game says", () => {
-    const game = startDiceWar({ players: ["You", "Ai"], computers: [false, true], dice: 3, sides: 6, seed: "three" }) as DiceWarGame;
+    const game = startDiceWar({
+      players: ["You", "Ai"],
+      computers: [false, true],
+      dice: 3,
+      sides: 6,
+      seed: "three",
+    }) as DiceWarGame;
     expect(playDiceWar(game, { faces: { "0": [1, 2] } })).toBeNull();
     const after = playDiceWar(game, { faces: { "0": [6, 6, 6] } }) as DiceWarGame;
     expect(after.throws[0]!.rolls[0]).toEqual({ seat: 0, faces: [6, 6, 6], total: 18 });
@@ -86,7 +129,11 @@ describe("a throw", () => {
     // Find a seed where the two computers tie for highest against a person who rolls low.
     let tie: DiceWarGame | null = null;
     for (let at = 0; at < 400 && tie === null; at += 1) {
-      const game = startDiceWar({ players: ["You", "Aiko", "Ben"], computers: [false, true, true], seed: `tie-${at}` }) as DiceWarGame;
+      const game = startDiceWar({
+        players: ["You", "Aiko", "Ben"],
+        computers: [false, true, true],
+        seed: `tie-${at}`,
+      }) as DiceWarGame;
       const a = diceWarComputerFaces(game, 1, 0, 1)[0] as number;
       const b = diceWarComputerFaces(game, 1, 0, 2)[0] as number;
       if (a === b && a > 1) tie = game;
@@ -115,7 +162,14 @@ describe("a throw", () => {
     // Two dice of two sides tie often: play many games and find a round that went through at least two wars.
     let deepest = 0;
     for (let at = 0; at < 60; at += 1) {
-      const game = playOut({ players: ["A", "B"], computers: [true, true], sides: 2, dice: 1, seed: `deep-${at}`, to: 3 });
+      const game = playOut({
+        players: ["A", "B"],
+        computers: [true, true],
+        sides: 2,
+        dice: 1,
+        seed: `deep-${at}`,
+        to: 3,
+      });
       for (const one of game.throws) {
         if (one.winner !== null && one.war >= 1) {
           deepest = Math.max(deepest, one.war);
@@ -145,7 +199,13 @@ describe("a game", () => {
   it("played for rounds ends after them, the most points winning and level piles sharing", () => {
     const shared = new Set<number>();
     for (let at = 0; at < 60; at += 1) {
-      const game = playOut({ seed: `rounds-${at}`, goal: "rounds", to: 3, players: ["A", "B"], computers: [true, true] });
+      const game = playOut({
+        seed: `rounds-${at}`,
+        goal: "rounds",
+        to: 3,
+        players: ["A", "B"],
+        computers: [true, true],
+      });
       expect(game.ended).toBe("rounds");
       expect(game.round).toBe(3);
       // A war that was called off, or a tie in points, leaves nobody ahead.
@@ -207,7 +267,9 @@ describe("a game kept as text", () => {
     expect(decodeDiceWar(JSON.stringify({ ...kept, computers: [false] }))).toBeNull();
     expect(decodeDiceWar(JSON.stringify({ ...kept, sides: 1 }))).toBeNull();
     const ended = playOut({ seed: "past", to: 2 });
-    expect(decodeDiceWar(JSON.stringify({ ...(JSON.parse(encodeDiceWar(ended)) as object), moves: [...ended.moves, {}] }))).toBeNull();
+    expect(
+      decodeDiceWar(JSON.stringify({ ...(JSON.parse(encodeDiceWar(ended)) as object), moves: [...ended.moves, {}] })),
+    ).toBeNull();
   });
 });
 
@@ -226,9 +288,17 @@ describe("the odds of a throw", () => {
     expect(six.beats).toBeCloseTo((5 / 6) ** 3, 12);
     expect(six.ties).toBeCloseTo(1 - (5 / 6) ** 3, 12);
     expect(six.loses).toBeCloseTo(0, 12);
-    for (const [players, dice, sides, total] of [[3, 1, 6, 3], [2, 2, 6, 7], [5, 3, 8, 14], [8, 1, 100, 50]] as const) {
+    for (const [players, dice, sides, total] of [
+      [3, 1, 6, 3],
+      [2, 2, 6, 7],
+      [5, 3, 8, 14],
+      [8, 1, 100, 50],
+    ] as const) {
       const odds = diceWarOdds({ players, dice, sides }, total);
-      expect((odds.beats ?? 0) + (odds.ties ?? 0) + (odds.loses ?? 0), `${players}p ${dice}d${sides} at ${total}`).toBeCloseTo(1, 12);
+      expect(
+        (odds.beats ?? 0) + (odds.ties ?? 0) + (odds.loses ?? 0),
+        `${players}p ${dice}d${sides} at ${total}`,
+      ).toBeCloseTo(1, 12);
       expect(odds.outright + odds.war).toBeCloseTo(1, 12);
     }
     expect(diceWarOdds({ players: 3 }, 1).beats).toBe(0);
@@ -251,7 +321,11 @@ describe("the odds of a throw", () => {
     let wars = 0;
     const games = 4000;
     for (let at = 0; at < games; at += 1) {
-      const game = startDiceWar({ players: ["a", "b", "c"], computers: [true, true, true], seed: `odds-${at}` }) as DiceWarGame;
+      const game = startDiceWar({
+        players: ["a", "b", "c"],
+        computers: [true, true, true],
+        seed: `odds-${at}`,
+      }) as DiceWarGame;
       if (playDiceWar(game, {})!.throws[0]!.tied.length > 1) wars += 1;
     }
     const expected = diceWarOdds({ players: 3 }).war;

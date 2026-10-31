@@ -24,7 +24,16 @@ const packed = run("npm", ["pack", "--json", "--ignore-scripts", "--pack-destina
 if (packed.status !== 0) throw new Error(packed.stderr);
 const tarball = join(scratch, JSON.parse(packed.stdout)[0].filename);
 const prefix = join(scratch, "prefix");
-const installed = run("npm", ["install", "--global", "--prefix", prefix, "--no-audit", "--no-fund", "--silent", tarball]);
+const installed = run("npm", [
+  "install",
+  "--global",
+  "--prefix",
+  prefix,
+  "--no-audit",
+  "--no-fund",
+  "--silent",
+  tarball,
+]);
 if (installed.status !== 0) throw new Error(installed.stderr);
 const env = { ...process.env, PATH: `${windows ? prefix : join(prefix, "bin")}${delimiter}${process.env.PATH}` };
 

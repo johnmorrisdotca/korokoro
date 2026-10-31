@@ -34,7 +34,11 @@ export const SHARE_VERSION = 2;
  * ```
  */
 export function shareQuery(roll: Roll): string {
-  const params = new URLSearchParams({ roll: formatNotation(roll.spec), faces: roll.faces.join(","), at: String(roll.at) });
+  const params = new URLSearchParams({
+    roll: formatNotation(roll.spec),
+    faces: roll.faces.join(","),
+    at: String(roll.at),
+  });
   if (roll.seed !== null) params.set("seed", roll.seed);
   if (roll.held !== undefined) params.set("held", roll.held.flatMap((h, i) => (h ? [i] : [])).join(","));
   params.set("v", String(SHARE_VERSION));
@@ -62,7 +66,11 @@ export function shareQueryMany(rolls: readonly Roll[]): string {
   const first = rolls[0];
   if (first === undefined) return "";
   const spec = { ...first.spec, times: rolls.length };
-  const params = new URLSearchParams({ roll: formatNotation(spec), faces: rolls.map((r) => r.faces.join(",")).join(";"), at: String(first.at) });
+  const params = new URLSearchParams({
+    roll: formatNotation(spec),
+    faces: rolls.map((r) => r.faces.join(",")).join(";"),
+    at: String(first.at),
+  });
   if (first.seed !== null) params.set("seed", first.seed);
   params.set("v", String(SHARE_VERSION));
   return params.toString();
@@ -93,7 +101,13 @@ export function readSharedMany(query: string | URLSearchParams): Roll[] | null {
   const rolls: Roll[] = [];
   for (const [index, faces] of each.entries()) {
     if (faces.split(",").some((f) => f.trim() === "")) return null;
-    const read = rollFrom(spec, faces.split(",").map(Number), `shared-${when.toString(36)}-${index}`, when, params.get("seed"));
+    const read = rollFrom(
+      spec,
+      faces.split(",").map(Number),
+      `shared-${when.toString(36)}-${index}`,
+      when,
+      params.get("seed"),
+    );
     if (read === null) return null;
     read.set = { id: `shared-${when.toString(36)}-0`, index, of: each.length };
     rolls.push(read);
@@ -123,7 +137,13 @@ export function readShared(query: string | URLSearchParams): Roll | null {
   const given = (params.get("faces") ?? "").split(",");
   if (given.some((f) => f.trim() === "")) return null;
   const at = Number(params.get("at"));
-  const read: Roll | null = rollFrom(spec, given.map(Number), `shared-${Number.isFinite(at) ? at.toString(36) : "0"}`, Number.isFinite(at) ? at : 0, params.get("seed"));
+  const read: Roll | null = rollFrom(
+    spec,
+    given.map(Number),
+    `shared-${Number.isFinite(at) ? at.toString(36) : "0"}`,
+    Number.isFinite(at) ? at : 0,
+    params.get("seed"),
+  );
   if (read === null) return null;
   const faces = read.faces;
   const held = params.get("held");

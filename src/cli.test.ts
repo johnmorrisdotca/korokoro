@@ -6,7 +6,8 @@ import { PRESETS } from "./games/presets.ts";
 import { VERSION } from "./version.ts";
 
 const now = Date.UTC(2026, 8, 30, 12, 0, 0);
-const run = (args: string, around: Parameters<typeof runCli>[1] = {}) => runCli(args === "" ? [] : args.split(" "), { now, ...around });
+const run = (args: string, around: Parameters<typeof runCli>[1] = {}) =>
+  runCli(args === "" ? [] : args.split(" "), { now, ...around });
 
 describe("the command line rolls dice", () => {
   it("rolls 2d6 when asked for nothing", () => {
@@ -61,7 +62,24 @@ describe("the command line rolls dice", () => {
   it("helps, and says its version", () => {
     const help = run("--help");
     expect(help.code).toBe(0);
-    for (const flag of ["--seed", "--times", "--max-dice", "--odds", "--game", "--games", "--test", "--sides", "--json", "--csv", "--stdin", "--lang", "--no-color", "--help", "--version"]) expect(help.out, flag).toContain(flag);
+    for (const flag of [
+      "--seed",
+      "--times",
+      "--max-dice",
+      "--odds",
+      "--game",
+      "--games",
+      "--test",
+      "--sides",
+      "--json",
+      "--csv",
+      "--stdin",
+      "--lang",
+      "--no-color",
+      "--help",
+      "--version",
+    ])
+      expect(help.out, flag).toContain(flag);
     expect(run("-h").out).toBe(help.out);
     expect(run("--version")).toEqual({ code: 0, out: `${VERSION}\n`, err: "" });
     expect(run("-v").out).toBe(`${VERSION}\n`);
@@ -72,7 +90,11 @@ describe("the command line rolls dice", () => {
 
 describe("more than ten dice", () => {
   it("is refused unless --max-dice allows it", () => {
-    expect(run("40d6 -s table")).toMatchObject({ code: 1, out: "", err: "korokoro: 40d6: “40”: roll 1 to 10 dice at a time\n" });
+    expect(run("40d6 -s table")).toMatchObject({
+      code: 1,
+      out: "",
+      err: "korokoro: 40d6: “40”: roll 1 to 10 dice at a time\n",
+    });
     const many = run("40d6 -s table --max-dice 100");
     expect(many.code).toBe(0);
     expect(many.out).toMatch(/^40d6: \d+ {2}\[(\d ){39}\d\]\n$/);
@@ -83,10 +105,17 @@ describe("more than ten dice", () => {
   });
 
   it("stops at the number given, and at a hundred, and says so", () => {
-    expect(run("40d6 --max-dice 20")).toMatchObject({ code: 1, err: "korokoro: 40d6: “40”: roll 1 to 20 dice at a time, and past 10 only plain dice, all added or one kept\n" });
+    expect(run("40d6 --max-dice 20")).toMatchObject({
+      code: 1,
+      err: "korokoro: 40d6: “40”: roll 1 to 20 dice at a time, and past 10 only plain dice, all added or one kept\n",
+    });
     expect(run("20d6! --max-dice 100").err).toContain("past 10 only plain dice");
     expect(run("40d6 --max-dice 20 --lang ja").err).toContain("一度に振れるのは1〜20個です");
-    for (const bad of ["101", "9", "0", "many", "12.5"]) expect(run(`2d6 --max-dice ${bad}`), bad).toMatchObject({ code: 2, err: "korokoro: --max-dice takes a whole number from 10 to 100\nTry `koro --help`.\n" });
+    for (const bad of ["101", "9", "0", "many", "12.5"])
+      expect(run(`2d6 --max-dice ${bad}`), bad).toMatchObject({
+        code: 2,
+        err: "korokoro: --max-dice takes a whole number from 10 to 100\nTry `koro --help`.\n",
+      });
     expect(run("2d6 --max-dice").code).toBe(2);
     // Ten, the default, changes nothing.
     expect(run("2d6 -s table --max-dice 10").out).toBe(run("2d6 -s table").out);
@@ -145,7 +174,11 @@ describe("games", () => {
     expect(run("-g yahtzee -s table").out).toBe("Yahtzee (5d6): Chance, for 13  [1 2 1 5 4]\n");
     expect(run("--game Yacht -s table").out).toBe(run("-g yahtzee -s table").out);
     expect(run("-g craps -s table").out).toBe("Craps (2d6): 3 · 3 on the come-out: craps  [1 2]\n");
-    expect(run("-g nothing")).toEqual({ code: 1, out: "", err: "korokoro: no game is called “nothing”. `koro --games` lists them\n" });
+    expect(run("-g nothing")).toEqual({
+      code: 1,
+      out: "",
+      err: "korokoro: no game is called “nothing”. `koro --games` lists them\n",
+    });
   });
 
   it("read each roll in the light of the ones before it", () => {
@@ -182,8 +215,13 @@ describe("JSON and CSV", () => {
   it("carry what could not be rolled, and a game's reading", () => {
     const bad = run("11d6 2d6 -j");
     expect(bad.code).toBe(1);
-    expect(JSON.parse(bad.out).errors).toEqual([{ input: "11d6", problem: "count", part: "11", message: "“11”: roll 1 to 10 dice at a time" }]);
-    expect(JSON.parse(run("-g yahtzee -s table -j").out).rolls[0]).toMatchObject({ game: "yahtzee", reading: { outcome: "chance", text: "Chance, for 13" } });
+    expect(JSON.parse(bad.out).errors).toEqual([
+      { input: "11d6", problem: "count", part: "11", message: "“11”: roll 1 to 10 dice at a time" },
+    ]);
+    expect(JSON.parse(run("-g yahtzee -s table -j").out).rolls[0]).toMatchObject({
+      game: "yahtzee",
+      reading: { outcome: "chance", text: "Chance, for 13" },
+    });
   });
 
   it("print CSV with its header", () => {
@@ -198,13 +236,23 @@ describe("testing a real die", () => {
     expect(run("--test", {}).code).toBe(2);
     expect(runCli(["--test", "3 5 6 6 1 2"]).out).toBe("6 results on a d6: too few to say. The test wants 30.\n");
     const fair = Array.from({ length: 60 }, (_, i) => (i % 6) + 1).join(" ");
-    expect(runCli(["--test", fair]).out).toMatch(/^60 results on a d6: nothing to see\. A fair die strays this far or further 100% of the time\.\n$/);
+    expect(runCli(["--test", fair]).out).toMatch(
+      /^60 results on a d6: nothing to see\. A fair die strays this far or further 100% of the time\.\n$/,
+    );
     const heavy = Array.from({ length: 120 }, (_, i) => (i % 2 === 0 ? 6 : (i % 6) + 1)).join(" ");
     expect(runCli(["--test", heavy]).out).toMatch(/lopsided/);
     expect(runCli(["--test", "1 2 3", "--sides", "20"]).out).toContain("on a d20");
-    expect(runCli(["--test", "1 2 x"])).toEqual({ code: 1, out: "", err: "korokoro: “x” is not a result of this die\n" });
+    expect(runCli(["--test", "1 2 x"])).toEqual({
+      code: 1,
+      out: "",
+      err: "korokoro: “x” is not a result of this die\n",
+    });
     expect(runCli(["--test", "1 2 3", "--sides", "1"]).code).toBe(2);
-    expect(JSON.parse(runCli(["--test", fair, "--json"]).out).test).toMatchObject({ sides: 6, rolls: 60, verdict: "fair" });
+    expect(JSON.parse(runCli(["--test", fair, "--json"]).out).test).toMatchObject({
+      sides: 6,
+      rolls: 60,
+      verdict: "fair",
+    });
   });
 });
 

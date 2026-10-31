@@ -115,13 +115,19 @@ test("the history is saved as CSV, JSON and text, and the JSON comes back in", a
   await tap(page, '[data-testid="kk-clear"]');
   await tap(page, '[data-testid="kk-clear"]');
   await expect(page.locator('[data-testid="kk-history-row"]')).toHaveCount(0);
-  await page.locator('[data-testid="kk-import"]').setInputFiles({ name: "rolls.json", mimeType: "application/json", buffer: Buffer.from(json.text) });
+  await page
+    .locator('[data-testid="kk-import"]')
+    .setInputFiles({ name: "rolls.json", mimeType: "application/json", buffer: Buffer.from(json.text) });
   await expect(page.locator('[data-testid="kk-history-row"]')).toHaveCount(3);
   await expect(page.locator('[data-testid="kk-export-said"]')).toHaveText("Added 3 rolls");
   // The same file again adds nothing, and a file that is not an export says so.
-  await page.locator('[data-testid="kk-import"]').setInputFiles({ name: "rolls.json", mimeType: "application/json", buffer: Buffer.from(json.text) });
+  await page
+    .locator('[data-testid="kk-import"]')
+    .setInputFiles({ name: "rolls.json", mimeType: "application/json", buffer: Buffer.from(json.text) });
   await expect(page.locator('[data-testid="kk-export-said"]')).toHaveText("Every roll in that file is already here");
-  await page.locator('[data-testid="kk-import"]').setInputFiles({ name: "notes.json", mimeType: "application/json", buffer: Buffer.from("not an export") });
+  await page
+    .locator('[data-testid="kk-import"]')
+    .setInputFiles({ name: "notes.json", mimeType: "application/json", buffer: Buffer.from("not an export") });
   await expect(page.locator('[data-testid="kk-export-said"]')).toHaveText("That file is not a Korokoro export");
   await expect(page.locator('[data-testid="kk-history-row"]')).toHaveCount(3);
   await sound(page, errors);

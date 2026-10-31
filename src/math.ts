@@ -193,18 +193,35 @@ const FUNCTIONS: readonly string[] = ["floor", "ceil", "round", "abs", "max", "m
 export function soundMath(given: unknown, depth = 0): MathNode | undefined {
   if (typeof given !== "object" || given === null || depth > MAX_MATH_NODES) return undefined;
   const node = given as Record<string, unknown>;
-  if (node.kind === "dice") return Number.isInteger(node.group) && (node.group as number) >= 0 ? { kind: "dice", group: node.group as number } : undefined;
-  if (node.kind === "number") return Number.isInteger(node.value) && Math.abs(node.value as number) <= MAX_MATH_NUMBER ? { kind: "number", value: node.value as number } : undefined;
+  if (node.kind === "dice")
+    return Number.isInteger(node.group) && (node.group as number) >= 0
+      ? { kind: "dice", group: node.group as number }
+      : undefined;
+  if (node.kind === "number")
+    return Number.isInteger(node.value) && Math.abs(node.value as number) <= MAX_MATH_NUMBER
+      ? { kind: "number", value: node.value as number }
+      : undefined;
   if (node.kind === "op") {
     const left = soundMath(node.left, depth + 1);
     const right = soundMath(node.right, depth + 1);
-    if ((node.op !== "+" && node.op !== "-" && node.op !== "*" && node.op !== "/") || left === undefined || right === undefined) return undefined;
+    if (
+      (node.op !== "+" && node.op !== "-" && node.op !== "*" && node.op !== "/") ||
+      left === undefined ||
+      right === undefined
+    )
+      return undefined;
     return { kind: "op", op: node.op, left, right };
   }
-  if (node.kind === "call" && typeof node.name === "string" && FUNCTIONS.includes(node.name) && Array.isArray(node.args)) {
+  if (
+    node.kind === "call" &&
+    typeof node.name === "string" &&
+    FUNCTIONS.includes(node.name) &&
+    Array.isArray(node.args)
+  ) {
     const args = node.args.map((arg) => soundMath(arg, depth + 1));
     const several = node.name === "max" || node.name === "min";
-    if (args.includes(undefined) || (several ? args.length < 2 || args.length > 4 : args.length !== 1)) return undefined;
+    if (args.includes(undefined) || (several ? args.length < 2 || args.length > 4 : args.length !== 1))
+      return undefined;
     return { kind: "call", name: node.name as MathFunction, args: args as MathNode[] };
   }
   return undefined;
@@ -243,7 +260,13 @@ function span(node: MathNode, ranges: readonly { min: number; max: number }[]): 
   const wide = (min: Q, max: Q, whole: boolean, width: number, bottom: number): Span | MathProblem => {
     const across = whole ? exactFloor(max) - exactFloor(min) + 1 : width;
     const narrow = Math.min(width, across);
-    if (narrow > MAX_MATH_TOTALS || size(min) > MAX_MATH_AMOUNT || size(max) > MAX_MATH_AMOUNT || bottom > MAX_MATH_DIVISOR) return "large";
+    if (
+      narrow > MAX_MATH_TOTALS ||
+      size(min) > MAX_MATH_AMOUNT ||
+      size(max) > MAX_MATH_AMOUNT ||
+      bottom > MAX_MATH_DIVISOR
+    )
+      return "large";
     return { min, max, whole, width: narrow, bottom: whole ? 1 : bottom };
   };
   if (node.kind === "op") {
@@ -254,7 +277,12 @@ function span(node: MathNode, ranges: readonly { min: number; max: number }[]): 
     if (a.width * b.width > MAX_MATH_PAIRS) return "large";
     if (node.op === "/" && !less(q(0), b.min) && !less(b.max, q(0))) return "zero";
     // Every way the ends can be put together: the least and the most are among them.
-    const ends = [apply(node.op, a.min, b.min), apply(node.op, a.min, b.max), apply(node.op, a.max, b.min), apply(node.op, a.max, b.max)];
+    const ends = [
+      apply(node.op, a.min, b.min),
+      apply(node.op, a.min, b.max),
+      apply(node.op, a.max, b.min),
+      apply(node.op, a.max, b.max),
+    ];
     const min = ends.reduce((x, y) => (less(y, x) ? y : x));
     const max = ends.reduce((x, y) => (less(x, y) ? y : x));
     // The bottom of a quotient is at most the bottom it had times the largest top it is divided by.
@@ -268,12 +296,19 @@ function span(node: MathNode, ranges: readonly { min: number; max: number }[]): 
     args.push(made);
   }
   const [first] = args as [Span];
-  if (node.name === "floor" || node.name === "ceil" || node.name === "round") return wide(call(node.name, [first.min]), call(node.name, [first.max]), true, first.width, 1);
+  if (node.name === "floor" || node.name === "ceil" || node.name === "round")
+    return wide(call(node.name, [first.min]), call(node.name, [first.max]), true, first.width, 1);
   if (node.name === "abs") {
     const low = call("abs", [first.min]);
     const high = call("abs", [first.max]);
     const crosses = less(first.min, q(0)) && less(q(0), first.max);
-    return wide(crosses ? q(0) : less(low, high) ? low : high, less(low, high) ? high : low, first.whole, first.width, first.bottom);
+    return wide(
+      crosses ? q(0) : less(low, high) ? low : high,
+      less(low, high) ? high : low,
+      first.whole,
+      first.width,
+      first.bottom,
+    );
   }
   if (args.reduce((pairs, arg) => pairs * arg.width, 1) > MAX_MATH_PAIRS) return "large";
   return wide(
@@ -310,7 +345,13 @@ function span(node: MathNode, ranges: readonly { min: number; max: number }[]): 
  */
 export function checkMath(node: MathNode, ranges: readonly { min: number; max: number }[]): MathProblem | null {
   const used = mathGroups(node);
-  if (count(node) > MAX_MATH_NODES || used.length !== ranges.length || new Set(used).size !== used.length || used.some((g) => g >= ranges.length)) return "shape";
+  if (
+    count(node) > MAX_MATH_NODES ||
+    used.length !== ranges.length ||
+    new Set(used).size !== used.length ||
+    used.some((g) => g >= ranges.length)
+  )
+    return "shape";
   const made = span(node, ranges);
   if (typeof made === "string") return made;
   return made.whole ? null : "fraction";
@@ -329,7 +370,10 @@ export function checkMath(node: MathNode, ranges: readonly { min: number; max: n
  * console.log(mathRange({ kind: "dice", group: 0 }, [{ min: 1, max: 6 }]));
  * ```
  */
-export function mathRange(node: MathNode, ranges: readonly { min: number; max: number }[]): { min: number; max: number } {
+export function mathRange(
+  node: MathNode,
+  ranges: readonly { min: number; max: number }[],
+): { min: number; max: number } {
   const made = span(node, ranges);
   if (typeof made === "string") return { min: 0, max: 0 };
   return { min: exactFloor(made.min), max: exactFloor(made.max) };
@@ -416,7 +460,9 @@ export function mathText(node: MathNode, dice: (group: number) => string): strin
   const rank = RANK[node.op];
   const side = (child: MathNode, right: boolean) => {
     const text = mathText(child, dice);
-    const loose = child.kind === "op" && (RANK[child.op] < rank || (right && RANK[child.op] === rank && (node.op === "-" || node.op === "/")));
+    const loose =
+      child.kind === "op" &&
+      (RANK[child.op] < rank || (right && RANK[child.op] === rank && (node.op === "-" || node.op === "/")));
     // A negative number on the right is bracketed so that it cannot be read as two signs.
     return loose || (right && text.startsWith("-")) ? `(${text})` : text;
   };

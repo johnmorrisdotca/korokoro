@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { canHold, diceOf, groupsOf, isSuccessRoll, normalizeSpec, rangeOf, readDice, roll, rollFrom, rulesText, type RollSpec } from "./dice.ts";
+import {
+  canHold,
+  diceOf,
+  groupsOf,
+  isSuccessRoll,
+  normalizeSpec,
+  rangeOf,
+  readDice,
+  roll,
+  rollFrom,
+  rulesText,
+  type RollSpec,
+} from "./dice.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
 import { chanceAtLeast, distributionOf, exactCounts, expectedTotal } from "./odds.ts";
 import { seededSource, type RandomSource } from "./random.ts";
@@ -98,7 +110,10 @@ describe("the odds of the rules added in 1.7.0, against every way the dice can f
     const allow = left + 1e-9;
     for (let i = 0; i < odds.probabilities.length; i++) {
       const total = odds.min + i;
-      expect(Math.abs((odds.probabilities[i] as number) - (totals.get(total) ?? 0)), `${text} at ${total}`).toBeLessThanOrEqual(allow);
+      expect(
+        Math.abs((odds.probabilities[i] as number) - (totals.get(total) ?? 0)),
+        `${text} at ${total}`,
+      ).toBeLessThanOrEqual(allow);
     }
     for (const total of totals.keys()) expect(total, text).toBeGreaterThanOrEqual(odds.min);
     for (const total of totals.keys()) expect(total, text).toBeLessThanOrEqual(odds.max);
@@ -201,7 +216,8 @@ describe("notation for the rules added in 1.7.0", () => {
     // What is written reads back as the same roll.
     expect(parseNotation(written)).toEqual(read.spec);
     // A spec carries only what it uses.
-    for (const group of groupsOf(read.spec)) for (const value of Object.values(group)) expect(value).not.toBeUndefined();
+    for (const group of groupsOf(read.spec))
+      for (const value of Object.values(group)) expect(value).not.toBeUndefined();
   });
 
   it.each([
@@ -232,7 +248,11 @@ describe("notation for the rules added in 1.7.0", () => {
     ["2d[Yes,No]>=1", "custom", ">=1"],
     ["2d[1,2]min2", "custom", "min2"],
     ["4d6sasd", "twice", "sd"],
-    ["2d6 # a label that runs on for far longer than forty characters", "label", "# a label that runs on for far longer than forty characters"],
+    [
+      "2d6 # a label that runs on for far longer than forty characters",
+      "label",
+      "# a label that runs on for far longer than forty characters",
+    ],
     ["2d6 # one # two", "label", "# one # two"],
     ["[one] 2d6 # two", "label", "# two"],
     ["[] 2d6", "label", "[]"],
@@ -243,18 +263,42 @@ describe("notation for the rules added in 1.7.0", () => {
   });
 
   it("a spec given by hand keeps only the rules that leave something to roll", () => {
-    expect(rulesText(normalizeSpec({ count: 6, sides: 10, success: { op: ">=", n: 8 }, failure: { op: "=", n: 1 } }))).toBe(">=8f=1");
+    expect(
+      rulesText(normalizeSpec({ count: 6, sides: 10, success: { op: ">=", n: 8 }, failure: { op: "=", n: 1 } })),
+    ).toBe(">=8f=1");
     expect(rulesText(normalizeSpec({ count: 6, sides: 10, success: { op: ">=", n: 11 } }))).toBe("");
     expect(rulesText(normalizeSpec({ count: 6, sides: 10, failure: { op: "=", n: 1 } }))).toBe("");
-    expect(rulesText(normalizeSpec({ count: 4, sides: 6, keep: "highest", keepCount: 3, success: { op: ">=", n: 5 } }))).toBe("kh3");
+    expect(
+      rulesText(normalizeSpec({ count: 4, sides: 6, keep: "highest", keepCount: 3, success: { op: ">=", n: 5 } })),
+    ).toBe("kh3");
     expect(rulesText(normalizeSpec({ count: 2, sides: 6, floor: 9 }))).toBe("");
-    expect(rulesText(normalizeSpec({ count: 2, sides: 6, explode: true, explodeKind: "penetrating", explodeWhen: { op: ">=", n: 5 } }))).toBe("!p>=5");
+    expect(
+      rulesText(
+        normalizeSpec({
+          count: 2,
+          sides: 6,
+          explode: true,
+          explodeKind: "penetrating",
+          explodeWhen: { op: ">=", n: 5 },
+        }),
+      ),
+    ).toBe("!p>=5");
     expect(rulesText(normalizeSpec({ count: 2, sides: 6, explodeKind: "penetrating" }))).toBe("");
     expect(rulesText(normalizeSpec({ count: 2, sides: 6, rerollWhen: { op: "<=", n: 2 } }))).toBe("ro<3");
     expect(rulesText(normalizeSpec({ count: 2, sides: 6, rerollUntilWhen: { op: "=", n: 1 } }))).toBe("r<2");
     expect(rulesText(normalizeSpec({ count: 2, sides: 6, rerollUntilWhen: { op: ">=", n: 3 } }))).toBe("");
     // Nonsense is left out, never guessed at.
-    expect(rulesText(normalizeSpec({ count: 2, sides: 6, success: { op: "≥", n: 5 } as never, sort: "up" as never, critical: 6 as never }))).toBe("");
+    expect(
+      rulesText(
+        normalizeSpec({
+          count: 2,
+          sides: 6,
+          success: { op: "≥", n: 5 } as never,
+          sort: "up" as never,
+          critical: 6 as never,
+        }),
+      ),
+    ).toBe("");
     expect(normalizeSpec({ count: 2, sides: 6, label: "  fire   damage " }).label).toBe("fire damage");
     expect(normalizeSpec({ count: 2, sides: 6, label: "<b>x</b>" }).label).toBe("<b>x</b>");
     expect(normalizeSpec({ count: 2, sides: 6, label: "a#b" })).not.toHaveProperty("label");
@@ -351,7 +395,14 @@ describe("a roll by the rules added in 1.7.0", () => {
   });
 
   it("is read back from its faces, and refuses faces it could not have thrown", () => {
-    for (const text of ["6d10>=8f=1!", "3d6!!p>=5", "2d6r>=5", "4d6min2max5kh3", "2d6ro=3>=4", "1d20cs>=19cf=1+5 # attack"]) {
+    for (const text of [
+      "6d10>=8f=1!",
+      "3d6!!p>=5",
+      "2d6r>=5",
+      "4d6min2max5kh3",
+      "2d6ro=3>=4",
+      "1d20cs>=19cf=1+5 # attack",
+    ]) {
       const made = roll(spec(text), seededSource(`read ${text}`), 5);
       const read = rollFrom(made.spec, made.faces, made.id, made.at, made.seed);
       expect(read, text).toEqual(made);

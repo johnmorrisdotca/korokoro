@@ -100,7 +100,14 @@ export type DiceWarRoll = { seat: number; faces: number[]; total: number };
  * console.log(value.round);
  * ```
  */
-export type DiceWarThrow = { round: number; war: number; rolls: DiceWarRoll[]; tied: number[]; winner: number | null; stake: number };
+export type DiceWarThrow = {
+  round: number;
+  war: number;
+  rolls: DiceWarRoll[];
+  tied: number[];
+  winner: number | null;
+  stake: number;
+};
 
 /** A move: the dice the people at the table rolled, by seat, such as `{ faces: { "0": [4] } }`. The computers' dice are the seed's, so a table of computers is `{}`.
  *
@@ -188,7 +195,12 @@ function whole(value: unknown, least: number, most: number): value is number {
  */
 export function startDiceWar(options: DiceWarOptions): DiceWarGame | null {
   const { players, computers, dice = 1, sides = 6, goal = "points", to = 5, seed = newSeed() } = options;
-  if (!Array.isArray(players) || players.length < DICE_WAR_LIMITS.fewestPlayers || players.length > DICE_WAR_LIMITS.mostPlayers) return null;
+  if (
+    !Array.isArray(players) ||
+    players.length < DICE_WAR_LIMITS.fewestPlayers ||
+    players.length > DICE_WAR_LIMITS.mostPlayers
+  )
+    return null;
   if (!players.every((name) => typeof name === "string")) return null;
   if (!whole(dice, 1, DICE_WAR_LIMITS.mostDice) || !whole(sides, MIN_SIDES, MAX_SIDES)) return null;
   if (goal !== "points" && goal !== "rounds") return null;
@@ -248,7 +260,12 @@ export function diceWarPeopleToRoll(game: DiceWarGame): number[] {
  * console.log(diceWarComputerFaces(game, 1, 0, 0));
  * ```
  */
-export function diceWarComputerFaces(game: Pick<DiceWarGame, "seed" | "dice" | "sides">, round: number, war: number, seat: number): number[] {
+export function diceWarComputerFaces(
+  game: Pick<DiceWarGame, "seed" | "dice" | "sides">,
+  round: number,
+  war: number,
+  seat: number,
+): number[] {
   return roll({ count: game.dice, sides: game.sides }, seededSource(`${game.seed}/${round}/${war}/${seat}`), 0).faces;
 }
 
@@ -280,7 +297,8 @@ export function playDiceWar(game: DiceWarGame, move: DiceWarMove): DiceWarGame |
     if (game.computers[seat]) faces = diceWarComputerFaces(game, game.round, game.wars, seat);
     else {
       const handed = given[String(seat)];
-      if (!Array.isArray(handed) || handed.length !== game.dice || !handed.every((face) => whole(face, 1, game.sides))) return null;
+      if (!Array.isArray(handed) || handed.length !== game.dice || !handed.every((face) => whole(face, 1, game.sides)))
+        return null;
       faces = [...handed];
     }
     rolls.push({ seat, faces, total: faces.reduce((sum, face) => sum + face, 0) });
@@ -316,8 +334,22 @@ export function playDiceWar(game: DiceWarGame, move: DiceWarMove): DiceWarGame |
       rollers = game.players.map((_, seat) => seat);
     }
   }
-  const kept: DiceWarMove = Object.keys(given).length === 0 ? {} : { faces: Object.fromEntries(Object.entries(given).map(([seat, faces]) => [seat, [...faces]])) };
-  return { ...game, moves: [...game.moves, kept], phase: ended === null ? "playing" : "over", scores, round, wars, stake, rollers, throws: [...game.throws, { ...thrown, winner }], ended };
+  const kept: DiceWarMove =
+    Object.keys(given).length === 0
+      ? {}
+      : { faces: Object.fromEntries(Object.entries(given).map(([seat, faces]) => [seat, [...faces]])) };
+  return {
+    ...game,
+    moves: [...game.moves, kept],
+    phase: ended === null ? "playing" : "over",
+    scores,
+    round,
+    wars,
+    stake,
+    rollers,
+    throws: [...game.throws, { ...thrown, winner }],
+    ended,
+  };
 }
 
 /** Whether a game is over.
@@ -401,10 +433,19 @@ export type DiceWarChances = {
  * console.log(diceWarOdds({ players: 2, dice: 1, sides: 6 }).war);
  * ```
  */
-export function diceWarOdds(options: { players: number; dice?: number; sides?: number }, total?: number): DiceWarChances {
+export function diceWarOdds(
+  options: { players: number; dice?: number; sides?: number },
+  total?: number,
+): DiceWarChances {
   const { players, dice = 1, sides = 6 } = options;
-  if (!whole(players, DICE_WAR_LIMITS.fewestPlayers, DICE_WAR_LIMITS.mostPlayers) || !whole(dice, 1, DICE_WAR_LIMITS.mostDice) || !whole(sides, MIN_SIDES, MAX_SIDES)) {
-    throw new RangeError("korokoro: a Dice War table is two to eight players, one to ten dice of two to a thousand sides");
+  if (
+    !whole(players, DICE_WAR_LIMITS.fewestPlayers, DICE_WAR_LIMITS.mostPlayers) ||
+    !whole(dice, 1, DICE_WAR_LIMITS.mostDice) ||
+    !whole(sides, MIN_SIDES, MAX_SIDES)
+  ) {
+    throw new RangeError(
+      "korokoro: a Dice War table is two to eight players, one to ten dice of two to a thousand sides",
+    );
   }
   const spec = normalizeSpec({ count: dice, sides });
   const { min, probabilities } = distributionOf(spec);
@@ -423,7 +464,14 @@ export function diceWarOdds(options: { players: number; dice?: number; sides?: n
   const atMost = known ? (below[index] as number) + (probabilities[index] as number) : 0;
   const beats = total === undefined ? null : known ? (below[index] as number) ** others : total > min ? 1 : 0;
   const ties = total === undefined ? null : known ? atMost ** others - (below[index] as number) ** others : 0;
-  return { outright, war: 1 - outright, eachOutright: outright / players, beats, ties, loses: beats === null || ties === null ? null : Math.max(0, 1 - beats - ties) };
+  return {
+    outright,
+    war: 1 - outright,
+    eachOutright: outright / players,
+    beats,
+    ties,
+    loses: beats === null || ties === null ? null : Math.max(0, 1 - beats - ties),
+  };
 }
 
 /** A game of Dice War as text: its table, its seed and its moves, which is all there is to keep.
@@ -441,7 +489,18 @@ export function diceWarOdds(options: { players: number; dice?: number; sides?: n
  * ```
  */
 export function encodeDiceWar(game: DiceWarGame): string {
-  return JSON.stringify({ v: KEPT_VERSION, g: "diceWar", players: game.players, computers: game.computers, dice: game.dice, sides: game.sides, goal: game.goal, to: game.to, seed: game.seed, moves: game.moves });
+  return JSON.stringify({
+    v: KEPT_VERSION,
+    g: "diceWar",
+    players: game.players,
+    computers: game.computers,
+    dice: game.dice,
+    sides: game.sides,
+    goal: game.goal,
+    to: game.to,
+    seed: game.seed,
+    moves: game.moves,
+  });
 }
 
 /**
@@ -470,9 +529,24 @@ export function decodeDiceWar(text: string | null): DiceWarGame | null {
   }
   if (typeof kept !== "object" || kept === null || Array.isArray(kept)) return null;
   const { v, g, players, computers, dice, sides, goal, to, seed, moves } = kept as Record<string, unknown>;
-  if (v !== KEPT_VERSION || g !== "diceWar" || !Array.isArray(players) || !Array.isArray(computers) || !Array.isArray(moves)) return null;
+  if (
+    v !== KEPT_VERSION ||
+    g !== "diceWar" ||
+    !Array.isArray(players) ||
+    !Array.isArray(computers) ||
+    !Array.isArray(moves)
+  )
+    return null;
   if (computers.length !== players.length || !computers.every((seat) => typeof seat === "boolean")) return null;
-  let game = startDiceWar({ players: players as string[], computers: computers as boolean[], dice: dice as number, sides: sides as number, goal: goal as DiceWarGoal, to: to as number, seed: seed as string });
+  let game = startDiceWar({
+    players: players as string[],
+    computers: computers as boolean[],
+    dice: dice as number,
+    sides: sides as number,
+    goal: goal as DiceWarGoal,
+    to: to as number,
+    seed: seed as string,
+  });
   for (const move of moves) {
     if (game === null) return null;
     game = playDiceWar(game, move as DiceWarMove);

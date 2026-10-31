@@ -79,7 +79,10 @@ function decode(ctx: AudioContext, data: ArrayBuffer): Promise<AudioBuffer> {
 /** The landings that get a knock: all of them up to `MAX_KNOCKS`, then an even spread from first to last. */
 export function knockTimes(landings: readonly number[]): number[] {
   if (landings.length <= MAX_KNOCKS) return [...landings];
-  return Array.from({ length: MAX_KNOCKS }, (_, i) => landings[Math.round((i * (landings.length - 1)) / (MAX_KNOCKS - 1))] as number);
+  return Array.from(
+    { length: MAX_KNOCKS },
+    (_, i) => landings[Math.round((i * (landings.length - 1)) / (MAX_KNOCKS - 1))] as number,
+  );
 }
 
 /**

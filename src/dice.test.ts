@@ -41,7 +41,9 @@ describe("roll", () => {
   });
 
   it("the same seed rolls the same dice", () => {
-    expect(roll({ count: 5, sides: 100 }, seededSource("z")).faces).toEqual(roll({ count: 5, sides: 100 }, seededSource("z")).faces);
+    expect(roll({ count: 5, sides: 100 }, seededSource("z")).faces).toEqual(
+      roll({ count: 5, sides: 100 }, seededSource("z")).faces,
+    );
   });
 
   it("throws a d30 from 1 to 30, every face and nothing else", () => {
@@ -79,9 +81,12 @@ describe("notation", () => {
     expect(parseNotation(text)).toEqual(spec);
   });
 
-  it.each(["11d6", "2d1", "2d1001", "d", "3d6+", "hello", "1d20kh1", "0d6"])("refuses %s rather than rolling something else", (text) => {
-    expect(parseNotation(text)).toBeNull();
-  });
+  it.each(["11d6", "2d1", "2d1001", "d", "3d6+", "hello", "1d20kh1", "0d6"])(
+    "refuses %s rather than rolling something else",
+    (text) => {
+      expect(parseNotation(text)).toBeNull();
+    },
+  );
 
   it("writes back what it reads", () => {
     for (const text of ["3d6+2", "1d20", "2d20kh1+5", "2d20kl1-1", "5d100", "2d30", "1d30+3", "5d30kh1-4"]) {

@@ -110,7 +110,9 @@ export const READERS = {
     let inARow = 1;
     for (let i = before.length - 1; i >= 0 && all(before[i] as Dice)[0] === all(before[i] as Dice)[1]; i--) inARow += 1;
     // Where a game ends the turn on a third doubles, as Monopoly does.
-    return inARow >= 3 && options.third === 1 ? bad("third", { total: dice.total, face: a as number }) : good("doubles", { total: dice.total, face: a as number });
+    return inARow >= 3 && options.third === 1
+      ? bad("third", { total: dice.total, face: a as number })
+      : good("doubles", { total: dice.total, face: a as number });
   },
 
   /** Two dice for the table: a seven moves the robber. */
@@ -119,7 +121,9 @@ export const READERS = {
   /** Two dice, and doubles are played four times over. */
   backgammon: (dice) => {
     const [a, b] = all(dice);
-    return a === b ? good("doubles", { face: a as number, total: 4 * (a as number) }) : plain("moves", { a: Math.max(a as number, b as number), b: Math.min(a as number, b as number) });
+    return a === b
+      ? good("doubles", { face: a as number, total: 4 * (a as number) })
+      : plain("moves", { a: Math.max(a as number, b as number), b: Math.min(a as number, b as number) });
   },
 
   /** One die, and a six rolls again; the third six in a row does not move. */
@@ -172,7 +176,11 @@ export const READERS = {
     const total = dice.total;
     if (chance === null) {
       const first = hazardFirst(main, total);
-      return first === "nick" ? good("nick", { total, main }) : first === "out" ? bad("out", { total, main }) : plain("chance", { total, main });
+      return first === "nick"
+        ? good("nick", { total, main })
+        : first === "out"
+          ? bad("out", { total, main })
+          : plain("chance", { total, main });
     }
     if (total === chance) return good("made", { total });
     if (total === main) return bad("lost", { total, chance });
@@ -230,12 +238,18 @@ export const READERS = {
     const face = all(dice)[0] as number;
     if (face === 1) return bad("out");
     let turn = face;
-    for (let i = before.length - 1; i >= 0 && all(before[i] as Dice)[0] !== 1; i--) turn += all(before[i] as Dice)[0] as number;
+    for (let i = before.length - 1; i >= 0 && all(before[i] as Dice)[0] !== 1; i--)
+      turn += all(before[i] as Dice)[0] as number;
     return plain("turn", { face, turn });
   },
 
   /** The dice in hand, counted: "two 3s, a 5". */
-  counts: (dice) => plain("counts", { dice: tally(all(dice)).map(([face, n]) => `${n}×${face}`).join(", ") }),
+  counts: (dice) =>
+    plain("counts", {
+      dice: tally(all(dice))
+        .map(([face, n]) => `${n}×${face}`)
+        .join(", "),
+    }),
 
   /** Five dice: a 6, a 5 and a 4 make the ship, her captain and her crew, and the other two are the cargo. */
   shipCaptainCrew: (dice) => {
@@ -247,7 +261,13 @@ export const READERS = {
   },
 
   /** Two dice (or one): the total, and every set of tiles from 1 to 9 it may shut. */
-  shutTheBox: (dice) => plain("shut", { total: dice.total, ways: waysToShut(dice.total).map((w) => w.join("+")).join(", ") }),
+  shutTheBox: (dice) =>
+    plain("shut", {
+      total: dice.total,
+      ways: waysToShut(dice.total)
+        .map((w) => w.join("+"))
+        .join(", "),
+    }),
 
   /** Two dice read as one number, the higher die first: 21 is Mexico, then doubles, then the rest. */
   mexico: (dice) => {
@@ -290,7 +310,11 @@ export const READERS = {
       if ((attack[i] as number) > (defence[i] as number)) defender += 1;
       else attacker += 1;
     }
-    return { outcome: `${attacker}-${defender}`, values: { attacker, defender }, tone: attacker === 0 ? "good" : defender === 0 ? "bad" : "plain" };
+    return {
+      outcome: `${attacker}-${defender}`,
+      values: { attacker, defender },
+      tone: attacker === 0 ? "good" : defender === 0 ? "bad" : "plain",
+    };
   },
 
   /** One die each: the highest goes first, and a tie at the top is rolled again by those who tied. */
@@ -298,7 +322,9 @@ export const READERS = {
     const faces = all(dice);
     const top = Math.max(...faces);
     const leaders = faces.flatMap((face, i) => (face === top ? [i + 1] : []));
-    return leaders.length === 1 ? good("first", { player: leaders[0] as number, face: top }) : plain("tie", { players: leaders.join(", "), face: top });
+    return leaders.length === 1
+      ? good("first", { player: leaders[0] as number, face: top })
+      : plain("tie", { players: leaders.join(", "), face: top });
   },
 
   /** A d20, alone or the one kept of two: a natural 20, a natural 1, or the total. */
@@ -314,7 +340,11 @@ export const READERS = {
   /** Four Fate dice and a bonus, read off the ladder. */
   fate: (dice) => {
     const total = dice.total;
-    return { outcome: total > 8 ? "above" : total < -2 ? "below" : `rung${total}`, values: { total: total > 0 ? `+${total}` : String(total) }, tone: "plain" };
+    return {
+      outcome: total > 8 ? "above" : total < -2 ? "below" : `rung${total}`,
+      values: { total: total > 0 ? `+${total}` : String(total) },
+      tone: "plain",
+    };
   },
 
   /** A pool of d6 read by its highest die: 1 to 3, 4 or 5, a 6, or a critical on two sixes. */
@@ -326,7 +356,12 @@ export const READERS = {
   },
 
   /** Two d6 and a stat: 10 or more, 7 to 9, or 6 or less. */
-  pbta: (dice) => (dice.total >= 10 ? good("strong", { total: dice.total }) : dice.total >= 7 ? plain("weak", { total: dice.total }) : bad("miss", { total: dice.total })),
+  pbta: (dice) =>
+    dice.total >= 10
+      ? good("strong", { total: dice.total })
+      : dice.total >= 7
+        ? plain("weak", { total: dice.total })
+        : bad("miss", { total: dice.total }),
 
   /** A pool counted for dice at or above a number: successes. */
   successes: (dice, _before, options) => {
@@ -339,7 +374,13 @@ export const READERS = {
     const faces = all(dice);
     const hits = faces.filter((face) => face >= 5).length;
     const glitch = faces.filter((face) => face === 1).length * 2 > faces.length;
-    return glitch ? bad("glitch", { hits }) : hits === 0 ? plain("none") : hits === 1 ? good("one", { hits }) : good("hits", { hits });
+    return glitch
+      ? bad("glitch", { hits })
+      : hits === 0
+        ? plain("none")
+        : hits === 1
+          ? good("one", { hits })
+          : good("hits", { hits });
   },
 
   /** A percentile roll: what skill it succeeds against, and against which it is a hard or an extreme success. */
@@ -404,7 +445,12 @@ export type ReadingId = keyof typeof READERS;
  * console.log(readDiceAs(preset.reading, sample).outcome);
  * ```
  */
-export function readDiceAs(reading: ReadingId, roll: Roll, before: readonly Roll[] = [], options: Record<string, number> = {}): Outcome {
+export function readDiceAs(
+  reading: ReadingId,
+  roll: Roll,
+  before: readonly Roll[] = [],
+  options: Record<string, number> = {},
+): Outcome {
   return (READERS[reading] as Read)(diceFor(roll), before.map(diceFor), options);
 }
 
@@ -430,7 +476,18 @@ export function readDiceAs(reading: ReadingId, roll: Roll, before: readonly Roll
  */
 export function patternsOf(spec: RollSpec): { dice: Dice; ways: bigint }[] | null {
   const groups = groupsOf(spec);
-  if (groups.some((g) => g.explode === true || g.reroll !== undefined || g.rerollUntil !== undefined || g.weights !== undefined || g.keep !== "all" || playsByNewRules(g))) return null;
+  if (
+    groups.some(
+      (g) =>
+        g.explode === true ||
+        g.reroll !== undefined ||
+        g.rerollUntil !== undefined ||
+        g.weights !== undefined ||
+        g.keep !== "all" ||
+        playsByNewRules(g),
+    )
+  )
+    return null;
   const factorial = (n: number): bigint => (n <= 1 ? 1n : BigInt(n) * factorial(n - 1));
   // One kind: every multiset of its faces, with the number of orders it has.
   const kind = (group: DiceGroup): { faces: number[]; ways: bigint }[] => {
@@ -440,7 +497,8 @@ export function patternsOf(spec: RollSpec): { dice: Dice; ways: bigint }[] | nul
     const walk = (face: number, left: number, picked: number[], orders: bigint) => {
       if (left === 0) return void out.push({ faces: picked, ways: orders });
       if (face < low) return;
-      for (let n = left; n >= 0; n--) walk(face - 1, left - n, [...picked, ...new Array<number>(n).fill(face)], orders / factorial(n));
+      for (let n = left; n >= 0; n--)
+        walk(face - 1, left - n, [...picked, ...new Array<number>(n).fill(face)], orders / factorial(n));
     };
     walk(high, group.count, [], factorial(group.count));
     return out;
@@ -453,6 +511,13 @@ export function patternsOf(spec: RollSpec): { dice: Dice; ways: bigint }[] | nul
   }
   return patterns.map((p) => ({
     ways: p.ways,
-    dice: { groups: p.faces, modifier: spec.modifier, total: p.faces.reduce((t, faces, i) => t + faces.reduce((s, f) => s + valueOfFace(groups[i] as DiceGroup, f), 0), spec.modifier) },
+    dice: {
+      groups: p.faces,
+      modifier: spec.modifier,
+      total: p.faces.reduce(
+        (t, faces, i) => t + faces.reduce((s, f) => s + valueOfFace(groups[i] as DiceGroup, f), 0),
+        spec.modifier,
+      ),
+    },
   }));
 }

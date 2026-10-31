@@ -19,7 +19,21 @@ export * from "./export.ts";
 export * from "./diceWar.ts";
 export { VERSION } from "./version.ts";
 export { cliLanguage, runCli, type CliResult, type CliSurroundings } from "./cli.ts";
-export { PRESETS, PRESETS as presets, findPresets, getPreset, presetOdds, presetSpec, readPreset, rollPreset, type GameFamily, type OutcomeOdds, type Preset, type PresetReading, type PresetRoll } from "./games/presets.ts";
+export {
+  PRESETS,
+  PRESETS as presets,
+  findPresets,
+  getPreset,
+  presetOdds,
+  presetSpec,
+  readPreset,
+  rollPreset,
+  type GameFamily,
+  type OutcomeOdds,
+  type Preset,
+  type PresetReading,
+  type PresetRoll,
+} from "./games/presets.ts";
 export { asChance, chinchirorinHandWithin, crapsPass, yahtzeeWithin } from "./games/odds.ts";
 export { patternsOf, readDiceAs, waysToShut, type Outcome, type ReadingId } from "./games/readings.ts";
 export { READING_WORDS } from "./games/words.ts";

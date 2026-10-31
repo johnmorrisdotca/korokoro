@@ -4,7 +4,6 @@ import type { Roll, RollSpec } from "./dice.ts";
 import { parseNotation } from "./notation.ts";
 import { mountRoller, type RollerHandle, type RollerOptions } from "./ui/mount.ts";
 
-
 // A Boolean prop left out is `undefined`, not `false`: the tray's own default then stands.
 const flag = { type: Boolean, default: undefined } as const;
 
@@ -63,14 +62,33 @@ export const DiceRoller = defineComponent({
   setup(props, { emit, expose }) {
     const box = ref<HTMLElement | null>(null);
     let roller: RollerHandle | null = null;
-    const dice = (): Partial<RollSpec> | undefined => (props.notation !== undefined ? (parseNotation(props.notation) ?? props.spec) : props.spec);
+    const dice = (): Partial<RollSpec> | undefined =>
+      props.notation !== undefined ? (parseNotation(props.notation) ?? props.spec) : props.spec;
 
     onMounted(() => {
       if (box.value === null) return;
       const options: RollerOptions = { onRoll: (roll) => emit("roll", roll) };
       // Only what was given is passed on, so that everything left out keeps the tray's default.
       const given = props as unknown as Record<string, unknown>;
-      for (const name of ["locale", "strings", "storage", "storageKey", "query", "shareBase", "theme", "wide", "size", "animationMs", "sound", "playSound", "hold", "placeholder", "keyboard", "languageChooser", "diceWar"] as const) {
+      for (const name of [
+        "locale",
+        "strings",
+        "storage",
+        "storageKey",
+        "query",
+        "shareBase",
+        "theme",
+        "wide",
+        "size",
+        "animationMs",
+        "sound",
+        "playSound",
+        "hold",
+        "placeholder",
+        "keyboard",
+        "languageChooser",
+        "diceWar",
+      ] as const) {
         if (given[name] !== undefined) (options as Record<string, unknown>)[name] = given[name];
       }
       const spec = dice();

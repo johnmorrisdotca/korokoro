@@ -1,4 +1,14 @@
-import { faceRange, dieName, groupsOf, isSides, normalizeSpec, roll, type CustomFace, type DiceGroup, type Sides } from "../dice.ts";
+import {
+  faceRange,
+  dieName,
+  groupsOf,
+  isSides,
+  normalizeSpec,
+  roll,
+  type CustomFace,
+  type DiceGroup,
+  type Sides,
+} from "../dice.ts";
 import { cryptoSource, type RandomSource } from "../random.ts";
 import { clothVars, isCloth, type Cloth } from "./cloth.ts";
 import { h } from "./dom.ts";
@@ -160,11 +170,14 @@ export function mountDie(target: HTMLElement, options: DieOptions = {}): DieHand
   const doc = target.ownerDocument;
   const win = doc.defaultView;
   const tree = target.getRootNode();
-  injectStyle(doc, tree.nodeType === 11 && "host" in tree ? tree as ShadowRoot : undefined);
+  injectStyle(doc, tree.nodeType === 11 && "host" in tree ? (tree as ShadowRoot) : undefined);
   const reduced = win?.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
   const animationMs = reduced ? 0 : Math.max(0, options.animationMs ?? DEFAULT_TUMBLE_MS);
   let locale = options.locale ?? doc.documentElement.lang ?? "en";
-  const wordsFor = (tag: string): RollerStrings => ({ ...(tag.toLowerCase().startsWith("ja") ? STRINGS.ja : STRINGS.en), ...options.strings });
+  const wordsFor = (tag: string): RollerStrings => ({
+    ...(tag.toLowerCase().startsWith("ja") ? STRINGS.ja : STRINGS.en),
+    ...options.strings,
+  });
   let t = wordsFor(locale);
   let rollable = options.rollable !== false;
   const source = options.source ?? cryptoSource();
@@ -176,10 +189,19 @@ export function mountDie(target: HTMLElement, options: DieOptions = {}): DieHand
   let element: HTMLElement | null = null;
   let destroyed = false;
 
-  const px = options.width !== undefined && Number.isFinite(options.width) && options.width > 0 ? Math.round(options.width) : null;
-  const root = h("div", { class: "kk-root kk-solo", "data-die-size": options.size ?? "medium", "data-testid": "kk-solo", "data-one-pip": options.onePip === "black" ? "black" : "red" });
+  const px =
+    options.width !== undefined && Number.isFinite(options.width) && options.width > 0
+      ? Math.round(options.width)
+      : null;
+  const root = h("div", {
+    class: "kk-root kk-solo",
+    "data-die-size": options.size ?? "medium",
+    "data-testid": "kk-solo",
+    "data-one-pip": options.onePip === "black" ? "black" : "red",
+  });
   if (px !== null) root.style.setProperty("--kk-solo", `${px}px`);
-  for (const [name, value] of Object.entries({ ...clothVars(options.cloth), ...(options.theme ?? {}) })) root.style.setProperty(name, value);
+  for (const [name, value] of Object.entries({ ...clothVars(options.cloth), ...(options.theme ?? {}) }))
+    root.style.setProperty(name, value);
   if (isCloth(options.cloth)) root.dataset.cloth = options.cloth;
   // What a screen reader is told when it lands, and nothing more: the die itself is labelled with what it shows.
   const said = h("span", { class: "kk-sr", "aria-live": "polite", "data-testid": "kk-solo-said" });
@@ -187,13 +209,26 @@ export function mountDie(target: HTMLElement, options: DieOptions = {}): DieHand
   target.append(root);
 
   const name = () => (group.faces !== undefined ? "" : dieName(group));
-  const label = () => fillIn(rollable ? t.dieAloneRollable : t.dieAlone, { die: name(), face: faceText(group, face) }).replace(/^[\s,、]+/, "");
+  const label = () =>
+    fillIn(rollable ? t.dieAloneRollable : t.dieAlone, { die: name(), face: faceText(group, face) }).replace(
+      /^[\s,、]+/,
+      "",
+    );
 
   function draw(tumbling: boolean, shown: number = face) {
     const text = label();
-    const attrs = { class: "kk-die", "data-face": String(face), "data-sides": String(group.sides), "data-testid": "kk-solo-die", "data-rolling": tumbling ? "true" : "false", "data-custom": group.faces !== undefined ? "true" : null };
+    const attrs = {
+      class: "kk-die",
+      "data-face": String(face),
+      "data-sides": String(group.sides),
+      "data-testid": "kk-solo-die",
+      "data-rolling": tumbling ? "true" : "false",
+      "data-custom": group.faces !== undefined ? "true" : null,
+    };
     const picture = dieFace(group, shown, text);
-    const next = rollable ? h("button", { ...attrs, type: "button", "aria-label": text }, picture) : h("span", { ...attrs, role: "img", "aria-label": text }, picture);
+    const next = rollable
+      ? h("button", { ...attrs, type: "button", "aria-label": text }, picture)
+      : h("span", { ...attrs, role: "img", "aria-label": text }, picture);
     // The svg labels itself too; the button's own label is the one that is read.
     picture.removeAttribute("role");
     picture.removeAttribute("aria-label");
@@ -217,7 +252,8 @@ export function mountDie(target: HTMLElement, options: DieOptions = {}): DieHand
   function ring(): void {
     if (options.sound !== true) return;
     try {
-      if (options.playSound !== undefined) return options.playSound({ dice: 1, ms: animationMs, landings: [animationMs] });
+      if (options.playSound !== undefined)
+        return options.playSound({ dice: 1, ms: animationMs, landings: [animationMs] });
       sound ??= createRollSound(win ?? undefined);
       sound.play({ dice: 1, ms: animationMs, landings: [animationMs] });
     } catch {
@@ -230,14 +266,18 @@ export function mountDie(target: HTMLElement, options: DieOptions = {}): DieHand
     face = landed;
     draw(false);
     element?.classList.add("kk-land");
-    said.textContent = fillIn(t.dieAloneRolled, { die: name(), face: faceText(group, landed) }).replace(/^[\s,、:]+/, "");
+    said.textContent = fillIn(t.dieAloneRolled, { die: name(), face: faceText(group, landed) }).replace(
+      /^[\s,、:]+/,
+      "",
+    );
     options.onRoll?.(landed);
   }
 
   function throwIt() {
     if (rolling || !rollable || destroyed) return;
     // The generator throws the die here, before anything moves; the tumble and the sound only show what it threw.
-    const thrown = roll({ count: 1, sides: group.sides, faces: group.faces } as Parameters<typeof roll>[0], source).faces[0] as number;
+    const thrown = roll({ count: 1, sides: group.sides, faces: group.faces } as Parameters<typeof roll>[0], source)
+      .faces[0] as number;
     ring();
     if (animationMs === 0) return land(thrown);
     rolling = true;

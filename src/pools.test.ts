@@ -1,9 +1,35 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_DICE, MAX_GROUPS, MAX_REROLLS, canHold, diceCount, diceOf, groupsOf, normalizeSpec, rangeOf, readDice, roll, rollHeld, sidesOf, specOf, type RollSpec } from "./dice.ts";
+import {
+  MAX_DICE,
+  MAX_GROUPS,
+  MAX_REROLLS,
+  canHold,
+  diceCount,
+  diceOf,
+  groupsOf,
+  normalizeSpec,
+  rangeOf,
+  readDice,
+  roll,
+  rollHeld,
+  sidesOf,
+  specOf,
+  type RollSpec,
+} from "./dice.ts";
 import { parseHistory, serializeHistory } from "./history.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
-import { chanceAtLeast, chanceExactly, distributionHolding, distributionOf, exactCounts, expectedTotal, luckOf, mostLikely, spreadOf } from "./odds.ts";
+import {
+  chanceAtLeast,
+  chanceExactly,
+  distributionHolding,
+  distributionOf,
+  exactCounts,
+  expectedTotal,
+  luckOf,
+  mostLikely,
+  spreadOf,
+} from "./odds.ts";
 import { seededSource, type RandomSource } from "./random.ts";
 import { SHARE_VERSION, readShared, shareQuery } from "./share.ts";
 import { statsOf } from "./stats.ts";
@@ -35,7 +61,8 @@ function paired(...kinds: number[][]): Map<number, number> {
   let totals = new Map<number, number>([[0, 1]]);
   for (const kind of kinds) {
     const next = new Map<number, number>();
-    for (const [t, p] of totals) for (const face of kind) next.set(t + face, (next.get(t + face) ?? 0) + p / kind.length);
+    for (const [t, p] of totals)
+      for (const face of kind) next.set(t + face, (next.get(t + face) ?? 0) + p / kind.length);
     totals = next;
   }
   return totals;
@@ -47,14 +74,24 @@ function expectSame(spec: RollSpec, want: Map<number, number>, shift = 0) {
   const d = distributionOf(spec);
   expect(sum(d.probabilities)).toBeCloseTo(1, 12);
   expect(d.probabilities).toHaveLength(d.max - d.min + 1);
-  for (const [total, chance] of want) expect(chanceExactly(spec, total + shift), `${formatNotation(spec)} = ${total + shift}`).toBeCloseTo(chance, 12);
+  for (const [total, chance] of want)
+    expect(chanceExactly(spec, total + shift), `${formatNotation(spec)} = ${total + shift}`).toBeCloseTo(chance, 12);
 }
 
 describe("several kinds of dice in one roll", () => {
   it("1d20+1d4 is a d20 and a d4, thrown in that order and added", () => {
     const spec = dice("1d20+1d4");
-    expect(spec).toEqual({ count: 1, sides: 20, modifier: 0, keep: "all", more: [{ count: 1, sides: 4, keep: "all" }] });
-    expect(groupsOf(spec)).toEqual([{ count: 1, sides: 20, keep: "all" }, { count: 1, sides: 4, keep: "all" }]);
+    expect(spec).toEqual({
+      count: 1,
+      sides: 20,
+      modifier: 0,
+      keep: "all",
+      more: [{ count: 1, sides: 4, keep: "all" }],
+    });
+    expect(groupsOf(spec)).toEqual([
+      { count: 1, sides: 20, keep: "all" },
+      { count: 1, sides: 4, keep: "all" },
+    ]);
     expect(diceCount(spec)).toBe(2);
     expect(formatNotation(spec)).toBe("1d20+1d4");
     expect(rangeOf(spec)).toEqual({ min: 2, max: 24 });
@@ -117,8 +154,15 @@ describe("several kinds of dice in one roll", () => {
     expect(groupsOf(fair)).toHaveLength(MAX_GROUPS);
     expect(diceCount(fair)).toBe(10);
     expect(formatNotation(fair)).toBe("2d20+3d4+3d5+2d6");
-    expect(normalizeSpec({ count: 10, sides: 6, more: [{ count: 1, sides: 4, keep: "all" }] })).toEqual({ count: 10, sides: 6, modifier: 0, keep: "all" });
-    expect(normalizeSpec({ count: 1, sides: 6, more: [{ count: 1, sides: 0 as never, keep: "all" }, null as never] })).toEqual({ count: 1, sides: 6, modifier: 0, keep: "all" });
+    expect(normalizeSpec({ count: 10, sides: 6, more: [{ count: 1, sides: 4, keep: "all" }] })).toEqual({
+      count: 10,
+      sides: 6,
+      modifier: 0,
+      keep: "all",
+    });
+    expect(
+      normalizeSpec({ count: 1, sides: 6, more: [{ count: 1, sides: 0 as never, keep: "all" }, null as never] }),
+    ).toEqual({ count: 1, sides: 6, modifier: 0, keep: "all" });
   });
 
   it("each kind keeps its own rules", () => {
@@ -153,7 +197,8 @@ describe("several kinds of dice in one roll", () => {
   it("puts a kept pool and a plain die together: advantage with a d4", () => {
     // The higher of two d20 is k with chance (2k − 1) / 400.
     const high = new Map<number, number>();
-    for (let k = 1; k <= 20; k++) for (let b = 1; b <= 4; b++) high.set(k + b, (high.get(k + b) ?? 0) + (2 * k - 1) / 400 / 4);
+    for (let k = 1; k <= 20; k++)
+      for (let b = 1; b <= 4; b++) high.set(k + b, (high.get(k + b) ?? 0) + (2 * k - 1) / 400 / 4);
     expectSame(dice("2d20kh1+1d4"), high);
     expect(expectedTotal(dice("2d20kh1+1d4+5"))).toBeCloseTo(13.825 + 2.5 + 5, 12);
   });
@@ -168,24 +213,29 @@ describe("several kinds of dice in one roll", () => {
     expect(sum(distributionOf(dice("5d1000+5d999")).probabilities)).toBeCloseTo(1, 9);
   });
 
-  it.each(["1d20+1d4+3", "2d20kh1+1d4", "3d6+2d8!", "4dF+1d6", "2d10ro<3+3d4kl1+1d12r<3-4"])("the dice and the odds agree on %s", (text) => {
-    const spec = dice(text);
-    const d = distributionOf(spec);
-    const source = seededSource(`mixed ${text}`);
-    const throws = 40_000;
-    const seen = new Array<number>(d.probabilities.length).fill(0);
-    let total = 0;
-    for (let i = 0; i < throws; i++) {
-      const r = roll(spec, source, i);
-      total += r.total;
-      seen[r.total - d.min] = (seen[r.total - d.min] as number) + 1;
-    }
-    const mean = expectedTotal(spec);
-    expect(Math.abs(total / throws - mean)).toBeLessThan((4 * spreadOf(spec)) / Math.sqrt(throws));
-    d.probabilities.forEach((p, i) => {
-      expect(Math.abs((seen[i] as number) / throws - p), `${text} = ${d.min + i}`).toBeLessThan(5 * Math.sqrt((p * (1 - p)) / throws) + 2 / throws);
-    });
-  });
+  it.each(["1d20+1d4+3", "2d20kh1+1d4", "3d6+2d8!", "4dF+1d6", "2d10ro<3+3d4kl1+1d12r<3-4"])(
+    "the dice and the odds agree on %s",
+    (text) => {
+      const spec = dice(text);
+      const d = distributionOf(spec);
+      const source = seededSource(`mixed ${text}`);
+      const throws = 40_000;
+      const seen = new Array<number>(d.probabilities.length).fill(0);
+      let total = 0;
+      for (let i = 0; i < throws; i++) {
+        const r = roll(spec, source, i);
+        total += r.total;
+        seen[r.total - d.min] = (seen[r.total - d.min] as number) + 1;
+      }
+      const mean = expectedTotal(spec);
+      expect(Math.abs(total / throws - mean)).toBeLessThan((4 * spreadOf(spec)) / Math.sqrt(throws));
+      d.probabilities.forEach((p, i) => {
+        expect(Math.abs((seen[i] as number) / throws - p), `${text} = ${d.min + i}`).toBeLessThan(
+          5 * Math.sqrt((p * (1 - p)) / throws) + 2 / throws,
+        );
+      });
+    },
+  );
 
   it("replays from a seed, is kept, and is shared", () => {
     const spec = dice("2d20kh1+2d4!+1d8ro<2+3");
@@ -195,13 +245,22 @@ describe("several kinds of dice in one roll", () => {
       const first = roll(spec, a, i);
       expect(roll(spec, b, i).faces).toEqual(first.faces);
       expect(parseHistory(serializeHistory([first]))).toEqual([first]);
-      expect(readShared(shareQuery(first))).toMatchObject({ faces: first.faces, total: first.total, dice: first.dice, spec });
+      expect(readShared(shareQuery(first))).toMatchObject({
+        faces: first.faces,
+        total: first.total,
+        dice: first.dice,
+        spec,
+      });
     }
     expect(roll(dice("1d20+2d4"), seededSource("korokoro"), 1).faces).toEqual([15, 2, 3]);
   });
 
   it("counts naturals on the d20 of a mixed roll, and each die's faces under its own kind", () => {
-    const history = [roll(dice("1d20+1d4"), scripted([20, 4]), 1), roll(dice("1d20+1d4"), scripted([1, 1]), 2), roll(dice("2d4"), scripted([4, 4]), 3)];
+    const history = [
+      roll(dice("1d20+1d4"), scripted([20, 4]), 1),
+      roll(dice("1d20+1d4"), scripted([1, 1]), 2),
+      roll(dice("2d4"), scripted([4, 4]), 3),
+    ];
     const stats = statsOf(history, dice("1d20+1d4"));
     expect(stats.naturalTwenties).toBe(1);
     expect(stats.naturalOnes).toBe(1);
@@ -223,8 +282,16 @@ describe("reroll until clear, as Roll20 writes it", () => {
     expect(once).toEqual({ count: 2, sides: 8, modifier: 0, keep: "all", reroll: 2 });
     expect(formatNotation(once)).toBe("2d8ro<3");
     // The same dice from the same throws: until clear keeps going where once stops.
-    expect(roll(until, scripted([1, 2, 2, 5, 7]), 1)).toMatchObject({ faces: [1, 2, 2, 5, 7], kept: [false, false, false, true, true], total: 12 });
-    expect(roll(once, scripted([1, 2, 2, 5]), 1)).toMatchObject({ faces: [1, 2, 2, 5], kept: [false, true, false, true], total: 7 });
+    expect(roll(until, scripted([1, 2, 2, 5, 7]), 1)).toMatchObject({
+      faces: [1, 2, 2, 5, 7],
+      kept: [false, false, false, true, true],
+      total: 12,
+    });
+    expect(roll(once, scripted([1, 2, 2, 5]), 1)).toMatchObject({
+      faces: [1, 2, 2, 5],
+      kept: [false, true, false, true],
+      total: 7,
+    });
   });
 
   it(`stops after ${MAX_REROLLS} rerolls, and the die stands as it lies`, () => {
@@ -289,19 +356,37 @@ describe("reroll until clear, as Roll20 writes it", () => {
   it("still takes ro of most of a die's faces, since once always ends", () => {
     expect(dice("1d6ro<6")).toMatchObject({ reroll: 5 });
     expect(normalizeSpec({ count: 1, sides: 6, rerollUntil: 5 })).not.toHaveProperty("rerollUntil");
-    expect(normalizeSpec({ count: 1, sides: 6, rerollUntil: 1, reroll: 3 })).toEqual({ count: 1, sides: 6, modifier: 0, keep: "all", rerollUntil: 1 });
+    expect(normalizeSpec({ count: 1, sides: 6, rerollUntil: 1, reroll: 3 })).toEqual({
+      count: 1,
+      sides: 6,
+      modifier: 0,
+      keep: "all",
+      rerollUntil: 1,
+    });
   });
 
   it("reads what 1.2.0 and 1.3.0 wrote as they meant it", () => {
     // A link made by 1.3.0: `r<3` was reroll once, and the link has no version.
     const old = "roll=2d6r%3C3&faces=2%2C1%2C5&at=5";
-    expect(readShared(old)).toMatchObject({ spec: { count: 2, sides: 6, reroll: 2 }, faces: [2, 1, 5], kept: [false, true, true], total: 6 });
+    expect(readShared(old)).toMatchObject({
+      spec: { count: 2, sides: 6, reroll: 2 },
+      faces: [2, 1, 5],
+      kept: [false, true, true],
+      total: 6,
+    });
     expect(readShared(old)?.spec).not.toHaveProperty("rerollUntil");
     // The same faces do not fit a reroll until clear: the 1 would have been thrown again.
     expect(readShared(`${old}&v=${SHARE_VERSION}`)).toBeNull();
-    expect(parseNotation("2d6r<3", { legacyReroll: true })).toEqual({ count: 2, sides: 6, modifier: 0, keep: "all", reroll: 2 });
+    expect(parseNotation("2d6r<3", { legacyReroll: true })).toEqual({
+      count: 2,
+      sides: 6,
+      modifier: 0,
+      keep: "all",
+      reroll: 2,
+    });
     // A history kept by 1.3.0 holds the spec, not notation, so it means what it meant.
-    const kept = '{"version":1,"rolls":[{"id":"a","spec":{"count":2,"sides":6,"modifier":0,"keep":"all","reroll":2},"faces":[2,1,5],"kept":[false,true,true],"total":6,"at":5,"seed":null}]}';
+    const kept =
+      '{"version":1,"rolls":[{"id":"a","spec":{"count":2,"sides":6,"modifier":0,"keep":"all","reroll":2},"faces":[2,1,5],"kept":[false,true,true],"total":6,"at":5,"seed":null}]}';
     expect(parseHistory(kept)[0]).toMatchObject({ faces: [2, 1, 5], total: 6, spec: { reroll: 2 } });
     expect(formatNotation(parseHistory(kept)[0]!.spec)).toBe("2d6ro<3");
   });
@@ -351,8 +436,18 @@ describe("holding dice", () => {
     const play = () => {
       const source = seededSource("yacht");
       const one = roll(dice("5d6"), source, 1);
-      const two = rollHeld(one, one.faces.map((f) => f >= 5), source, 2);
-      const three = rollHeld(two, two.faces.map((f) => f >= 5), source, 3);
+      const two = rollHeld(
+        one,
+        one.faces.map((f) => f >= 5),
+        source,
+        2,
+      );
+      const three = rollHeld(
+        two,
+        two.faces.map((f) => f >= 5),
+        source,
+        3,
+      );
       return [one.faces, two.faces, three.faces, three.held];
     };
     expect(play()).toEqual(play());
@@ -371,7 +466,9 @@ describe("holding dice", () => {
     expect(readShared("roll=5d6&faces=1,2,3,4,5&held=7&v=2")).toBeNull();
     expect(readShared("roll=4d6kh3&faces=1,2,3,4&held=1&v=2")).toBeNull();
     // A history whose held does not fit is kept as an ordinary roll.
-    expect(parseHistory(JSON.stringify([{ spec: first.spec, faces: first.faces, at: 1, held: [true] }]))[0]).not.toHaveProperty("held");
+    expect(
+      parseHistory(JSON.stringify([{ spec: first.spec, faces: first.faces, at: 1, held: [true] }]))[0],
+    ).not.toHaveProperty("held");
   });
 
   it("the odds with dice held are the odds of the rest, on top of what is held", () => {

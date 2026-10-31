@@ -1,12 +1,51 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_FACES, MAX_LABEL, MAX_LOADED_SIDES, MAX_WEIGHT, chancesOf, customFaces, dieName, groupsOf, hasTotal, isFair, isLoaded, loadedWeights, normalizeSpec, rangeOf, readDice, roll, rollHeld, type RollSpec } from "./dice.ts";
+import {
+  MAX_FACES,
+  MAX_LABEL,
+  MAX_LOADED_SIDES,
+  MAX_WEIGHT,
+  chancesOf,
+  customFaces,
+  dieName,
+  groupsOf,
+  hasTotal,
+  isFair,
+  isLoaded,
+  loadedWeights,
+  normalizeSpec,
+  rangeOf,
+  readDice,
+  roll,
+  rollHeld,
+  type RollSpec,
+} from "./dice.ts";
 import { parseHistory, serializeHistory } from "./history.ts";
 import { LOADED_PRESETS, faceChances, loadingOf } from "./loaded.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
-import { chanceAtLeast, chanceExactly, distributionHolding, distributionOf, exactCounts, expectedTotal, spreadOf } from "./odds.ts";
+import {
+  chanceAtLeast,
+  chanceExactly,
+  distributionHolding,
+  distributionOf,
+  exactCounts,
+  expectedTotal,
+  spreadOf,
+} from "./odds.ts";
 import { seededSource } from "./random.ts";
-import { MAX_SETS, MAX_SET_NAME, loadSets, makeSet, parseSets, readSet, serializeSets, setQuery, storeSets, withSet, withoutSet } from "./sets.ts";
+import {
+  MAX_SETS,
+  MAX_SET_NAME,
+  loadSets,
+  makeSet,
+  parseSets,
+  readSet,
+  serializeSets,
+  setQuery,
+  storeSets,
+  withSet,
+  withoutSet,
+} from "./sets.ts";
 import { readShared, shareQuery } from "./share.ts";
 import { chiSquareTail, faceStats, fairnessTest, readResults, statsOf } from "./stats.ts";
 
@@ -22,7 +61,8 @@ function paired(...kinds: [number, number][][]): Map<number, number> {
   let totals = new Map<number, number>([[0, 1]]);
   for (const kind of kinds) {
     const next = new Map<number, number>();
-    for (const [t, p] of totals) for (const [worth, chance] of kind) next.set(t + worth, (next.get(t + worth) ?? 0) + p * chance);
+    for (const [t, p] of totals)
+      for (const [worth, chance] of kind) next.set(t + worth, (next.get(t + worth) ?? 0) + p * chance);
     totals = next;
   }
   return totals;
@@ -32,7 +72,8 @@ function expectSame(spec: RollSpec, want: Map<number, number>) {
   const d = distributionOf(spec);
   expect(sum(d.probabilities)).toBeCloseTo(1, 12);
   expect(d.probabilities).toHaveLength(d.max - d.min + 1);
-  for (const [total, chance] of want) if (chance > 0) expect(chanceExactly(spec, total), `${formatNotation(spec)} = ${total}`).toBeCloseTo(chance, 12);
+  for (const [total, chance] of want)
+    if (chance > 0) expect(chanceExactly(spec, total), `${formatNotation(spec)} = ${total}`).toBeCloseTo(chance, 12);
   d.probabilities.forEach((p, i) => {
     if (!want.has(d.min + i)) expect(p).toBeCloseTo(0, 15);
   });
@@ -44,15 +85,28 @@ function expectSame(spec: RollSpec, want: Map<number, number>) {
 describe("custom dice", () => {
   it("are their faces: words, words worth a number, and numbers", () => {
     const yes = dice("d[Yes,No,Maybe]");
-    expect(yes).toEqual({ count: 1, sides: 3, modifier: 0, keep: "all", faces: [{ label: "Yes" }, { label: "No" }, { label: "Maybe" }] });
+    expect(yes).toEqual({
+      count: 1,
+      sides: 3,
+      modifier: 0,
+      keep: "all",
+      faces: [{ label: "Yes" }, { label: "No" }, { label: "Maybe" }],
+    });
     expect(hasTotal(yes)).toBe(false);
     expect(dieName(yes)).toBe("d[Yes,No,Maybe]");
     const hits = dice("2d[Hit=1,Miss=0,Miss=0]");
-    expect(groupsOf(hits)[0]?.faces).toEqual([{ label: "Hit", value: 1 }, { label: "Miss", value: 0 }, { label: "Miss", value: 0 }]);
+    expect(groupsOf(hits)[0]?.faces).toEqual([
+      { label: "Hit", value: 1 },
+      { label: "Miss", value: 0 },
+      { label: "Miss", value: 0 },
+    ]);
     expect(hasTotal(hits)).toBe(true);
     expect(rangeOf(hits)).toEqual({ min: 0, max: 2 });
     expect(groupsOf(dice("d[1,1,2,3,5,8]"))[0]?.faces?.map((f) => f.value)).toEqual([1, 1, 2, 3, 5, 8]);
-    expect(groupsOf(dice("d[Yes#2A7,No#bb3333]"))[0]?.faces).toEqual([{ label: "Yes", colour: "#2a7" }, { label: "No", colour: "#bb3333" }]);
+    expect(groupsOf(dice("d[Yes#2A7,No#bb3333]"))[0]?.faces).toEqual([
+      { label: "Yes", colour: "#2a7" },
+      { label: "No", colour: "#bb3333" },
+    ]);
   });
 
   it("roll a face by its place, and say what it says and what it is worth", () => {
@@ -121,12 +175,37 @@ describe("custom dice", () => {
 
   it("has exact odds over what its faces are worth, a face written twice twice as likely", () => {
     const hits = dice("2d[Hit=1,Miss=0,Miss=0]");
-    expectSame(hits, paired([[1, 1 / 3], [0, 2 / 3]], [[1, 1 / 3], [0, 2 / 3]]));
+    expectSame(
+      hits,
+      paired(
+        [
+          [1, 1 / 3],
+          [0, 2 / 3],
+        ],
+        [
+          [1, 1 / 3],
+          [0, 2 / 3],
+        ],
+      ),
+    );
     expect(chanceAtLeast(hits, 1)).toBeCloseTo(5 / 9, 14);
     expect(exactCounts(hits)).toEqual({ min: 0, counts: [4n, 4n, 1n], outcomes: 9n });
-    expectSame(dice("d[0,0,10]+1d6"), paired([[0, 2 / 3], [10, 1 / 3]], [1, 2, 3, 4, 5, 6].map((f) => [f, 1 / 6] as [number, number])));
+    expectSame(
+      dice("d[0,0,10]+1d6"),
+      paired(
+        [
+          [0, 2 / 3],
+          [10, 1 / 3],
+        ],
+        [1, 2, 3, 4, 5, 6].map((f) => [f, 1 / 6] as [number, number]),
+      ),
+    );
     expect(expectedTotal(dice("d[1,1,2,3,5,8]"))).toBeCloseTo(20 / 6, 12);
-    expect(faceChances(groupsOf(dice("d[Yes,No,No]"))[0]!).map((f) => [f.label, f.chance])).toEqual([["Yes", 1 / 3], ["No", 1 / 3], ["No", 1 / 3]]);
+    expect(faceChances(groupsOf(dice("d[Yes,No,No]"))[0]!).map((f) => [f.label, f.chance])).toEqual([
+      ["Yes", 1 / 3],
+      ["No", 1 / 3],
+      ["No", 1 / 3],
+    ]);
   });
 
   it("can be held like any plain die", () => {
@@ -239,7 +318,8 @@ describe("loaded dice", () => {
     // Advantage on a loaded d20.
     const d20 = Array.from({ length: 20 }, (_, i) => [i + 1, i === 19 ? 2 / 21 : 1 / 21] as [number, number]);
     const high = new Map<number, number>();
-    for (const [a, pa] of d20) for (const [b, pb] of d20) high.set(Math.max(a, b), (high.get(Math.max(a, b)) ?? 0) + pa * pb);
+    for (const [a, pa] of d20)
+      for (const [b, pb] of d20) high.set(Math.max(a, b), (high.get(Math.max(a, b)) ?? 0) + pa * pb);
     expectSame(dice("2d20{20:2}kh1"), high);
     expect(exactCounts(dice("2d20{20:2}kh1"))?.outcomes).toBe(441n);
   });
@@ -263,7 +343,14 @@ describe("loaded dice", () => {
   });
 
   it("keeps its odds through rerolls, explosions and mixed pools", () => {
-    for (const text of ["3d6{6:3}!", "2d6{1:2,6:2}ro<2", "2d6{1:3}r<2", "4d6{6:2}kh3", "1d6{6:3}+1d20", "2d4{1:0}!+d[0,0,5]"]) {
+    for (const text of [
+      "3d6{6:3}!",
+      "2d6{1:2,6:2}ro<2",
+      "2d6{1:3}r<2",
+      "4d6{6:2}kh3",
+      "1d6{6:3}+1d20",
+      "2d4{1:0}!+d[0,0,5]",
+    ]) {
       const spec = dice(text);
       const d = distributionOf(spec);
       expect(sum(d.probabilities), text).toBeCloseTo(1, 12);
@@ -275,7 +362,9 @@ describe("loaded dice", () => {
         expect(r.total >= d.min && r.total <= d.max).toBe(true);
         total += r.total;
       }
-      expect(Math.abs(total / throws - expectedTotal(spec)), text).toBeLessThan((4 * spreadOf(spec)) / Math.sqrt(throws));
+      expect(Math.abs(total / throws - expectedTotal(spec)), text).toBeLessThan(
+        (4 * spreadOf(spec)) / Math.sqrt(throws),
+      );
     }
     // A reroll on a loaded die: the 1 is thrown again once, and a heavy 6 is what it most often becomes.
     const once = dice("1d6{6:3}ro<2");
@@ -303,7 +392,7 @@ describe("is this die fair?", () => {
     // Critical values from the standard table: (statistic, degrees of freedom) → upper tail.
     expect(chiSquareTail(3.841, 1)).toBeCloseTo(0.05, 4);
     expect(chiSquareTail(6.635, 1)).toBeCloseTo(0.01, 4);
-    expect(chiSquareTail(11.070, 5)).toBeCloseTo(0.05, 4);
+    expect(chiSquareTail(11.07, 5)).toBeCloseTo(0.05, 4);
     expect(chiSquareTail(15.086, 5)).toBeCloseTo(0.01, 4);
     expect(chiSquareTail(20.515, 5)).toBeCloseTo(0.001, 5);
     expect(chiSquareTail(30.144, 19)).toBeCloseTo(0.05, 4);
@@ -321,7 +410,15 @@ describe("is this die fair?", () => {
 
   it("says nothing on a handful of rolls, and says how many it wants", () => {
     const few = fairnessTest([1, 0, 2, 1, 0, 1]);
-    expect(few).toMatchObject({ sides: 6, rolls: 5, minimum: 30, enough: false, p: null, statistic: null, verdict: "too-few" });
+    expect(few).toMatchObject({
+      sides: 6,
+      rolls: 5,
+      minimum: 30,
+      enough: false,
+      p: null,
+      statistic: null,
+      verdict: "too-few",
+    });
     expect(fairnessTest([5, 5, 5, 5, 5, 4]).verdict).toBe("too-few");
     expect(fairnessTest([5, 5, 5, 5, 5, 5]).verdict).toBe("fair");
     expect(fairnessTest(new Array<number>(20).fill(4)).minimum).toBe(100);
@@ -362,7 +459,12 @@ describe("is this die fair?", () => {
   it("counts a loaded die apart from the fair dice of its size, and finds it out", () => {
     const source = seededSource("stats");
     const history = [];
-    for (let i = 0; i < 100; i++) history.push(roll(dice("1d6"), source, i), roll(dice("1d6{6:3}"), source, i), roll(dice("1d[a,b,c,d,e,f]"), source, i));
+    for (let i = 0; i < 100; i++)
+      history.push(
+        roll(dice("1d6"), source, i),
+        roll(dice("1d6{6:3}"), source, i),
+        roll(dice("1d[a,b,c,d,e,f]"), source, i),
+      );
     const fair = faceStats(history, 6);
     expect(fair.dice).toBe(100);
     expect(fair).not.toHaveProperty("loaded");
@@ -383,7 +485,10 @@ describe("is this die fair?", () => {
 describe("sets of dice", () => {
   it("are a name and notation, checked", () => {
     expect(makeSet("  Long   sword ", "1d8+3")).toEqual({ name: "Long sword", notation: "1d8+3" });
-    expect(makeSet("Skirmish", dice("2d[Hit=1,Miss=0,Miss=0]"))).toEqual({ name: "Skirmish", notation: "2d[Hit=1,Miss=0,Miss=0]" });
+    expect(makeSet("Skirmish", dice("2d[Hit=1,Miss=0,Miss=0]"))).toEqual({
+      name: "Skirmish",
+      notation: "2d[Hit=1,Miss=0,Miss=0]",
+    });
     expect(makeSet("Ability", "4d6dl1")?.notation).toBe("4d6kh3");
     expect(makeSet("", "2d6")).toBeNull();
     expect(makeSet("x".repeat(MAX_SET_NAME + 1), "2d6")).toBeNull();
@@ -394,7 +499,10 @@ describe("sets of dice", () => {
     let sets = withSet([], makeSet("A", "1d6")!);
     sets = withSet(sets, makeSet("B", "1d8")!);
     sets = withSet(sets, makeSet("A", "2d6")!);
-    expect(sets).toEqual([{ name: "A", notation: "2d6" }, { name: "B", notation: "1d8" }]);
+    expect(sets).toEqual([
+      { name: "A", notation: "2d6" },
+      { name: "B", notation: "1d8" },
+    ]);
     expect(withoutSet(sets, "A")).toEqual([{ name: "B", notation: "1d8" }]);
     let many: ReturnType<typeof withSet> = [];
     for (let i = 0; i < MAX_SETS + 5; i++) many = withSet(many, makeSet(`Set ${i}`, "1d6")!);
@@ -404,17 +512,33 @@ describe("sets of dice", () => {
 
   it("are kept on the device and read back defensively", () => {
     const kept = new Map<string, string>();
-    const storage = { getItem: (k: string) => kept.get(k) ?? null, setItem: (k: string, v: string) => void kept.set(k, v), removeItem: (k: string) => void kept.delete(k) };
+    const storage = {
+      getItem: (k: string) => kept.get(k) ?? null,
+      setItem: (k: string, v: string) => void kept.set(k, v),
+      removeItem: (k: string) => void kept.delete(k),
+    };
     const sets = [makeSet("Fireball", "8d6")!, makeSet("The Optimist", "1d6{6:3}")!];
     expect(storeSets(storage, "k", sets)).toBe(true);
     expect(loadSets(storage, "k")).toEqual(sets);
     expect(storeSets(storage, "k", [])).toBe(true);
     expect(kept.has("k")).toBe(false);
     expect(parseSets(serializeSets(sets))).toEqual(sets);
-    expect(parseSets('{"sets":[{"name":"ok","notation":"2d6"},{"name":"bad","notation":"nope"},{"name":"ok","notation":"3d6"},null,7]}')).toEqual([{ name: "ok", notation: "2d6" }]);
+    expect(
+      parseSets(
+        '{"sets":[{"name":"ok","notation":"2d6"},{"name":"bad","notation":"nope"},{"name":"ok","notation":"3d6"},null,7]}',
+      ),
+    ).toEqual([{ name: "ok", notation: "2d6" }]);
     expect(parseSets("not json")).toEqual([]);
     expect(parseSets(null)).toEqual([]);
-    const broken = { getItem: () => { throw new Error("blocked"); }, setItem: () => { throw new Error("blocked"); }, removeItem: () => undefined };
+    const broken = {
+      getItem: () => {
+        throw new Error("blocked");
+      },
+      setItem: () => {
+        throw new Error("blocked");
+      },
+      removeItem: () => undefined,
+    };
     expect(loadSets(broken, "k")).toEqual([]);
     expect(storeSets(broken, "k", sets)).toBe(false);
     expect(storeSets(undefined, "k", sets)).toBe(false);
@@ -426,7 +550,10 @@ describe("sets of dice", () => {
     expect(query).toBe("dice=1d6%7B6%3A3%7D&name=The+Optimist&v=2");
     expect(readSet(query)).toEqual(set);
     expect(isLoaded(dice(readSet(query)!.notation))).toBe(true);
-    expect(readSet(setQuery(makeSet("Yes or no", "d[Yes,No,Maybe]")!))).toEqual({ name: "Yes or no", notation: "1d[Yes,No,Maybe]" });
+    expect(readSet(setQuery(makeSet("Yes or no", "d[Yes,No,Maybe]")!))).toEqual({
+      name: "Yes or no",
+      notation: "1d[Yes,No,Maybe]",
+    });
     expect(readSet("dice=2d6")).toEqual({ name: "2d6", notation: "2d6" });
     expect(readSet("dice=banana&name=x")).toBeNull();
     expect(readSet("name=x")).toBeNull();

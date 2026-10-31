@@ -5,10 +5,15 @@ import { expect, test } from "@playwright/test";
 
 import { open } from "./tray.mjs";
 
-test("assigning face on a die sets the attribute and shows that face, and reading it gives the face showing", async ({ page }) => {
+test("assigning face on a die sets the attribute and shows that face, and reading it gives the face showing", async ({
+  page,
+}) => {
   const errors = await open(page, "/pages/define.html");
   await page.evaluate(() => {
-    document.body.insertAdjacentHTML("beforeend", '<korokoro-die id="pd" sides="6" face="3" rollable="off"></korokoro-die>');
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<korokoro-die id="pd" sides="6" face="3" rollable="off"></korokoro-die>',
+    );
   });
   await expect(page.locator("#pd")).toHaveAttribute("face", "3");
   expect(await page.locator("#pd").evaluate((die) => die.face)).toBe(3);

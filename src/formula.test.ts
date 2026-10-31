@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
 
-import { MAX_DICE, MAX_DICE_BY_CODE, canHold, diceCount, diceOf, groupsOf, groupTotals, isSuccessRoll, normalizeSpec, rangeOf, readDice, roll, rollFrom, rollMany, type RollSpec } from "./dice.ts";
+import {
+  MAX_DICE,
+  MAX_DICE_BY_CODE,
+  canHold,
+  diceCount,
+  diceOf,
+  groupsOf,
+  groupTotals,
+  isSuccessRoll,
+  normalizeSpec,
+  rangeOf,
+  readDice,
+  roll,
+  rollFrom,
+  rollMany,
+  type RollSpec,
+} from "./dice.ts";
 import { fromJSON, toJSON } from "./export.ts";
 import { checkMath, evaluateMath, mathText, type MathNode } from "./math.ts";
 import { checkNotation, formatNotation, parseNotation } from "./notation.ts";
@@ -38,7 +54,8 @@ function everyWay(of: RollSpec): Map<number, number> {
   walk([], 1);
   const all = [...totals.values()].reduce((a, b) => a + b, 0);
   for (const [total, chance] of totals) totals.set(total, chance / all);
-  if (!groupsOf(of).some((g) => g.unique === true) && Math.abs(all - 1) > 1e-12) throw new Error("the walk lost some ways");
+  if (!groupsOf(of).some((g) => g.unique === true) && Math.abs(all - 1) > 1e-12)
+    throw new Error("the walk lost some ways");
   return totals;
 }
 
@@ -78,7 +95,8 @@ describe("the odds of a formula, against every way the dice can fall", () => {
     const odds = distributionOf(of);
     expect(odds.min, text).toBe(Math.min(...totals.keys()));
     expect(odds.max, text).toBe(Math.max(...totals.keys()));
-    for (let i = 0; i < odds.probabilities.length; i++) expect(odds.probabilities[i], `${text} at ${odds.min + i}`).toBeCloseTo(totals.get(odds.min + i) ?? 0, 12);
+    for (let i = 0; i < odds.probabilities.length; i++)
+      expect(odds.probabilities[i], `${text} at ${odds.min + i}`).toBeCloseTo(totals.get(odds.min + i) ?? 0, 12);
     expect(odds.probabilities.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 12);
     expect(rangeOf(of), text).toEqual({ min: odds.min, max: odds.max });
   });
@@ -88,7 +106,9 @@ describe("the odds of a formula, against every way the dice can fall", () => {
     expect(chanceExactly(spec("2d6*2"), 14)).toBeCloseTo(6 / 36, 12);
     expect(chanceExactly(spec("2d6*2"), 13)).toBe(0);
     // The higher of two d20 is advantage.
-    expect(distributionOf(spec("max(1d20,1d20)")).probabilities).toEqual(distributionOf(spec("2d20kh1")).probabilities.map((p) => expect.closeTo(p, 12)));
+    expect(distributionOf(spec("max(1d20,1d20)")).probabilities).toEqual(
+      distributionOf(spec("2d20kh1")).probabilities.map((p) => expect.closeTo(p, 12)),
+    );
     // One die less another is as likely to be up as down.
     expect(expectedTotal(spec("1d20-1d20"))).toBeCloseTo(0, 12);
     expect(chanceAtLeast(spec("1d20-1d20"), 1)).toBeCloseTo(190 / 400, 12);
@@ -106,7 +126,18 @@ describe("the odds of a formula, against every way the dice can fall", () => {
 
   it("is exact where floating point would not be", () => {
     // 7 thirds, times 3, is 7, and rounding it up is still 7.
-    const node: MathNode = { kind: "call", name: "ceil", args: [{ kind: "op", op: "*", left: { kind: "op", op: "/", left: { kind: "number", value: 7 }, right: { kind: "number", value: 3 } }, right: { kind: "number", value: 3 } }] };
+    const node: MathNode = {
+      kind: "call",
+      name: "ceil",
+      args: [
+        {
+          kind: "op",
+          op: "*",
+          left: { kind: "op", op: "/", left: { kind: "number", value: 7 }, right: { kind: "number", value: 3 } },
+          right: { kind: "number", value: 3 },
+        },
+      ],
+    };
     expect(evaluateMath(node, [])).toBe(7);
     expect(thrown("ceil(1d20/3*3)", [7]).total).toBe(7);
     expect(thrown("floor(1d20/10*10)", [3]).total).toBe(3);
@@ -214,7 +245,11 @@ describe("notation for formulas", () => {
   });
 
   it("still refuses what it always refused, in the same words", () => {
-    expect(checkNotation("11d6")).toMatchObject({ problem: "count", part: "11", message: "“11”: roll 1 to 10 dice at a time" });
+    expect(checkNotation("11d6")).toMatchObject({
+      problem: "count",
+      part: "11",
+      message: "“11”: roll 1 to 10 dice at a time",
+    });
     expect(checkNotation("2d6+100")).toMatchObject({ problem: "bonus" });
     expect(checkNotation("nonsense")).toMatchObject({ problem: "shape" });
     // Dice taken away used to be refused, and are now a formula.
@@ -228,9 +263,19 @@ describe("notation for formulas", () => {
     // With a formula the bonus is part of it.
     expect(normalizeSpec({ count: 2, sides: 6, modifier: 5, math: twice }).modifier).toBe(0);
     // A kind named twice, a kind not named, a division left unrounded, and nonsense are all left out.
-    expect(normalizeSpec({ count: 2, sides: 6, math: { kind: "op", op: "*", left: dice, right: dice } })).not.toHaveProperty("math");
-    expect(normalizeSpec({ count: 2, sides: 6, more: [{ count: 1, sides: 4, keep: "all" }], math: twice })).not.toHaveProperty("math");
-    expect(normalizeSpec({ count: 2, sides: 6, math: { kind: "op", op: "/", left: dice, right: { kind: "number", value: 2 } } })).not.toHaveProperty("math");
+    expect(
+      normalizeSpec({ count: 2, sides: 6, math: { kind: "op", op: "*", left: dice, right: dice } }),
+    ).not.toHaveProperty("math");
+    expect(
+      normalizeSpec({ count: 2, sides: 6, more: [{ count: 1, sides: 4, keep: "all" }], math: twice }),
+    ).not.toHaveProperty("math");
+    expect(
+      normalizeSpec({
+        count: 2,
+        sides: 6,
+        math: { kind: "op", op: "/", left: dice, right: { kind: "number", value: 2 } },
+      }),
+    ).not.toHaveProperty("math");
     expect(normalizeSpec({ count: 2, sides: 6, math: { kind: "sqrt", of: dice } as never })).not.toHaveProperty("math");
     expect(normalizeSpec({ count: 2, sides: 6, math: "2d6*2" as never })).not.toHaveProperty("math");
     // With a formula, two kinds that are the same dice stay two.
@@ -285,7 +330,9 @@ describe("dice that all differ", () => {
       expect(new Set(made.faces).size).toBe(5);
       expect(made.faces.every((f) => f >= 1 && f <= 6)).toBe(true);
     }
-    expect(roll(spec("5d6u"), seededSource("same"), 1).faces).toEqual(roll(spec("5d6u"), seededSource("same"), 1).faces);
+    expect(roll(spec("5d6u"), seededSource("same"), 1).faces).toEqual(
+      roll(spec("5d6u"), seededSource("same"), 1).faces,
+    );
     expect(new Set(roll(spec("6d6u"), seededSource("all"), 1).faces)).toEqual(new Set([1, 2, 3, 4, 5, 6]));
   });
 
@@ -337,9 +384,14 @@ describe("more than ten dice, from code", () => {
   });
 
   it("is refused past a hundred, and for dice that are not plain", () => {
-    expect(checkNotation("101d6", { maxDice: 100 })).toMatchObject({ problem: "count", part: "101", message: "“101”: roll 1 to 100 dice at a time, and past 10 only plain dice, all added or one kept" });
+    expect(checkNotation("101d6", { maxDice: 100 })).toMatchObject({
+      problem: "count",
+      part: "101",
+      message: "“101”: roll 1 to 100 dice at a time, and past 10 only plain dice, all added or one kept",
+    });
     expect(checkNotation("60d6+60d6", { maxDice: 100 })).toMatchObject({ problem: "count", part: "60d6" });
-    for (const text of ["50d6!", "50d6r<2", "50d6kh3", "50d6>=5", "20d6+1d[1,2,3]", "12d6{6:3}", "12d6min2", "20d20u"]) expect(checkNotation(text, { maxDice: 100 }), text).toMatchObject({ ok: false, problem: "count" });
+    for (const text of ["50d6!", "50d6r<2", "50d6kh3", "50d6>=5", "20d6+1d[1,2,3]", "12d6{6:3}", "12d6min2", "20d20u"])
+      expect(checkNotation(text, { maxDice: 100 }), text).toMatchObject({ ok: false, problem: "count" });
     expect(checkNotation("50d6", { maxDice: 1000 })).toMatchObject({ ok: true });
     expect(checkNotation("101d6", { maxDice: 1000 })).toMatchObject({ ok: false });
     // Ten or fewer are what they always were, whatever the limit.
@@ -354,19 +406,27 @@ describe("more than ten dice, from code", () => {
     expect(roll({ count: 50, sides: 6 }).faces).toHaveLength(10);
     expect(roll({ count: 50, sides: 6 }, seededSource("x"), 1).faces).toHaveLength(10);
     expect(roll({ count: 50, sides: 6 }, seededSource("x"), { at: 1 }).faces).toHaveLength(10);
-    expect(rollMany({ count: 50, sides: 6 }, 3, seededSource("x"), 1).rolls.map((r) => r.faces.length)).toEqual([10, 10, 10]);
+    expect(rollMany({ count: 50, sides: 6 }, 3, seededSource("x"), 1).rolls.map((r) => r.faces.length)).toEqual([
+      10, 10, 10,
+    ]);
     // A spec read with the option is still brought to ten by a roll that does not pass it on.
     expect(roll(spec("50d6", { maxDice: 100 }), seededSource("x"), 1).faces).toHaveLength(10);
     // With the option, fifty.
     expect(roll({ count: 50, sides: 6 }, seededSource("x"), { maxDice: 100 }).faces).toHaveLength(50);
     expect(roll({ count: 50, sides: 6 }, seededSource("x"), { at: 7, maxDice: 100 }).at).toBe(7);
-    expect(rollMany({ count: 50, sides: 6 }, 3, seededSource("x"), { maxDice: 100 }).rolls.map((r) => r.faces.length)).toEqual([50, 50, 50]);
+    expect(
+      rollMany({ count: 50, sides: 6 }, 3, seededSource("x"), { maxDice: 100 }).rolls.map((r) => r.faces.length),
+    ).toEqual([50, 50, 50]);
     expect(roll({ count: 500, sides: 6 }, seededSource("x"), { maxDice: 1000 }).faces).toHaveLength(100);
     // The same dice from the same seed, whichever way the time is given.
-    expect(roll({ count: 2, sides: 6 }, seededSource("x"), { at: 1 }).faces).toEqual(roll({ count: 2, sides: 6 }, seededSource("x"), 1).faces);
+    expect(roll({ count: 2, sides: 6 }, seededSource("x"), { at: 1 }).faces).toEqual(
+      roll({ count: 2, sides: 6 }, seededSource("x"), 1).faces,
+    );
     // Dice that are not plain are brought back to ten, as ever.
     expect(normalizeSpec({ count: 50, sides: 6, explode: true }, { maxDice: 100 }).count).toBe(10);
-    expect(roll({ count: 50, sides: 6, keep: "highest", keepCount: 3 }, seededSource("x"), { maxDice: 100 }).spec.count).toBe(10);
+    expect(
+      roll({ count: 50, sides: 6, keep: "highest", keepCount: 3 }, seededSource("x"), { maxDice: 100 }).spec.count,
+    ).toBe(10);
   });
 
   it("a formula may use them", () => {

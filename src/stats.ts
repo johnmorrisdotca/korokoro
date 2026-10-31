@@ -1,4 +1,16 @@
-import { diceCount, diceOf, dieName, faceRange, groupOf, hasTotal, sidesOf, type DiceGroup, type Roll, type RollSpec, type Sides } from "./dice.ts";
+import {
+  diceCount,
+  diceOf,
+  dieName,
+  faceRange,
+  groupOf,
+  hasTotal,
+  sidesOf,
+  type DiceGroup,
+  type Roll,
+  type RollSpec,
+  type Sides,
+} from "./dice.ts";
 import { formatNotation } from "./notation.ts";
 import { distributionOf, expectedTotal, luckOf } from "./odds.ts";
 
@@ -94,7 +106,10 @@ export type TotalStats = {
 
 /** The natural log of the gamma function, by Lanczos's approximation: good to about fifteen digits for the arguments a chi-square needs. */
 function logGamma(x: number): number {
-  const g = [76.18009172947146, -86.50532032941678, 24.01409824083091, -1.231739572450155, 1.20865097386618e-3, -5.395239384953e-6];
+  const g = [
+    76.18009172947146, -86.50532032941678, 24.01409824083091, -1.231739572450155, 1.20865097386618e-3,
+    -5.395239384953e-6,
+  ];
   let denominator = x;
   let series = 1.00000000019;
   for (const c of g) series += c / ++denominator;
@@ -233,12 +248,27 @@ export function fairnessTest(counts: readonly number[], chances?: readonly numbe
   const minimum = Math.ceil(FAIRNESS_MINIMUM_EACH / Math.min(...share.filter((c) => c > 0)));
   const impossible = counts.some((c, i) => c > 0 && (share[i] as number) === 0);
   const enough = sides >= 2 && live >= 2 && rolls >= minimum;
-  if (!enough && !impossible) return { sides, rolls, minimum, enough: false, expected, statistic: null, p: null, verdict: "too-few" };
+  if (!enough && !impossible)
+    return { sides, rolls, minimum, enough: false, expected, statistic: null, p: null, verdict: "too-few" };
   // A face that cannot come up, coming up, settles it whatever the count.
-  if (impossible) return { sides, rolls, minimum, enough: true, expected, statistic: Infinity, p: 0, verdict: "lopsided" };
-  const statistic = counts.reduce((sum, c, i) => ((expected[i] as number) === 0 ? sum : sum + (c - (expected[i] as number)) ** 2 / (expected[i] as number)), 0);
+  if (impossible)
+    return { sides, rolls, minimum, enough: true, expected, statistic: Infinity, p: 0, verdict: "lopsided" };
+  const statistic = counts.reduce(
+    (sum, c, i) =>
+      (expected[i] as number) === 0 ? sum : sum + (c - (expected[i] as number)) ** 2 / (expected[i] as number),
+    0,
+  );
   const p = chiSquareTail(statistic, live - 1);
-  return { sides, rolls, minimum, enough: true, expected, statistic, p, verdict: p >= 0.05 ? "fair" : p >= 0.001 ? "unusual" : "lopsided" };
+  return {
+    sides,
+    rolls,
+    minimum,
+    enough: true,
+    expected,
+    statistic,
+    p,
+    verdict: p >= 0.05 ? "fair" : p >= 0.001 ? "unusual" : "lopsided",
+  };
 }
 
 /** What `readResults` found in somebody's typed results.
@@ -424,7 +454,8 @@ export function statsOf(history: readonly Roll[], focus?: RollSpec, sides?: Side
     }
     longestHot = Math.max(longestHot, hot);
     longestCold = Math.max(longestCold, cold);
-    if (r.faces.length > 1 && r.faces.length === diceCount(r.spec) && r.faces.every((f) => f === r.faces[0])) matches += 1;
+    if (r.faces.length > 1 && r.faces.length === diceCount(r.spec) && r.faces.every((f) => f === r.faces[0]))
+      matches += 1;
     for (const die of diceOf(r)) {
       if (die.status !== "kept" || sidesOf(r.spec, die) !== 20) continue;
       if (die.face === 20) naturalTwenties += 1;

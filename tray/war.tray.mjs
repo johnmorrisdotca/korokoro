@@ -12,11 +12,18 @@ async function sitDown(page) {
 }
 /** The list of games shuts when a game is chosen: open it again if it is shut. */
 async function games(page) {
-  if (!(await page.locator('[data-testid="kk-games-panel"]').evaluate((panel) => panel.open))) await tap(page, '[data-testid="kk-games-panel"] summary');
+  if (!(await page.locator('[data-testid="kk-games-panel"]').evaluate((panel) => panel.open)))
+    await tap(page, '[data-testid="kk-games-panel"] summary');
 }
-const scores = (page) => page.locator('[data-testid="kk-war-seat"] b').allTextContents().then((cells) => cells.map(Number));
+const scores = (page) =>
+  page
+    .locator('[data-testid="kk-war-seat"] b')
+    .allTextContents()
+    .then((cells) => cells.map(Number));
 
-test("Dice War is on its own shelf, found by its name, and sits the person down with two computers", async ({ page }) => {
+test("Dice War is on its own shelf, found by its name, and sits the person down with two computers", async ({
+  page,
+}) => {
   const errors = await open(page);
   await tap(page, '[data-testid="kk-games-panel"] summary');
   await page.locator('[data-testid="kk-games-search"]').fill("war");
@@ -35,7 +42,9 @@ test("Dice War is on its own shelf, found by its name, and sits the person down 
   await sound(page, errors);
 });
 
-test("each throw of the tray is the person's roll, the computers answer, and the game ends at the score", async ({ page }) => {
+test("each throw of the tray is the person's roll, the computers answer, and the game ends at the score", async ({
+  page,
+}) => {
   const errors = await open(page);
   await sitDown(page);
   let throws = 0;
@@ -47,10 +56,16 @@ test("each throw of the tray is the person's roll, the computers answer, and the
     const s = await state(page);
     // The person's dice are the tray's, and the first line of the last throw says so.
     const lines = await war(page, "kk-war-throws").locator("li").allTextContents();
-    expect(lines.some((line) => new RegExp(`^You ${s.dice[0].face} · `).test(line)), `a line of "${lines.join(" | ")}" says the tray threw a ${s.dice[0].face}`).toBe(true);
+    expect(
+      lines.some((line) => new RegExp(`^You ${s.dice[0].face} · `).test(line)),
+      `a line of "${lines.join(" | ")}" says the tray threw a ${s.dice[0].face}`,
+    ).toBe(true);
     const after = await scores(page);
     expect(after.reduce((a, b) => a + b, 0)).toBeGreaterThanOrEqual(before.reduce((a, b) => a + b, 0));
-    expect(s.dice.some((die) => die.button), "no die is held in this game").toBe(false);
+    expect(
+      s.dice.some((die) => die.button),
+      "no die is held in this game",
+    ).toBe(false);
   }
   const final = await scores(page);
   expect(Math.max(...final)).toBeGreaterThanOrEqual(5);
@@ -63,7 +78,11 @@ test("each throw of the tray is the person's roll, the computers answer, and the
   expect(game.scores).toEqual(final);
   expect(diceWarOver(game)).toBe(true);
   const names = ["You", "Aiko", "Ben"];
-  await expect(war(page, "kk-war-status")).toContainText(diceWarWinners(game).map((seat) => names[seat]).join(", "));
+  await expect(war(page, "kk-war-status")).toContainText(
+    diceWarWinners(game)
+      .map((seat) => names[seat])
+      .join(", "),
+  );
   // The tray goes on rolling once the game is over, and the game waits for a new one.
   await roll(page);
   expect(await scores(page)).toEqual(final);
@@ -72,7 +91,9 @@ test("each throw of the tray is the person's roll, the computers answer, and the
   await sound(page, errors);
 });
 
-test("the table can be changed: more players, more dice, another way to end; and the text replays", async ({ page }) => {
+test("the table can be changed: more players, more dice, another way to end; and the text replays", async ({
+  page,
+}) => {
   const errors = await open(page);
   await sitDown(page);
   await page.locator('[data-testid="kk-war-players"]').selectOption("5");
@@ -95,7 +116,9 @@ test("the table can be changed: more players, more dice, another way to end; and
   await sound(page, errors);
 });
 
-test("choosing another game, or stopping, takes the table away, and the tray's own dice end it too", async ({ page }) => {
+test("choosing another game, or stopping, takes the table away, and the tray's own dice end it too", async ({
+  page,
+}) => {
   const errors = await open(page);
   await sitDown(page);
   await games(page);

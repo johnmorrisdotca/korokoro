@@ -37,7 +37,13 @@ export default defineConfig({
     ],
     search: { provider: "local" },
     outline: { level: [2, 3] },
-    editLink: { pattern: `${repo}/blob/main/README.md`, text: "These pages are made from the README and docs/ on GitHub" },
-    footer: { message: "MIT © John Morris", copyright: "Korokoro is one of a family: Kyuubu, Hitotsu, Toranpu, Tane, Narabe, Tenka, Kumimoji." },
+    editLink: {
+      pattern: `${repo}/blob/main/README.md`,
+      text: "These pages are made from the README and docs/ on GitHub",
+    },
+    footer: {
+      message: "MIT © John Morris",
+      copyright: "Korokoro is one of a family: Kyuubu, Hitotsu, Toranpu, Tane, Narabe, Tenka, Kumimoji.",
+    },
   },
 });

@@ -14,7 +14,14 @@ function made(faces: number[], sides: 6 | 20 | 30 = 6, keep: "all" | "highest" =
 
 describe("statsOf", () => {
   it("counts streaks, matches and natural twenties", () => {
-    const history = [made([6, 6]), made([5, 4]), made([1, 1]), made([1, 2]), made([20], 20), made([1, 20], 20, "highest")];
+    const history = [
+      made([6, 6]),
+      made([5, 4]),
+      made([1, 1]),
+      made([1, 2]),
+      made([20], 20),
+      made([1, 20], 20, "highest"),
+    ];
     const stats = statsOf(history, normalizeSpec({ count: 2, sides: 6 }));
     expect(stats.rolls).toBe(6);
     expect(stats.diceThrown).toBe(11);
@@ -83,7 +90,9 @@ describe("history", () => {
     const good = roll({ count: 3, sides: 8, modifier: 1 }, seededSource("h"), 5);
     const text = serializeHistory([good]);
     expect(parseHistory(text)).toEqual([good]);
-    const bad = JSON.stringify({ rolls: [{ ...good, faces: [9, 9, 9] }, { spec: { sides: 1 } }, { spec: { sides: 7 } }, null] });
+    const bad = JSON.stringify({
+      rolls: [{ ...good, faces: [9, 9, 9] }, { spec: { sides: 1 } }, { spec: { sides: 7 } }, null],
+    });
     expect(parseHistory(bad)).toEqual([]);
     expect(parseHistory("not json")).toEqual([]);
   });
@@ -120,7 +129,13 @@ describe("share", () => {
   it("a shared d30 comes back as thrown", () => {
     const r = roll({ count: 2, sides: 30, modifier: 3 }, seededSource("share30"), 99);
     expect(shareQuery(r)).toContain("roll=2d30%2B3");
-    expect(readShared(shareQuery(r))).toMatchObject({ faces: r.faces, total: r.total, at: 99, seed: "share30", spec: r.spec });
+    expect(readShared(shareQuery(r))).toMatchObject({
+      faces: r.faces,
+      total: r.total,
+      at: 99,
+      seed: "share30",
+      spec: r.spec,
+    });
     expect(readShared("roll=2d30&faces=30,1")).toMatchObject({ total: 31 });
     expect(readShared("roll=2d30&faces=31,1")).toBeNull();
   });

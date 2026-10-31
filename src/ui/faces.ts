@@ -33,11 +33,36 @@ const FACETS: Partial<Record<DieSides, string>> = {
 
 const PIPS: Record<number, [number, number][]> = {
   1: [[50, 50]],
-  2: [[28, 28], [72, 72]],
-  3: [[28, 28], [50, 50], [72, 72]],
-  4: [[28, 28], [72, 28], [28, 72], [72, 72]],
-  5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]],
-  6: [[28, 26], [72, 26], [28, 50], [72, 50], [28, 74], [72, 74]],
+  2: [
+    [28, 28],
+    [72, 72],
+  ],
+  3: [
+    [28, 28],
+    [50, 50],
+    [72, 72],
+  ],
+  4: [
+    [28, 28],
+    [72, 28],
+    [28, 72],
+    [72, 72],
+  ],
+  5: [
+    [28, 28],
+    [72, 28],
+    [50, 50],
+    [28, 72],
+    [72, 72],
+  ],
+  6: [
+    [28, 26],
+    [72, 26],
+    [28, 50],
+    [72, 50],
+    [28, 74],
+    [72, 74],
+  ],
 };
 
 /** Where the number sits, so it is inside the widest part of the shape. */
@@ -55,7 +80,21 @@ export function faceText(group: DiceGroup, face: number): string {
 
 /** How large a custom face's words are drawn, by the longest line of them. */
 function wordSize(longest: number): number {
-  return longest <= 1 ? 40 : longest === 2 ? 34 : longest === 3 ? 28 : longest === 4 ? 23 : longest <= 6 ? 17 : longest <= 8 ? 13.5 : longest <= 11 ? 10.5 : 8.5;
+  return longest <= 1
+    ? 40
+    : longest === 2
+      ? 34
+      : longest === 3
+        ? 28
+        : longest === 4
+          ? 23
+          : longest <= 6
+            ? 17
+            : longest <= 8
+              ? 13.5
+              : longest <= 11
+                ? 10.5
+                : 8.5;
 }
 
 /** Dark ink or light, whichever reads on a colour given as #rgb or #rrggbb. */
@@ -75,12 +114,25 @@ function customFace(svg: SVGElement, label: string, colour: string | undefined) 
   if (chars.length > 6 && label.includes(" ")) {
     // Break at the space nearest the middle.
     const spaces = chars.flatMap((c, i) => (c === " " ? [i] : []));
-    const at = spaces.reduce((best, i) => (Math.abs(i - chars.length / 2) < Math.abs(best - chars.length / 2) ? i : best));
+    const at = spaces.reduce((best, i) =>
+      Math.abs(i - chars.length / 2) < Math.abs(best - chars.length / 2) ? i : best,
+    );
     lines = [chars.slice(0, at).join(""), chars.slice(at + 1).join("")];
   }
   const size = wordSize(Math.max(...lines.map((line) => [...line].length)));
   lines.forEach((line, i) => {
-    const text = s("text", { x: 50, y: 50 + (i - (lines.length - 1) / 2) * size * 1.15, "font-size": size, class: "kk-word", "text-anchor": "middle", "dominant-baseline": "central" }, line);
+    const text = s(
+      "text",
+      {
+        x: 50,
+        y: 50 + (i - (lines.length - 1) / 2) * size * 1.15,
+        "font-size": size,
+        class: "kk-word",
+        "text-anchor": "middle",
+        "dominant-baseline": "central",
+      },
+      line,
+    );
     if (colour !== undefined) text.setAttribute("style", `fill:${inkOn(colour)}`);
     svg.append(text);
   });
@@ -90,7 +142,11 @@ function customFace(svg: SVGElement, label: string, colour: string | undefined) 
 function loadedMark(): SVGElement {
   const mark = s("g", { class: "kk-loaded" });
   // On the corner and over the edge, clear of every pip and number.
-  mark.append(s("circle", { cx: 9, cy: 9, r: 14 }), s("path", { d: "M4.5 6.5 L2 16.5 L16 16.5 L13.5 6.5 Z" }), s("circle", { cx: 9, cy: 4.2, r: 3, class: "kk-loaded-ring" }));
+  mark.append(
+    s("circle", { cx: 9, cy: 9, r: 14 }),
+    s("path", { d: "M4.5 6.5 L2 16.5 L16 16.5 L13.5 6.5 Z" }),
+    s("circle", { cx: 9, cy: 4.2, r: 3, class: "kk-loaded-ring" }),
+  );
   return mark;
 }
 
@@ -123,15 +179,36 @@ function drawFace(group: DiceGroup, face: number, label: string): SVGElement {
   if (!isDieSides(sides)) {
     const text = String(face);
     svg.append(s("path", { d: TOKEN, class: "kk-body", "stroke-linejoin": "round" }));
-    svg.append(s("text", { x: 50, y: 45, "font-size": numberSize(text), class: "kk-number", "text-anchor": "middle", "dominant-baseline": "central" }, text));
-    if (text === "6" || text === "9") svg.append(s("rect", { x: 42, y: 63, width: 16, height: 3, rx: 1.5, class: "kk-underline" }));
-    svg.append(s("text", { x: 50, y: 80, "font-size": 13, class: "kk-caption", "text-anchor": "middle", "dominant-baseline": "central" }, `d${sides}`));
+    svg.append(
+      s(
+        "text",
+        {
+          x: 50,
+          y: 45,
+          "font-size": numberSize(text),
+          class: "kk-number",
+          "text-anchor": "middle",
+          "dominant-baseline": "central",
+        },
+        text,
+      ),
+    );
+    if (text === "6" || text === "9")
+      svg.append(s("rect", { x: 42, y: 63, width: 16, height: 3, rx: 1.5, class: "kk-underline" }));
+    svg.append(
+      s(
+        "text",
+        { x: 50, y: 80, "font-size": 13, class: "kk-caption", "text-anchor": "middle", "dominant-baseline": "central" },
+        `d${sides}`,
+      ),
+    );
     return svg;
   }
   if (sides === 6) {
     svg.append(s("rect", { x: 4, y: 4, width: 92, height: 92, rx: 18, class: "kk-body" }));
     svg.append(s("rect", { x: 10, y: 10, width: 80, height: 80, rx: 14, class: "kk-shine" }));
-    for (const [cx, cy] of PIPS[face] ?? []) svg.append(s("circle", { cx, cy, r: face === 1 ? 11 : 8.5, class: face === 1 ? "kk-pip kk-pip-one" : "kk-pip" }));
+    for (const [cx, cy] of PIPS[face] ?? [])
+      svg.append(s("circle", { cx, cy, r: face === 1 ? 11 : 8.5, class: face === 1 ? "kk-pip kk-pip-one" : "kk-pip" }));
     return svg;
   }
   svg.append(s("path", { d: OUTLINES[sides], class: "kk-body", "stroke-linejoin": "round" }));
@@ -140,7 +217,18 @@ function drawFace(group: DiceGroup, face: number, label: string): SVGElement {
   const text = String(face);
   const size = numberSize(text);
   svg.append(
-    s("text", { x: 50, y: NUMBER_Y[sides], "font-size": size, class: "kk-number", "text-anchor": "middle", "dominant-baseline": "central" }, text),
+    s(
+      "text",
+      {
+        x: 50,
+        y: NUMBER_Y[sides],
+        "font-size": size,
+        class: "kk-number",
+        "text-anchor": "middle",
+        "dominant-baseline": "central",
+      },
+      text,
+    ),
   );
   // A 6 and a 9 look alike upside down; real dice underline them, and so does this.
   if (text === "6" || text === "9") {

@@ -44,13 +44,41 @@ const PRESET_WORDS: Record<string, [keyof RollerStrings, keyof RollerStrings]> =
   "odd-couple": ["loadedOddCouple", "loadedOddCoupleSays"],
 };
 
-export function morePanel(state: MoreState, sets: readonly DiceSet[], canSave: boolean, times: number, mostTimes: number, t: RollerStrings, act: MoreActions): HTMLElement {
+export function morePanel(
+  state: MoreState,
+  sets: readonly DiceSet[],
+  canSave: boolean,
+  times: number,
+  mostTimes: number,
+  t: RollerStrings,
+  act: MoreActions,
+): HTMLElement {
   // How many times one tap throws the roll: once, or a set of up to ten.
-  const fewer = h("button", { type: "button", "aria-label": `${t.times} −1`, disabled: times <= 1, "data-testid": "kk-times-down" }, "−");
-  const more = h("button", { type: "button", "aria-label": `${t.times} +1`, disabled: times >= mostTimes, "data-testid": "kk-times-up" }, "+");
+  const fewer = h(
+    "button",
+    { type: "button", "aria-label": `${t.times} −1`, disabled: times <= 1, "data-testid": "kk-times-down" },
+    "−",
+  );
+  const more = h(
+    "button",
+    { type: "button", "aria-label": `${t.times} +1`, disabled: times >= mostTimes, "data-testid": "kk-times-up" },
+    "+",
+  );
   fewer.addEventListener("click", () => act.times(times - 1));
   more.addEventListener("click", () => act.times(times + 1));
-  const faces = h("input", { type: "text", class: "kk-field", value: state.faces, placeholder: t.customHint, "aria-label": t.customHint, autocomplete: "off", autocapitalize: "none", autocorrect: "off", spellcheck: "false", enterkeyhint: "done", "data-testid": "kk-custom-faces" });
+  const faces = h("input", {
+    type: "text",
+    class: "kk-field",
+    value: state.faces,
+    placeholder: t.customHint,
+    "aria-label": t.customHint,
+    autocomplete: "off",
+    autocapitalize: "none",
+    autocorrect: "off",
+    spellcheck: "false",
+    enterkeyhint: "done",
+    "data-testid": "kk-custom-faces",
+  });
   const add = h("button", { type: "button", class: "kk-link", "data-testid": "kk-custom-add" }, t.customAdd);
   const make = () => {
     state.faces = faces.value;
@@ -69,7 +97,13 @@ export function morePanel(state: MoreState, sets: readonly DiceSet[], canSave: b
 
   const presets = LOADED_PRESETS.map((preset) => {
     const [name, says] = PRESET_WORDS[preset.id] as [keyof RollerStrings, keyof RollerStrings];
-    const button = h("button", { type: "button", class: "kk-preset", "data-testid": "kk-loaded-preset", "data-value": preset.id }, h("b", {}, t[name]), h("code", {}, preset.notation), h("span", {}, t[says]));
+    const button = h(
+      "button",
+      { type: "button", class: "kk-preset", "data-testid": "kk-loaded-preset", "data-value": preset.id },
+      h("b", {}, t[name]),
+      h("code", {}, preset.notation),
+      h("span", {}, t[says]),
+    );
     button.addEventListener("click", () => {
       state.error = act.add(preset.notation) ?? "";
       act.redraw();
@@ -77,8 +111,22 @@ export function morePanel(state: MoreState, sets: readonly DiceSet[], canSave: b
     return button;
   });
 
-  const name = h("input", { type: "text", class: "kk-field", value: state.name, maxlength: MAX_SET_NAME, placeholder: t.setName, "aria-label": t.setName, autocomplete: "off", enterkeyhint: "done", "data-testid": "kk-set-name" });
-  const save = h("button", { type: "button", class: "kk-link", disabled: !canSave, "data-testid": "kk-set-save" }, t.setSave);
+  const name = h("input", {
+    type: "text",
+    class: "kk-field",
+    value: state.name,
+    maxlength: MAX_SET_NAME,
+    placeholder: t.setName,
+    "aria-label": t.setName,
+    autocomplete: "off",
+    enterkeyhint: "done",
+    "data-testid": "kk-set-name",
+  });
+  const save = h(
+    "button",
+    { type: "button", class: "kk-link", disabled: !canSave, "data-testid": "kk-set-save" },
+    t.setSave,
+  );
   const keep = () => {
     if (name.value.trim() === "" || !canSave) return;
     act.save(name.value);
@@ -92,11 +140,39 @@ export function morePanel(state: MoreState, sets: readonly DiceSet[], canSave: b
   save.addEventListener("click", keep);
 
   const list = sets.map((set) => {
-    const use = h("button", { type: "button", class: "kk-set-use", "aria-label": fillIn(t.setRoll, { name: set.name, notation: set.notation }), "data-testid": "kk-set-use" }, h("b", {}, set.name), h("code", {}, set.notation));
+    const use = h(
+      "button",
+      {
+        type: "button",
+        class: "kk-set-use",
+        "aria-label": fillIn(t.setRoll, { name: set.name, notation: set.notation }),
+        "data-testid": "kk-set-use",
+      },
+      h("b", {}, set.name),
+      h("code", {}, set.notation),
+    );
     use.addEventListener("click", () => act.use(set));
-    const copy = h("button", { type: "button", class: "kk-link", "aria-label": fillIn(t.setCopy, { name: set.name }), "data-testid": "kk-set-copy" }, t.copyLink);
+    const copy = h(
+      "button",
+      {
+        type: "button",
+        class: "kk-link",
+        "aria-label": fillIn(t.setCopy, { name: set.name }),
+        "data-testid": "kk-set-copy",
+      },
+      t.copyLink,
+    );
     copy.addEventListener("click", () => act.copy(set, copy));
-    const remove = h("button", { type: "button", class: "kk-link", "aria-label": fillIn(t.setDelete, { name: set.name }), "data-testid": "kk-set-delete" }, "×");
+    const remove = h(
+      "button",
+      {
+        type: "button",
+        class: "kk-link",
+        "aria-label": fillIn(t.setDelete, { name: set.name }),
+        "data-testid": "kk-set-delete",
+      },
+      "×",
+    );
     remove.addEventListener("click", () => act.remove(set));
     return h("li", { "data-testid": "kk-set" }, use, copy, remove);
   });
@@ -105,10 +181,37 @@ export function morePanel(state: MoreState, sets: readonly DiceSet[], canSave: b
     "details",
     { class: "kk-settings kk-more", open: state.open, "data-testid": "kk-more" },
     h("summary", {}, `${t.moreDice}${times > 1 ? ` · ${t.times} ${times}` : ""}`),
-    h("section", {}, h("div", { class: "kk-row" }, h("span", { class: "kk-label" }, t.times), h("div", { class: "kk-stepper" }, fewer, h("output", { "data-testid": "kk-times" }, `×${times}`), more))),
-    h("section", {}, h("h4", {}, t.customTitle), h("div", { class: "kk-row" }, faces, add), h("span", { class: "kk-error", role: "alert", "data-testid": "kk-custom-error" }, state.error)),
-    h("section", {}, h("h4", {}, t.loadedTitle), h("p", {}, t.loadedNote), h("div", { class: "kk-presets" }, ...presets)),
-    h("section", {}, h("h4", {}, t.setsTitle), h("div", { class: "kk-row" }, name, save), sets.length === 0 ? h("p", {}, t.setNone) : h("ul", { class: "kk-sets", "data-testid": "kk-sets" }, ...list)),
+    h(
+      "section",
+      {},
+      h(
+        "div",
+        { class: "kk-row" },
+        h("span", { class: "kk-label" }, t.times),
+        h("div", { class: "kk-stepper" }, fewer, h("output", { "data-testid": "kk-times" }, `×${times}`), more),
+      ),
+    ),
+    h(
+      "section",
+      {},
+      h("h4", {}, t.customTitle),
+      h("div", { class: "kk-row" }, faces, add),
+      h("span", { class: "kk-error", role: "alert", "data-testid": "kk-custom-error" }, state.error),
+    ),
+    h(
+      "section",
+      {},
+      h("h4", {}, t.loadedTitle),
+      h("p", {}, t.loadedNote),
+      h("div", { class: "kk-presets" }, ...presets),
+    ),
+    h(
+      "section",
+      {},
+      h("h4", {}, t.setsTitle),
+      h("div", { class: "kk-row" }, name, save),
+      sets.length === 0 ? h("p", {}, t.setNone) : h("ul", { class: "kk-sets", "data-testid": "kk-sets" }, ...list),
+    ),
   );
   details.addEventListener("toggle", () => (state.open = details.open));
   return details;

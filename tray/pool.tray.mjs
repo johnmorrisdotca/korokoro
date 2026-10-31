@@ -125,7 +125,18 @@ test("the keyboard rolls, and every control has a name", async ({ page, isMobile
   await page.keyboard.press("Space");
   let s = await state(page);
   expect(s.total).not.toBe("?");
-  const names = await page.evaluate(() => [...document.querySelectorAll(".kk-root button")].filter((b) => b.getBoundingClientRect().width > 0).map((b) => (b.getAttribute("aria-label") ?? b.querySelector("svg")?.getAttribute("aria-label") ?? b.textContent ?? "").trim()));
+  const names = await page.evaluate(() =>
+    [...document.querySelectorAll(".kk-root button")]
+      .filter((b) => b.getBoundingClientRect().width > 0)
+      .map((b) =>
+        (
+          b.getAttribute("aria-label") ??
+          b.querySelector("svg")?.getAttribute("aria-label") ??
+          b.textContent ??
+          ""
+        ).trim(),
+      ),
+  );
   expect(names.filter((name) => name === "")).toEqual([]);
   s = await sound(page, errors);
 });

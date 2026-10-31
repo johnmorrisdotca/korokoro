@@ -6,7 +6,9 @@ import { open } from "./tray.mjs";
 
 const lines = (page) => page.locator(".fam-help");
 
-test("Help is off at first, shows one line under each option row when pressed, and follows the language", async ({ page }) => {
+test("Help is off at first, shows one line under each option row when pressed, and follows the language", async ({
+  page,
+}) => {
   const errors = await open(page, "/?lang=en&seed=help");
   const row = page.locator('.kk-row:has([data-testid="kk-sides"])');
   const switchButton = page.locator("[data-help-switch]");
@@ -44,7 +46,14 @@ test("the pool row says what it is and what a tap does, in each state of the rol
 
 test("every die's mark is the same size, and every label is at the middle of its button", async ({ page }) => {
   await open(page, "/?lang=en&seed=centre");
-  const sizes = await page.locator('[data-testid="kk-sides"] .kk-icon').evaluateAll((icons) => icons.map((icon) => [Math.round(icon.getBoundingClientRect().width), Math.round(icon.getBoundingClientRect().height)]));
+  const sizes = await page
+    .locator('[data-testid="kk-sides"] .kk-icon')
+    .evaluateAll((icons) =>
+      icons.map((icon) => [
+        Math.round(icon.getBoundingClientRect().width),
+        Math.round(icon.getBoundingClientRect().height),
+      ]),
+    );
   expect(sizes).toHaveLength(8);
   expect(new Set(sizes.map((size) => size.join("x"))).size).toBe(1);
   // The chosen button of the counts is a circle with its number at the middle of it.

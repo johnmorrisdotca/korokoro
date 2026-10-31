@@ -92,7 +92,12 @@ export type FaceChance = {
 export function faceChances(group: DiceGroup): FaceChance[] {
   const low = group.faces !== undefined ? 1 : faceRange(group.sides).low;
   const chances = chancesOf(group);
-  return chances.map((chance, i) => ({ face: low + i, label: group.faces?.[i]?.label ?? String(low + i), chance, fair: 1 / chances.length }));
+  return chances.map((chance, i) => ({
+    face: low + i,
+    label: group.faces?.[i]?.label ?? String(low + i),
+    chance,
+    fair: 1 / chances.length,
+  }));
 }
 
 function lowestTerms(top: number, bottom: number): [number, number] {
@@ -121,5 +126,9 @@ export function loadingOf(group: DiceGroup): { face: number; loaded: [number, nu
   if (group.weights === undefined) return null;
   const all = group.weights.reduce((a, b) => a + b, 0);
   const heaviest = group.weights.indexOf(Math.max(...group.weights));
-  return { face: faceRange(group.sides).low + heaviest, loaded: lowestTerms(group.weights[heaviest] as number, all), fair: [1, group.weights.length] };
+  return {
+    face: faceRange(group.sides).low + heaviest,
+    loaded: lowestTerms(group.weights[heaviest] as number, all),
+    fair: [1, group.weights.length],
+  };
 }

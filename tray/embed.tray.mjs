@@ -5,7 +5,11 @@ import { open } from "./tray.mjs";
 
 const root = (page) => page.locator('[data-testid="korokoro"]');
 
-for (const [size, controls, panels] of [["small", false, false], ["medium", true, false], ["large", true, true]]) {
+for (const [size, controls, panels] of [
+  ["small", false, false],
+  ["medium", true, false],
+  ["large", true, true],
+]) {
   test(`the embed page at ${size}: the dice its address names, rolled by a tap`, async ({ page }) => {
     const errors = await open(page, `/embed/?dice=2d6%2B3&size=${size}&seed=table&sound=off`);
     await expect(root(page)).toHaveAttribute("data-size", size);
@@ -32,13 +36,17 @@ test("the demo writes the iframe and the tag for the size chosen", async ({ page
   await page.locator('[data-testid="embed-size"] [data-size="small"]').click();
   await expect(frame).toContainText("size=small");
   await expect(frame).toContainText('height="540"');
-  await expect(page.locator('[data-testid="embed-tag"]')).toContainText('<korokoro-roller notation="2d6" size="small">');
+  await expect(page.locator('[data-testid="embed-tag"]')).toContainText(
+    '<korokoro-roller notation="2d6" size="small">',
+  );
   await expect(page.locator('[data-testid="embed-says"]')).toContainText("Small:");
   await expect(page.locator('[data-testid="embed-preview"]')).toHaveAttribute("src", /embed\/\?dice=2d6&size=small$/);
   expect(errors).toEqual([]);
 });
 
-test("the cloth: chosen on the header's patches, the demo's tray and the code follow; the embed and the element take it by name", async ({ page }) => {
+test("the cloth: chosen on the header's patches, the demo's tray and the code follow; the embed and the element take it by name", async ({
+  page,
+}) => {
   const errors = await open(page, "/?lang=en&cloth=red");
   // Every patch is named and big enough to press; the address's cloth is the one pressed.
   await expect(page.locator('button[data-cloth="red"]')).toHaveAttribute("aria-checked", "true");
@@ -47,7 +55,9 @@ test("the cloth: chosen on the header's patches, the demo's tray and the code fo
   await expect(page.locator('[data-testid="embed-tag"]')).toContainText('cloth="red"');
   await page.locator('button[data-cloth="wood"]').click();
   await expect(root(page)).toHaveAttribute("data-cloth", "wood");
-  expect(await root(page).evaluate((tray) => getComputedStyle(tray).getPropertyValue("--kk-felt").trim())).toBe("#e2ba7a");
+  expect(await root(page).evaluate((tray) => getComputedStyle(tray).getPropertyValue("--kk-felt").trim())).toBe(
+    "#e2ba7a",
+  );
   await expect(page.locator('[data-testid="embed-preview"]')).toHaveAttribute("src", /cloth=wood/);
   await expect(page.locator('[data-testid="embed-tag"]')).toContainText('cloth="wood"');
   // Green is the tray's own, and is never written into the code.
@@ -56,13 +66,20 @@ test("the cloth: chosen on the header's patches, the demo's tray and the code fo
   expect(errors).toEqual([]);
 });
 
-test("the embed page and the element lay the felt in the cloth they are given, and the element changes it in place", async ({ page }) => {
+test("the embed page and the element lay the felt in the cloth they are given, and the element changes it in place", async ({
+  page,
+}) => {
   const errors = await open(page, "/embed/?size=small&cloth=blue&sound=off");
   await expect(root(page)).toHaveAttribute("data-cloth", "blue");
-  expect(await root(page).evaluate((tray) => getComputedStyle(tray).getPropertyValue("--kk-felt").trim())).toBe("#2865a6");
+  expect(await root(page).evaluate((tray) => getComputedStyle(tray).getPropertyValue("--kk-felt").trim())).toBe(
+    "#2865a6",
+  );
   await page.evaluate(async () => {
     await import("../dist/element-define.js");
-    document.body.insertAdjacentHTML("beforeend", '<korokoro-roller id="mine" notation="1d20" size="small" cloth="black" sound="off" storage="off"></korokoro-roller>');
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      '<korokoro-roller id="mine" notation="1d20" size="small" cloth="black" sound="off" storage="off"></korokoro-roller>',
+    );
   });
   const mine = page.locator('#mine [data-testid="korokoro"]');
   await expect(mine).toHaveAttribute("data-cloth", "black");
