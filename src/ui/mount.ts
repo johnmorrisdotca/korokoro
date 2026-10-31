@@ -1,55 +1,72 @@
 import {
   canHold,
   DEFAULT_SPEC,
-  DIE_SIDES,
   type DiceGroup,
-  type DieRoll,
-  type DieSides,
-  diceCount,
-  diceOf,
-  dieName,
-  faceRange,
-  groupOf,
   groupsOf,
-  hasTotal,
-  isLoaded,
-  isSuccessRoll,
-  type Keep,
-  MAX_DICE,
-  MAX_GROUPS,
-  MIN_DICE,
   normalizeSpec,
   type Roll,
   type RollSpec,
-  rangeOf,
-  roll,
-  rollHeld,
-  rollMany,
   type Sides,
-  setOf,
-  sidesOf,
-  specOf,
 } from "../dice.ts";
-import { diceWarOver } from "../diceWar.ts";
-import { formulaText, fromJSON, toCSV, toJSON, toText } from "../export.ts";
-import { getPreset, type Preset, presetSpec, readPreset } from "../games/presets.ts";
-import { addToHistory, HISTORY_LIMIT, loadHistory, type StorageLike, saveHistory } from "../history.ts";
+import { getPreset, type Preset, presetSpec } from "../games/presets.ts";
+import { loadHistory, type StorageLike } from "../history.ts";
 import { checkNotation, formatNotation } from "../notation.ts";
-import { chanceExactly, type Distribution, distributionHolding, expectedTotal, luckOf } from "../odds.ts";
-import { cryptoSource, newSeed, type RandomSource, seededSource } from "../random.ts";
-import { type DiceSet, loadSets, makeSet, readSet, setQuery, storeSets, withoutSet, withSet } from "../sets.ts";
-import { readShared, readSharedMany, shareQuery, shareQueryMany } from "../share.ts";
+import { expectedTotal } from "../odds.ts";
+import { cryptoSource, type RandomSource, seededSource } from "../random.ts";
+import { type DiceSet, loadSets, readSet } from "../sets.ts";
+import { readShared, readSharedMany } from "../share.ts";
 import { type Cloth, clothVars, isCloth } from "./cloth.ts";
-import { h, refill, s } from "./dom.ts";
-import { dieFace, dieIcon, faceText, minusMark } from "./faces.ts";
-import { type GamesState, gamesPanel } from "./games.ts";
-import { helpMarks } from "./help.ts";
-import { type MoreState, morePanel } from "./more.ts";
-import { historyPanel, oddsPanel, percent, type RealDie, statsPanel } from "./panels.ts";
-import { createRollSound, type PlaySound, type RollSound } from "./sound.ts";
-import { fillIn, REFUSALS, type RollerStrings, STRINGS } from "./strings.ts";
+import { h } from "./dom.ts";
+import type { GamesState } from "./games.ts";
+import type { MoreState } from "./more.ts";
+import { bindSession } from "./mountBind.ts";
+import {
+  dieElement as dieElementOf,
+  dieLabel as dieLabelOf,
+  randomFace as randomFaceOf,
+  renderControls as renderControlsOf,
+  renderTray as renderTrayOf,
+  restingDice as restingDiceOf,
+  sumLine as sumLineOf,
+} from "./mountControls.ts";
+import {
+  copyLink as copyLinkOf,
+  exportPanel as exportPanelOf,
+  linkTo as linkToOf,
+  renderPanels as renderPanelsOf,
+  renderResult as renderResultOf,
+  renderWar as renderWarOf,
+  restOf as restOfOf,
+  save as saveOf,
+  waiting as waitingOf,
+} from "./mountResult.ts";
+import {
+  addDie as addDieOf,
+  changeLit as changeLitOf,
+  changeSpec as changeSpecOf,
+  chooseGame as chooseGameOf,
+  chooseWar as chooseWarOf,
+  land as landOf,
+  later as laterOf,
+  oddsNow as oddsNowOf,
+  renderMute as renderMuteOf,
+  render as renderOf,
+  segment as segmentOf,
+  setKinds as setKindsOf,
+  setLocale as setLocaleOf,
+  settle as settleOf,
+  sound as soundOf,
+  startWar as startWarOf,
+  takeOne as takeOneOf,
+  throwDice as throwDiceOf,
+  toggleHold as toggleHoldOf,
+  useSeed as useSeedOf,
+} from "./mountThrow.ts";
+import type { RealDie } from "./panels.ts";
+import type { PlaySound, RollSound } from "./sound.ts";
+import { type RollerStrings, STRINGS } from "./strings.ts";
 import { injectStyle } from "./style.ts";
-import { newWar, throwWar, WAR_DEFAULTS, type WarSession, type WarSettings, warNames, warPanel } from "./war.ts";
+import { WAR_DEFAULTS, type WarSession, type WarSettings } from "./war.ts";
 
 /** Everything a tray can be told when it is mounted. All of it is optional.
  *
@@ -171,31 +188,7 @@ export type RollerHandle = {
   destroy(): void;
 };
 
-type Tab = "history" | "stats" | "odds";
-
-/** A pleasant set of faces for a tray nobody has rolled yet. */
-const RESTING = [5, 3, 6, 2, 4, 1, 6, 3, 5, 2];
-const RESTING_FATE = [1, 0, -1, 1, 0, 1, -1, 0, 1, -1];
-
-/** A speaker, with waves when the sound is on and a cross when it is off. */
-function speaker(on: boolean): SVGElement {
-  return s(
-    "svg",
-    {
-      viewBox: "0 0 24 24",
-      width: 20,
-      height: 20,
-      fill: "none",
-      stroke: "currentColor",
-      "stroke-width": 2,
-      "stroke-linecap": "round",
-      "stroke-linejoin": "round",
-      "aria-hidden": "true",
-    },
-    s("path", { d: "M4 9.5h3.5L12 6v12l-4.5-3.5H4z", fill: "currentColor" }),
-    s("path", { d: on ? "M15.5 9.5a3.5 3.5 0 0 1 0 5M18 7a7 7 0 0 1 0 10" : "M16 9.5l5 5M21 9.5l-5 5" }),
-  );
-}
+export type Tab = "history" | "stats" | "odds";
 
 function defaultStorage(): StorageLike | undefined {
   try {
@@ -375,594 +368,14 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
   // The felt first: on a phone it sits under the thumb, and the choices wait below it.
   root.append(felt, result, warBox, controls, panels, said);
   target.replaceChildren(root);
-
-  function later(fn: () => void, ms: number) {
-    const id = setTimeout(() => {
-      timers.delete(id);
-      fn();
-    }, ms);
-    timers.add(id);
-  }
-
-  function segment<T extends string | number>(
-    label: string,
-    values: readonly T[],
-    chosen: T | null,
-    name: (v: T) => Node | string,
-    pick: (v: T) => void,
-    testId: string,
-    dimmed: (v: T) => boolean = () => false,
-    last: HTMLElement | null = null,
-    inPool: (v: T) => boolean = () => false,
-    help: Record<string, string> = {},
-  ) {
-    return h(
-      "div",
-      { class: "kk-row", ...help },
-      h("span", { class: "kk-label", "data-testid": `${testId}-label` }, label),
-      h(
-        "div",
-        { class: "kk-seg", role: "group", "aria-label": label, "data-testid": testId },
-        ...values.map((v) => {
-          const button = h(
-            "button",
-            {
-              type: "button",
-              "aria-pressed": String(v === chosen),
-              "data-value": String(v),
-              "data-in": inPool(v) ? "true" : null,
-              disabled: dimmed(v),
-            },
-            name(v),
-          );
-          button.addEventListener("click", () => pick(v));
-          return button;
-        }),
-        last,
-      ),
-    );
-  }
-
   const notation = () => (empty ? "" : formatNotation(spec));
   const kinds = (): DiceGroup[] => (empty ? [] : groupsOf(spec));
   /** The plain die of a size, as a kind: what a die button stands for. */
-  const plainDie = (sides: Sides): DiceGroup => ({ count: 1, sides, keep: "all" });
-
-  /** The spec changed: nothing is held any more, and the target follows the new average. */
-  function settle(before: string) {
-    if (notation() !== before) {
-      goal = Math.round(expectedTotal(spec));
-      held = [];
-    }
-    showingShared = false;
-    render();
-  }
-
-  /** The pool, set from its kinds. The kind last touched stays lit, found again by its sides. */
-  function setKinds(next: DiceGroup[], touched: string | null) {
-    const before = notation();
-    empty = next.length === 0;
-    if (!empty) spec = specOf(next, spec.modifier);
-    const found = touched === null ? -1 : groupsOf(spec).findIndex((g) => dieName(g) === touched);
-    lit = empty ? 0 : found >= 0 ? found : Math.min(lit, groupsOf(spec).length - 1);
-    settle(before);
-  }
-
-  /**
-   * A change to one part keeps the rest. A whole spec (the dice, the bonus and
-   * what is kept, all given) replaces everything, so typing `4d6dl1` after
-   * `3d6!` does not leave the dice exploding.
-   */
-  function changeSpec(next: Partial<RollSpec>) {
-    const before = notation();
-    const whole =
-      next.count !== undefined && next.sides !== undefined && next.modifier !== undefined && next.keep !== undefined;
-    // The dice set from outside (typed, or by the page) are a choice; the bonus alone is not.
-    if (whole || next.count !== undefined || next.sides !== undefined || next.more !== undefined) suggested = false;
-    spec = normalizeSpec(whole ? next : { ...spec, ...next });
-    empty = false;
-    lit = whole ? 0 : Math.min(lit, groupsOf(spec).length - 1);
-    settle(before);
-  }
-
-  /** A change to the kind that is lit: its count, or what it keeps. */
-  function changeLit(next: Partial<DiceGroup>) {
-    const all = kinds();
-    const mine = all[lit];
-    if (mine === undefined) return;
-    if (next.count !== undefined) suggested = false;
-    all[lit] = { ...mine, ...next };
-    setKinds(all, dieName(mine));
-  }
-
-  /**
-   * One more die of a kind: on the kind already in the pool, or as a new kind.
-   * On the dice the tray opened with, a different kind takes their place, and
-   * the same kind is simply one more of them.
-   */
-  function addDie(die: DiceGroup, count = 1) {
-    const name = dieName(die);
-    // A formula is not added to by a tap: the die tapped starts a new roll, as it does on the dice the tray opened with.
-    const all = spec.math !== undefined || (suggested && !kinds().some((g) => dieName(g) === name)) ? [] : kinds();
-    suggested = false;
-    const at = all.findIndex((g) => dieName(g) === name);
-    // Never past the limits: the buttons dim there, and a die made or loaded below is held to them too.
-    const room = MAX_DICE - all.reduce((sum, g) => sum + g.count, 0);
-    const adding = Math.min(count, room);
-    if (adding < 1 || (at < 0 && all.length >= MAX_GROUPS)) return false;
-    if (at >= 0) all[at] = { ...(all[at] as DiceGroup), count: (all[at] as DiceGroup).count + adding };
-    else all.push({ ...die, count: adding, keep: "all" });
-    setKinds(all, name);
-    return true;
-  }
-
-  /** One die fewer of a kind; its last die takes the kind out of the pool. */
-  function takeOne(index: number) {
-    const all = kinds();
-    const mine = all[index];
-    if (mine === undefined) return;
-    suggested = false;
-    if (mine.count > 1) all[index] = { ...mine, count: mine.count - 1 };
-    else all.splice(index, 1);
-    setKinds(all, mine.count > 1 ? dieName(mine) : null);
-  }
-
-  function renderControls() {
-    const all = kinds();
-    // A roll written as a formula is changed where it was written: the buttons cannot take a die out of the middle of it.
-    const formula = !empty && spec.math !== undefined;
-    const total = all.reduce((sum, g) => sum + g.count, 0);
-    const mine = all[lit];
-    const room = MAX_DICE - total;
-    const full = room < 1;
-    const counts = Array.from({ length: MAX_DICE - MIN_DICE + 1 }, (_, i) => i + MIN_DICE);
-    const minus = h(
-      "button",
-      { type: "button", "aria-label": `${t.modifier} −1`, "data-testid": "kk-mod-down", disabled: formula },
-      "−",
-    );
-    const plus = h(
-      "button",
-      { type: "button", "aria-label": `${t.modifier} +1`, "data-testid": "kk-mod-up", disabled: formula },
-      "+",
-    );
-    minus.addEventListener("click", () => changeSpec({ modifier: spec.modifier - 1 }));
-    plus.addEventListener("click", () => changeSpec({ modifier: spec.modifier + 1 }));
-    const mod = spec.modifier > 0 ? `+${spec.modifier}` : String(spec.modifier);
-
-    const input = h("input", {
-      type: "text",
-      value: notation(),
-      "aria-label": t.notation,
-      placeholder: t.notationHint,
-      // A phone must not correct "2d6" into a word, or start it with a capital.
-      autocomplete: "off",
-      autocapitalize: "none",
-      autocorrect: "off",
-      spellcheck: "false",
-      inputmode: "text",
-      enterkeyhint: "done",
-      "data-testid": "kk-notation",
-    });
-    const error = h("span", { class: "kk-error", role: "alert" });
-    const apply = () => {
-      if (input.value.trim() === "" && empty) return;
-      const read = checkNotation(input.value);
-      if (!read.ok) {
-        input.setAttribute("aria-invalid", "true");
-        error.textContent = fillIn(t[REFUSALS[read.problem]], { part: read.part });
-        return;
-      }
-      // Dice typed by hand are their own roll, not a game's.
-      game = null;
-      changeSpec(read.spec);
-    };
-    input.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") apply();
-    });
-    input.addEventListener("change", apply);
-
-    const seeded = seed !== null;
-    const seedInput = h("input", {
-      type: "text",
-      class: "kk-field",
-      value: seed ?? "",
-      "aria-label": t.seeded,
-      "data-testid": "kk-seed",
-      autocapitalize: "none",
-      autocorrect: "off",
-      spellcheck: "false",
-    });
-    seedInput.addEventListener("change", () => useSeed(seedInput.value.trim() || newSeed()));
-    const fresh = h("button", { type: "button", class: "kk-link" }, t.newSeed);
-    fresh.addEventListener("click", () => useSeed(newSeed()));
-
-    // The pool: one chip for each kind of dice, and a tap on a chip takes one die of it away.
-    const chips = all.map((group, index) => {
-      const text = formatNotation(specOf([group]));
-      const chip = h(
-        "button",
-        {
-          type: "button",
-          class: "kk-chip",
-          "data-testid": "kk-chip",
-          "data-value": dieName(group).slice(1),
-          "data-lit": String(index === lit),
-          "data-suggested": String(suggested),
-          "aria-label": formula ? text : fillIn(t.takeOne, { die: dieName(group), n: group.count }),
-          title: formula ? text : fillIn(t.takeOne, { die: dieName(group), n: group.count }),
-          disabled: formula,
-        },
-        h("span", {}, text),
-        h("i", { "aria-hidden": "true", class: "kk-chip-x" }, minusMark()),
-      );
-      chip.addEventListener("click", () => takeOne(index));
-      return chip;
-    });
-    const clear = h(
-      "button",
-      {
-        type: "button",
-        class: "kk-clear",
-        "data-testid": "kk-clear-pool",
-        "aria-label": t.clearPoolLabel,
-        disabled: empty,
-      },
-      t.clearPool,
-    );
-    // Clear takes the bonus with the dice: nothing is left to roll.
-    clear.addEventListener("click", () => {
-      suggested = false;
-      spec = { ...spec, modifier: 0 };
-      game = null;
-      setKinds([], null);
-    });
-
-    // A button that would take the roll past a limit is dimmed, and the row's label says which limit.
-    const allKinds = all.length >= MAX_GROUPS;
-    const inRoll = (sides: Sides) => all.some((g) => dieName(g) === dieName(plainDie(sides)));
-    const cannotAdd = (sides: Sides) => !formula && (full || (allKinds && !inRoll(sides)));
-    // While the dice are only suggested, a tap chooses; after that, it adds. The label says which.
-    const addLabel = formula
-      ? t.choose
-      : full
-        ? fillIn(t.limitDice, { n: MAX_DICE })
-        : allKinds
-          ? fillIn(t.limitKinds, { n: MAX_GROUPS })
-          : suggested
-            ? t.choose
-            : t.add;
-
-    refill(
-      controls,
-      h(
-        "div",
-        { class: "kk-row" },
-        h("span", { class: "kk-label" }, t.pool),
-        h(
-          "div",
-          {
-            class: "kk-pool",
-            role: "group",
-            "aria-label": t.pool,
-            "data-testid": "kk-pool",
-            "data-suggested": String(suggested),
-          },
-          ...chips,
-        ),
-        // What the chips are and what a tap on one does, said in the row itself, in whichever state the roll is in.
-        h(
-          "p",
-          { class: "kk-fine kk-pool-hint", "data-testid": "kk-pool-hint" },
-          formula
-            ? t.formula
-            : empty
-              ? t.addToRoll
-              : suggested
-                ? fillIn(t.poolSuggested, { notation: notation() })
-                : t.poolHint,
-        ),
-      ),
-      segment(
-        all.length > 1 && mine !== undefined ? dieName(mine) : t.dice,
-        counts,
-        mine?.count ?? null,
-        (n) => String(n),
-        (n) => changeLit({ count: n }),
-        "kk-count",
-        (n) => formula || mine === undefined || n > mine.count + room,
-        undefined,
-        undefined,
-        helpMarks("count"),
-      ),
-      // The buttons are the dice a table owns; any other die is typed as notation, and then no button is lit.
-      segment<Sides>(
-        addLabel,
-        DIE_SIDES,
-        // A loaded or custom die lights no button: the buttons are the fair dice.
-        mine !== undefined && mine.weights === undefined && mine.faces === undefined ? mine.sides : null,
-        (n) => h("span", { class: "kk-die-pick" }, dieIcon(n as DieSides), `d${n}`),
-        (n) => void addDie(plainDie(n)),
-        "kk-sides",
-        cannotAdd,
-        clear,
-        inRoll,
-        helpMarks("sides"),
-      ),
-      h(
-        "div",
-        { class: "kk-row", ...helpMarks("bonus") },
-        h("span", { class: "kk-label" }, t.modifier),
-        h("div", { class: "kk-stepper" }, minus, h("output", { "data-testid": "kk-mod" }, mod), plus),
-        h("span", { class: "kk-notation" }, input),
-        error,
-        formula ? h("span", { class: "kk-fine kk-formula", "data-testid": "kk-formula" }, t.formula) : null,
-      ),
-      // Always there, so the rows below never move; dimmed while there is one die or none to choose among.
-      segment<Keep>(
-        t.keep,
-        ["all", "highest", "lowest"],
-        mine === undefined || (mine.keepCount ?? 1) > 1 ? null : mine.keep,
-        (k) => (k === "all" ? t.keepAll : k === "highest" ? t.keepHighest : t.keepLowest),
-        (k) => changeLit({ keep: k, keepCount: 1 }),
-        "kk-keep",
-        (k) => formula || mine === undefined || (mine.count < 2 && k !== "all"),
-        undefined,
-        undefined,
-        helpMarks("keep"),
-      ),
-      h(
-        "details",
-        { class: "kk-settings", open: seeded },
-        h("summary", {}, `${t.randomness}: ${seeded ? `${t.seeded} (${seed})` : t.fair}`),
-        segment(
-          t.randomness,
-          ["fair", "seeded"] as const,
-          seeded ? "seeded" : "fair",
-          (m) => (m === "fair" ? t.fair : t.seeded),
-          (m) => (m === "fair" ? useSeed(null) : useSeed(seed ?? newSeed())),
-          "kk-mode",
-        ),
-        h("p", {}, seeded ? t.seededHint : t.fairHint),
-        seeded ? h("div", { class: "kk-row" }, seedInput, fresh) : null,
-      ),
-      // The tray's own language chooser, for a page that asks for one: quiet, and last but for what is one level down.
-      options.languageChooser === true
-        ? segment(
-            t.language,
-            ["en", "ja"] as const,
-            locale.toLowerCase().startsWith("ja") ? "ja" : "en",
-            (l) => (l === "en" ? "English" : "日本語"),
-            (l) => setLocale(l, true),
-            "kk-language",
-          )
-        : null,
-      gamesPanel(
-        gamesState,
-        game,
-        japanese(),
-        t,
-        chooseGame,
-        () => {
-          game = null;
-          war = null;
-          render();
-        },
-        options.diceWar === true
-          ? { name: t.warName, says: t.warSays, chosen: war !== null, choose: chooseWar, value: "dice-war" }
-          : null,
-      ),
-      morePanel(more, sets, !empty, spec.times ?? 1, TRAY_TIMES, t, {
-        times(n) {
-          changeSpec({ times: n });
-        },
-        add(text) {
-          const read = checkNotation(text);
-          if (!read.ok) return fillIn(t[REFUSALS[read.problem]], { part: read.part });
-          // A die made or picked here joins the roll like a tapped one: every kind in what was typed, as many as there is room for.
-          for (const group of groupsOf(read.spec))
-            if (!addDie(group, group.count))
-              return fillIn(full ? t.limitDice : t.limitKinds, { n: full ? MAX_DICE : MAX_GROUPS });
-          return null;
-        },
-        save(name) {
-          const set = makeSet(name, spec);
-          if (set === null) return;
-          sets = withSet(sets, set);
-          storageWorks = storeSets(storage, setsKey, sets) && storageWorks;
-        },
-        use(set) {
-          const read = checkNotation(set.notation);
-          game = null;
-          war = null;
-          if (read.ok) changeSpec(read.spec);
-        },
-        remove(set) {
-          sets = withoutSet(sets, set.name);
-          storeSets(storage, setsKey, sets);
-          renderControls();
-        },
-        copy(set, button) {
-          copyLink(linkTo(setQuery(set)), button);
-        },
-        redraw: renderControls,
-      }),
-    );
-    const saying = empty ? t.addToRoll : fillIn(t.poolSays, { notation: notation() });
-    if (said.textContent !== saying) said.textContent = saying;
-  }
-
-  /** The tray in another language. A choice made with the tray's own chooser is remembered on the device. */
-  function setLocale(next: string, remember: boolean) {
-    locale = next;
-    t = wordsFor(next);
-    if (remember) {
-      try {
-        storage?.setItem(languageKey, next);
-      } catch {
-        // Not remembered on a device that keeps nothing.
-      }
-    }
-    release.textContent = t.releaseAll;
-    renderMute();
-    render();
-  }
-
-  /** Sit down to Dice War: the tray's dice become the person's, and each roll is their throw. */
-  function chooseWar() {
-    game = null;
-    gameRolls = [];
-    turn = 0;
-    gamesState.open = false;
-    startWar();
-    changeSpec({ count: warSettings.dice, sides: 6, modifier: 0, keep: "all", times: 1 });
-  }
-
-  /** A fresh table from the settings last chosen. */
-  function startWar() {
-    war = newWar(warSettings, warNames(warSettings.players, t.warYou));
-  }
-
-  /** The panel under the felt, while a game of Dice War is on. */
-  function renderWar() {
-    if (war === null) {
-      warBox.hidden = true;
-      warBox.replaceChildren();
-      return;
-    }
-    warBox.hidden = false;
-    warBox.replaceChildren(
-      warPanel(
-        war,
-        warNames(war.settings.players, t.warYou),
-        t,
-        locale,
-        (next) => {
-          warSettings = { ...warSettings, ...next };
-          startWar();
-          if (next.dice !== undefined)
-            changeSpec({ count: warSettings.dice, sides: 6, modifier: 0, keep: "all", times: 1 });
-          else render();
-        },
-        () => {
-          startWar();
-          render();
-        },
-      ),
-    );
-  }
-
-  /** Take up a game: its dice become the roll, and each roll is read the way the game reads it. */
-  function chooseGame(preset: Preset) {
-    war = null;
-    game = preset;
-    gameRolls = [];
-    turn = 0;
-    gamesState.open = false;
-    changeSpec(presetSpec(preset));
-  }
-
-  function useSeed(next: string | null) {
-    seed = next;
-    source = next === null ? cryptoSource() : seededSource(next);
-    render();
-  }
-
-  /** What a die is and what became of it, in words: "d6: 6, exploded". */
-  function dieLabel(group: DiceGroup, die: DieRoll, isHeld: boolean): string {
-    const words = [
-      group.weights !== undefined ? t.dieLoaded : null,
-      die.status === "dropped" ? t.dieDropped : die.status === "rerolled" ? t.dieRerolled : null,
-      die.exploded ? t.dieExploded : null,
-      die.counts === 1 ? t.dieSuccess : die.counts === -1 ? t.dieFailure : null,
-      die.critical === "success" ? t.dieCritical : die.critical === "failure" ? t.dieFumble : null,
-      isHeld ? t.held : null,
-    ].filter((w) => w !== null);
-    // A custom die is named by what it shows; its list of faces would be a mouthful.
-    return `${group.faces !== undefined ? "" : `${dieName(group)}: `}${faceText(group, die.face)}${words.length > 0 ? `, ${words.join(", ")}` : ""}`;
-  }
-
-  /** One die on the felt. `hold` makes it a button that holds it; without, it is a picture and a tap goes through to the felt. */
-  function dieElement(
-    group: DiceGroup,
-    die: DieRoll,
-    index: number,
-    first: boolean,
-    hold: ((index: number) => void) | null = null,
-  ): HTMLElement {
-    const sides = group.sides;
-    const kept = die.status === "kept";
-    const isHeld = held[index] === true;
-    // A kind with marks of its own (cs, cf) is marked by them; otherwise a d20 shows its natural 20 and 1.
-    const marked = group.critical !== undefined || group.fumble !== undefined;
-    const hit = marked
-      ? die.critical === "success"
-        ? "crit"
-        : die.critical === "failure"
-          ? "fumble"
-          : null
-      : sides === 20 && group.faces === undefined && kept
-        ? die.face === 20
-          ? "crit"
-          : die.face === 1
-            ? "fumble"
-            : null
-        : null;
-    const label = dieLabel(group, die, isHeld);
-    const attrs = {
-      class: "kk-die",
-      "data-kept": String(kept),
-      "data-status": die.status,
-      "data-exploded": die.exploded ? "true" : null,
-      "data-hit": hit,
-      "data-counts": die.counts === undefined ? null : String(die.counts),
-      "data-first": first ? "true" : null,
-      "data-testid": "kk-die",
-      "data-face": String(die.face),
-      "data-index": String(index),
-      "data-sides": String(sides),
-      "data-loaded": group.weights !== undefined ? "true" : null,
-      "data-custom": group.faces !== undefined ? "true" : null,
-      title:
-        kept && !die.exploded && group.weights === undefined && die.counts === undefined && die.critical === undefined
-          ? null
-          : label,
-    };
-    if (hold === null) return h("span", attrs, dieFace(group, die.face, label));
-    const button = h(
-      "button",
-      { ...attrs, type: "button", "aria-pressed": String(isHeld), "data-tag": t.held },
-      dieFace(group, die.face, label),
-    );
-    button.addEventListener("click", () => hold(index));
-    return button;
-  }
-
-  /** A face to show while a die tumbles. It is for show: the roll was made before anything moved. */
-  function randomFace(group: DiceGroup): number {
-    const { low, high } = group.faces !== undefined ? { low: 1, high: group.faces.length } : faceRange(group.sides);
-    return low + Math.floor(Math.random() * (high - low + 1));
-  }
-
-  /** The pool at rest, before it is thrown: each kind's dice in its own shape, showing pleasant faces. */
-  function restingDice(): DieRoll[] {
-    const all = kinds();
-    const dice: DieRoll[] = [];
-    all.forEach((group, index) => {
-      for (let n = 0; n < group.count; n++) {
-        const at = dice.length;
-        const face = group.sides === "F" ? (RESTING_FATE[at] as number) : Math.min(RESTING[at] as number, group.sides);
-        const custom = group.faces?.[face - 1];
-        const one: DieRoll = { face, status: "kept", exploded: false, die: at };
-        if (all.length > 1) one.group = index;
-        if (custom !== undefined) one.label = custom.label;
-        dice.push(one);
-      }
-    });
-    return dice;
-  }
-
-  /** The roll on the felt, when it is a roll of the pool as it stands now. */
+  const plainDie = (sides: Sides): DiceGroup => ({
+    count: 1,
+    sides,
+    keep: "all",
+  }); /** The roll on the felt, when it is a roll of the pool as it stands now. */
   const showing = () =>
     current !== null && !empty && (showingShared || formatNotation(current.spec) === formatNotation(spec))
       ? current
@@ -981,623 +394,200 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     !turnOver() &&
     game?.hold !== false;
   const heldCount = () => held.filter(Boolean).length;
-
-  function toggleHold(index: number) {
-    const shown = showing();
-    if (shown === null) return;
-    if (held.length !== shown.faces.length) held = shown.faces.map(() => false);
-    held[index] = held[index] !== true;
-    goal = Math.round(expectedTotal(oddsNow()));
-    renderTray();
-    renderPanels();
-  }
-
-  /** The odds of what a tap on the felt would throw now: the pool's own, or with dice held, those of the dice still to roll. */
-  function oddsNow(): RollSpec | Distribution {
-    const shown = showing();
-    return shown !== null && heldCount() > 0 && holdable() ? distributionHolding(spec, shown.faces, held) : spec;
-  }
-
-  function renderTray() {
-    const shown = showing();
-    const thrown = shown === null ? restingDice() : diceOf(shown);
-    const from = shown?.spec ?? spec;
-    const hold = holdable() ? toggleHold : null;
-    const holding = hold !== null ? heldCount() : 0;
-    tray.setAttribute("aria-label", empty ? t.addToRoll : fillIn(t.rollLabel, { notation: notation() }));
-    tray.disabled = empty || (holding > 0 && holding === thrown.length);
-    felt.setAttribute("data-rolling", String(rolling));
-    diceBox.setAttribute("data-count", thrown.length > MAX_DICE ? "many" : String(thrown.length));
-    // Dice asked to be sorted are shown so, kind by kind; the roll keeps the order they were thrown in.
-    const shownOrder = thrown.map((die, i) => ({ die, i }));
-    if (shown !== null && groupsOf(from).some((g) => g.sort !== undefined)) {
-      shownOrder.sort((a, b) => {
-        const kind = (a.die.group ?? 0) - (b.die.group ?? 0);
-        const sort = groupOf(from, a.die).sort;
-        if (kind !== 0 || sort === undefined) return kind !== 0 ? kind : a.i - b.i;
-        const by = (a.die.value ?? a.die.face) - (b.die.value ?? b.die.face);
-        return by !== 0 ? (sort === "ascending" ? by : -by) : a.i - b.i;
-      });
-    }
-    diceBox.replaceChildren(
-      ...shownOrder.map(({ die, i }, at) =>
-        dieElement(groupOf(from, die), die, i, at > 0 && die.group !== shownOrder[at - 1]?.die.group, hold),
-      ),
-    );
-    const words = empty
-      ? t.addToRoll
-      : current === null
-        ? t.tapToRoll
-        : (spec.times ?? 1) > 1
-          ? fillIn(t.timesHold, { n: spec.times ?? 1 })
-          : turnOver() && shown !== null
-            ? fillIn(t.turnOver, { n: game?.rolls ?? 0 })
-            : hold === null
-              ? t.tapAgain
-              : holding === 0
-                ? game?.rolls !== undefined
-                  ? fillIn(t.turnRoll, { a: turn, n: game.rolls })
-                  : t.tapAgainHold
-                : holding === thrown.length
-                  ? t.allHeld
-                  : fillIn(t.rollRest, { n: thrown.length - holding });
-    // Space rolls from a keyboard; the key is shown only where there is room for it beside the shorter hints.
-    refill(hint, words, empty || hold !== null || options.keyboard === false ? null : h("kbd", {}, "Space"));
-    release.hidden = holding === 0;
-  }
-
-  /** The dice as a sum, the way it would be said: each kind together, a kind of several dice in brackets, a die that does not count struck through. */
-  function sumLine(r: Roll): HTMLElement {
-    const thrown = diceOf(r);
-    const all = groupsOf(r.spec);
-    const line = h("div", { class: "kk-sum", "data-testid": "kk-sum" });
-    // A formula is shown as it was written, each kind of dice as it fell.
-    if (r.spec.math !== undefined) {
-      line.append(formulaText(r));
-      return line;
-    }
-    all.forEach((group, index) => {
-      const mine = thrown.filter((die) => (die.group ?? 0) === index);
-      // Signs and words sit side by side; numbers are added.
-      const joiner =
-        group.sides === "F"
-          ? " "
-          : group.success !== undefined || (group.faces?.every((f) => f.value === undefined) ?? false)
-            ? " · "
-            : " + ";
-      if (index > 0) line.append(" + ");
-      const bracket = all.length > 1 && mine.length > 1;
-      if (bracket) line.append("(");
-      mine.forEach((die, i) => {
-        if (i > 0) line.append(joiner);
-        // A die worth something other than its face says both: 6→5 for a penetrating die, 1→2 for a raised one.
-        const face = `${faceText(group, die.face)}${group.faces === undefined && die.value !== undefined ? `→${die.value}` : ""}`;
-        if (die.status === "kept" && die.counts !== undefined)
-          line.append(
-            h(
-              die.counts === 1 ? "b" : "i",
-              { title: die.counts === 1 ? t.dieSuccess : t.dieFailure },
-              `${face}${die.exploded ? "!" : ""}${die.counts === 1 ? "✓" : "✗"}`,
-            ),
-          );
-        else if (die.status === "kept") line.append(`${face}${die.exploded ? "!" : ""}`);
-        else
-          line.append(
-            h(
-              "s",
-              { title: die.status === "rerolled" ? t.dieRerolled : t.dieDropped },
-              `${face}${die.status === "rerolled" ? "↻" : ""}`,
-            ),
-          );
-      });
-      if (bracket) line.append(")");
-    });
-    if (r.spec.modifier !== 0) line.append(r.spec.modifier > 0 ? ` + ${r.spec.modifier}` : ` − ${-r.spec.modifier}`);
-    return line;
-  }
-
-  /** The luck meter and the link as they will be once there is a roll, faint and still: the shape of a result before there is one. */
-  function waiting(): HTMLElement[] {
-    return [
-      h("div", { class: "kk-luck", "data-waiting": "true", "aria-hidden": "true" }, h("div", { class: "kk-meter" })),
-      h("div", { class: "kk-actions" }, h("button", { type: "button", class: "kk-link", disabled: true }, t.copyLink)),
-    ];
-  }
-
-  /** A link to this page carrying a query. A share base that has a query of its own, such as a language, keeps it. */
-  function linkTo(query: string): string {
-    const base = options.shareBase ?? (win ? `${win.location.origin}${win.location.pathname}` : "");
-    // A roll made as a game's is shared as that game's.
-    return `${base}${base.includes("?") ? "&" : "?"}${query}${game === null ? "" : `&game=${game.id}`}`;
-  }
-
-  /** Put a link on the clipboard and say so on the button that asked; where there is no clipboard, show it to be copied by hand. */
-  function copyLink(url: string, button: HTMLElement) {
-    const was = button.textContent;
-    const done = () => {
-      button.textContent = t.copied;
-      later(() => (button.textContent = was), 1800);
-    };
-    const clipboard = win?.navigator.clipboard;
-    if (clipboard) clipboard.writeText(url).then(done, () => win?.prompt(t.copyLink, url));
-    else win?.prompt(t.copyLink, url);
-  }
-
-  function renderResult() {
-    if (rolling) {
-      refill(
-        result,
-        h("div", { class: "kk-total" }, h("small", {}, t.rolling), "…"),
-        h("div", { class: "kk-sum" }, "\u00a0"),
-        ...waiting(),
-      );
-      return;
-    }
-    if (empty) {
-      refill(
-        result,
-        h("div", { class: "kk-total", style: "opacity:.35" }, h("small", {}, t.pool), "–"),
-        h("div", { class: "kk-sum" }, t.addToRoll),
-        ...waiting(),
-      );
-      return;
-    }
-    if (current === null) {
-      const { min, max } = rangeOf(spec);
-      refill(
-        result,
-        h("div", { class: "kk-total", style: "opacity:.35" }, h("small", {}, formatNotation(spec)), "?"),
-        h(
-          "div",
-          { class: "kk-sum" },
-          `${t.expected} ${new Intl.NumberFormat(locale, { maximumFractionDigits: 1 }).format(expectedTotal(spec))} · ${t.range} ${min}–${max}`,
-        ),
-        ...waiting(),
-      );
-      return;
-    }
-    const r = current;
-    const thrown = diceOf(r);
-    // A roll with dice held is judged against the dice that were thrown again, not against a fresh roll of them all.
-    const against = r.held !== undefined ? distributionHolding(r.spec, r.faces, r.held) : r.spec;
-    const luck = luckOf(against, r.total);
-    const exact = chanceExactly(against, r.total);
-    const badges: HTMLElement[] = [];
-    if (showingShared) badges.push(h("span", { class: "kk-badge" }, t.shared));
-    if (r.held !== undefined)
-      badges.push(h("span", { class: "kk-badge" }, fillIn(t.heldBadge, { n: r.held.filter(Boolean).length })));
-    // A natural is one d20 read on its own: the one kept, or the only one thrown.
-    const twenties = thrown.filter((die) => die.status === "kept" && sidesOf(r.spec, die) === 20);
-    const natural = twenties.length === 1 ? twenties[0]?.face : null;
-    if (natural === 20) badges.push(h("span", { class: "kk-badge", "data-tone": "good" }, t.critical));
-    if (natural === 1) badges.push(h("span", { class: "kk-badge", "data-tone": "bad" }, t.fumble));
-    if (
-      r.spec.more === undefined &&
-      r.faces.length > 1 &&
-      r.faces.length === diceCount(r.spec) &&
-      r.faces.every((f) => f === r.faces[0])
-    )
-      badges.push(h("span", { class: "kk-badge", "data-tone": "good" }, t.allMatch));
-
-    const set = currentSet !== null && currentSet.at(-1) === r ? currentSet : null;
-    const copy = h("button", { type: "button", class: "kk-link", "data-testid": "kk-copy" }, t.copyLink);
-    copy.addEventListener("click", () => copyLink(linkTo(set === null ? shareQuery(r) : shareQueryMany(set)), copy));
-    // What the game makes of the roll, in the game's words.
-    const reading = game === null ? null : readPreset(game, r, gameRolls.slice(0, -1), japanese() ? "ja" : "en");
-    const says =
-      reading === null || reading.text === ""
-        ? null
-        : h("div", { class: "kk-reading", "data-tone": reading.tone, "data-testid": "kk-reading" }, reading.text);
-    if (set !== null) {
-      // A set: every roll on a line of its own, the highest and lowest marked, and what they all come to.
-      const all = setOf(set);
-      const lines = set.map((one, i) => {
-        const mark =
-          all.highest !== all.lowest && one.total === all.highest
-            ? "highest"
-            : all.highest !== all.lowest && one.total === all.lowest
-              ? "lowest"
-              : null;
-        const line = sumLine(one);
-        line.removeAttribute("data-testid");
-        const words = game === null ? "" : readPreset(game, one, set.slice(0, i), japanese() ? "ja" : "en").text;
-        return h(
-          "li",
-          { "data-mark": mark, "data-testid": "kk-set-line" },
-          h("span", { class: "kk-set-n" }, String(i + 1)),
-          line,
-          h("b", {}, hasTotal(one.spec) ? String(one.total) : words),
-          mark === null ? null : h("i", {}, mark === "highest" ? t.setHighest : t.setLowest),
-        );
-      });
-      refill(
-        result,
-        h(
-          "div",
-          { class: "kk-total kk-words", "data-testid": "kk-total" },
-          h("small", {}, `${t.total} · ${formatNotation(r.spec)}`),
-          set
-            .map((one) =>
-              hasTotal(one.spec)
-                ? String(one.total)
-                : diceOf(one)
-                    .map((d) => d.label ?? String(d.face))
-                    .join(" "),
-            )
-            .join(" · "),
-        ),
-        h(
-          "ol",
-          {
-            class: "kk-set-list",
-            tabindex: 0,
-            "aria-label": fillIn(t.setRolls, { n: set.length }),
-            "data-testid": "kk-set-list",
-          },
-          ...lines,
-        ),
-        hasTotal(r.spec)
-          ? h(
-              "div",
-              { class: "kk-sum", "data-testid": "kk-set-sum" },
-              fillIn(t.setSum, { n: set.length, sum: all.sum }),
-            )
-          : null,
-        h("div", { class: "kk-actions" }, ...badges, copy),
-      );
-      return;
-    }
-    // Where the game's reading is the result, it takes the total's place.
-    if (game !== null && !game.total && reading !== null && reading.text !== "") {
-      refill(
-        result,
-        h(
-          "div",
-          { class: "kk-total kk-words", "data-testid": "kk-total", "data-tone": reading.tone },
-          h("small", {}, `${japanese() ? game.nameJa : game.name} · ${formatNotation(r.spec)}`),
-          h("span", { "data-testid": "kk-reading" }, reading.text),
-        ),
-        r.faces.length > 1 ? sumLine(r) : h("div", { class: "kk-sum" }, "\u00a0"),
-        waiting()[0] as HTMLElement,
-        h("div", { class: "kk-actions" }, ...badges, copy),
-      );
-      return;
-    }
-    // A loaded roll says so beside its total, whatever else it says.
-    if (isLoaded(r.spec))
-      badges.unshift(
-        h("span", { class: "kk-badge", "data-tone": "bad", "data-testid": "kk-loaded-badge" }, t.loadedBadge),
-      );
-    // A roll of words is its words: there is no total to show, and no luck to measure.
-    if (!hasTotal(r.spec)) {
-      refill(
-        result,
-        h(
-          "div",
-          { class: "kk-total kk-words", "data-testid": "kk-total" },
-          h("small", {}, `${t.result} · ${formatNotation(r.spec)}`),
-          thrown.map((die) => die.label ?? String(die.face)).join(" · "),
-        ),
-        h("div", { class: "kk-sum" }, "\u00a0"),
-        waiting()[0] as HTMLElement,
-        h("div", { class: "kk-actions" }, ...badges, copy),
-      );
-      return;
-    }
-    refill(
-      result,
-      h(
-        "div",
-        { class: "kk-total", "data-testid": "kk-total" },
-        h("small", {}, `${isSuccessRoll(r.spec) ? t.successes : t.total} · ${formatNotation(r.spec)}`),
-        String(r.total),
-      ),
-      r.faces.length > 1 || r.spec.modifier !== 0 || r.spec.math !== undefined ? sumLine(r) : null,
-      says,
-      h(
-        "div",
-        { class: "kk-luck" },
-        h("div", { class: "kk-meter" }, h("i", { style: `left:${luck * 100}%` })),
-        h(
-          "span",
-          {},
-          `${fillIn(t.luckier, { percent: percent(luck, locale) })} · ${fillIn(t.exactly, { odds: exact > 0 ? new Intl.NumberFormat(locale, { maximumFractionDigits: exact > 0.1 ? 1 : 0 }).format(1 / exact) : "∞", total: r.total })}`,
-        ),
-      ),
-      // The badges share the link's row, so a natural 20 does not push everything below it down.
-      h("div", { class: "kk-actions" }, ...badges, copy),
-    );
-  }
-
-  function renderPanels() {
-    const tabs: [Tab, string][] = [
-      ["history", `${t.history}${history.length > 0 ? ` (${history.length})` : ""}`],
-      ["stats", t.stats],
-      ["odds", t.odds],
-    ];
-    const strip = h("div", { class: "kk-tabs", role: "tablist" });
-    for (const [key, label] of tabs) {
-      const button = h(
-        "button",
-        { type: "button", role: "tab", "aria-selected": String(tab === key), "data-testid": `kk-tab-${key}` },
-        label,
-      );
-      button.addEventListener("click", () => {
-        tab = key;
-        clearArmed = false;
-        renderPanels();
-      });
-      strip.append(button);
-    }
-    const body = h("div", { class: "kk-panel", role: "tabpanel" });
-    if (tab === "history") {
-      body.append(historyPanel(history, t, locale));
-      if (history.length > 0) {
-        const clear = h(
-          "button",
-          { type: "button", class: "kk-link", "data-danger": String(clearArmed), "data-testid": "kk-clear" },
-          clearArmed ? fillIn(t.clearSure, { n: history.length }) : t.clear,
-        );
-        clear.addEventListener("click", () => {
-          if (!clearArmed) {
-            clearArmed = true;
-            renderPanels();
-            later(() => {
-              clearArmed = false;
-              renderPanels();
-            }, 4000);
-            return;
-          }
-          clearArmed = false;
-          history = [];
-          storageWorks = saveHistory(storage, storageKey, history);
-          render();
-        });
-        body.append(h("div", { class: "kk-actions" }, clear));
-      }
-      body.append(exportPanel());
-      if (!storageWorks) body.append(h("p", { class: "kk-empty", style: "padding:0" }, t.savedNowhere));
-    } else if (tab === "stats") {
-      body.append(statsPanel(history, spec, kinds()[lit] ?? spec, t, locale, realDie));
-    } else if (empty) {
-      body.append(h("p", { class: "kk-empty" }, t.addToRoll));
-    } else {
-      const now = oddsNow();
-      const holding = "probabilities" in now ? { odds: now, held: heldCount(), rest: restOf() } : null;
-      body.append(
-        oddsPanel(spec, goal, current, t, locale, (value) => (goal = value), holding, game, japanese() ? "ja" : "en"),
-      );
-    }
-    panels.replaceChildren(strip, body);
-  }
-
-  /** Hand the person a file to keep: a link to the text, clicked for them. */
-  function save(name: string, type: string, text: string) {
-    const url = URL.createObjectURL(new Blob([text], { type }));
-    const link = h("a", { href: url, download: name, hidden: true });
-    doc.body.append(link);
-    link.click();
-    link.remove();
-    later(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  /** One level down in the history: the rolls as a file, and a JSON export brought back in. */
-  function exportPanel(): HTMLElement {
-    const day = new Date().toISOString().slice(0, 10);
-    const button = (words: string, id: string, act: () => void) => {
-      const made = h(
-        "button",
-        { type: "button", class: "kk-link", "data-testid": id, disabled: history.length === 0 },
-        words,
-      );
-      made.addEventListener("click", act);
-      return made;
-    };
-    const file = h("input", {
-      type: "file",
-      accept: "application/json,.json",
-      class: "kk-file",
-      "data-testid": "kk-import",
-      "aria-label": t.importJson,
-    });
-    const pick = h("label", { class: "kk-link kk-pick" }, t.importJson, file);
-    file.addEventListener("change", () => {
-      const chosen = file.files?.[0];
-      if (chosen === undefined) return;
-      void chosen.text().then((text) => {
-        const read = fromJSON(text);
-        if (read === null) exportSaid = t.importBad;
-        else {
-          // Rolls already here are not added twice; the rest join the history in the order they were thrown.
-          const have = new Set(history.map((r) => r.id));
-          const fresh = read.filter((r) => !have.has(r.id));
-          exportSaid = fresh.length === 0 ? t.importNothing : fillIn(t.imported, { n: fresh.length });
-          if (fresh.length > 0) {
-            history = [...history, ...fresh].sort((a, b) => a.at - b.at).slice(-HISTORY_LIMIT);
-            storageWorks = saveHistory(storage, storageKey, history);
-          }
-        }
-        renderPanels();
-      });
-    });
-    const details = h(
-      "details",
-      { class: "kk-settings", open: exportOpen, "data-testid": "kk-export" },
-      h("summary", {}, t.exportTitle),
-      h(
-        "div",
-        { class: "kk-actions" },
-        button(t.exportCsv, "kk-export-csv", () =>
-          save(`korokoro-${day}.csv`, "text/csv;charset=utf-8", toCSV(history)),
-        ),
-        button(t.exportJson, "kk-export-json", () =>
-          save(`korokoro-${day}.json`, "application/json", toJSON(history, { stats: true })),
-        ),
-        button(t.exportText, "kk-export-text", () =>
-          save(`korokoro-${day}.txt`, "text/plain;charset=utf-8", toText(history)),
-        ),
-        pick,
-      ),
-      h(
-        "p",
-        { class: "kk-fine", role: "status", "data-testid": "kk-export-said" },
-        exportSaid === "" ? t.exportNote : exportSaid,
-      ),
-    );
-    details.addEventListener("toggle", () => (exportOpen = details.open));
-    return details;
-  }
-
-  /** The dice still to roll while some are held, as notation: `3d6` of a `5d6` with two held. */
-  function restOf(): string {
-    let at = 0;
-    const rest: DiceGroup[] = [];
-    for (const group of groupsOf(spec)) {
-      let free = 0;
-      for (let n = 0; n < group.count; n++, at++) if (held[at] !== true) free += 1;
-      if (free > 0) rest.push({ ...group, count: free });
-    }
-    return rest.length === 0 ? "" : formatNotation(specOf(rest));
-  }
-
-  function renderMute() {
-    mute.setAttribute("aria-pressed", String(!muted));
-    mute.setAttribute("aria-label", muted ? t.soundOff : t.soundOn);
-    mute.setAttribute("title", muted ? t.soundOff : t.soundOn);
-    mute.replaceChildren(speaker(!muted));
-  }
-
-  /** The sound of a throw: the page's own if it gave one, else the recorded dice, fetched on the first throw that wants them. */
-  function sound(dice: number, landings: number[]) {
-    if (!hasSound || muted) return;
-    try {
-      if (options.playSound !== undefined) return options.playSound({ dice, ms: animationMs, landings });
-      ownSound ??= createRollSound(win ?? undefined);
-      ownSound.play({ dice, ms: animationMs, landings });
-    } catch {
-      // A sound that fails is no reason for the dice not to roll.
-    }
-  }
-
-  function render() {
-    renderControls();
-    renderTray();
-    renderResult();
-    renderWar();
-    renderPanels();
-  }
-
-  function throwDice() {
-    if (rolling || empty) return;
-    const shown = showing();
-    const keeping = shown !== null && holdable() && heldCount() > 0 ? held.slice(0, shown.faces.length) : null;
-    // With every die held there is nothing to throw.
-    if (keeping?.every(Boolean) === true) return;
-    // The generator throws the dice here, before anything moves; the tumble and the sound only show what it threw.
-    const many = (spec.times ?? 1) > 1 ? rollMany(spec, Math.min(TRAY_TIMES, spec.times ?? 1), source).rolls : null;
-    const thrown =
-      many !== null
-        ? (many.at(-1) as Roll)
-        : keeping !== null && shown !== null
-          ? rollHeld(shown, keeping, source)
-          : roll(spec, source);
-    showingShared = false;
-    const moving = thrown.faces.map((_, i) => keeping?.[i] !== true);
-    const movers = moving.filter(Boolean).length;
-    if (animationMs === 0) {
-      sound(
-        movers,
-        moving.flatMap((m) => (m ? [0] : [])),
-      );
-      return land(thrown, many);
-    }
-    // Each die starts a moment after the one before and tumbles for its own time; all are down by animationMs.
-    const gap = movers < 2 ? 0 : Math.min(45, (animationMs * 0.22) / (movers - 1));
-    let order = 0;
-    const waits = moving.map((m) => (m ? Math.round(order++ * gap) : 0));
-    const tumbles = waits.map((wait) => Math.round((animationMs - wait) * (0.86 + Math.random() * 0.14)));
-    sound(
-      movers,
-      waits.flatMap((wait, i) => (moving[i] ? [wait + (tumbles[i] as number)] : [])),
-    );
-    rolling = true;
-    renderResult();
-    felt.setAttribute("data-rolling", "true");
-    const dice = diceOf(thrown);
-    const shapes: [HTMLElement, DiceGroup][] = [];
-    diceBox.setAttribute("data-count", dice.length > MAX_DICE ? "many" : String(dice.length));
-    diceBox.replaceChildren(
-      ...dice.map((die, i) => {
-        const kind = groupOf(thrown.spec, die);
-        const first = i > 0 && die.group !== dice[i - 1]?.group;
-        // A held die stays where it is, showing its face.
-        if (!moving[i]) return dieElement(kind, die, i, first);
-        const el = dieElement(kind, { face: randomFace(kind), status: "kept", exploded: false, die: i }, i, first);
-        el.removeAttribute("aria-pressed");
-        el.classList.add("kk-tumble");
-        el.style.setProperty("--kk-x0", `${Math.round((Math.random() - 0.5) * 160)}px`);
-        el.style.setProperty("--kk-y0", `${Math.round(-40 - Math.random() * 60)}px`);
-        el.style.setProperty("--kk-r0", `${Math.round((Math.random() - 0.5) * 720)}deg`);
-        el.style.setProperty("--kk-t", `${tumbles[i]}ms`);
-        el.style.setProperty("--kk-wait", `${waits[i]}ms`);
-        shapes.push([el, kind]);
-        return el;
-      }),
-    );
-    refill(hint, " ");
-    release.hidden = true;
-    const flicker = () => {
-      for (const [el, kind] of shapes) el.replaceChildren(dieFace(kind, randomFace(kind), t.rolling));
-    };
-    const step = Math.max(60, Math.round(animationMs / 9));
-    for (let at = step; at < animationMs; at += step) later(flicker, at);
-    later(() => land(thrown, many), animationMs + 60);
-  }
-
-  function land(thrown: Roll, many: Roll[] | null = null) {
-    rolling = false;
-    current = thrown;
-    currentSet = many;
-    // A roll with dice held is the next roll of the same turn; any other begins one.
-    turn = thrown.held !== undefined ? turn + 1 : 1;
-    gameRolls = [...gameRolls, ...(many ?? [thrown])].slice(-24);
-    // What was held stays held for the next throw; a fresh roll holds nothing.
-    held = thrown.held !== undefined ? [...thrown.held] : thrown.faces.map(() => false);
-    for (const one of many ?? [thrown]) history = addToHistory(history, one);
-    storageWorks = saveHistory(storage, storageKey, history);
-    goal = Math.round(expectedTotal(oddsNow()));
-    // A throw at a game of Dice War: the tray's dice are the person's, if they are the table's dice and nothing else.
-    if (war !== null) {
-      const plain =
-        thrown.spec.count === war.settings.dice &&
-        thrown.spec.sides === 6 &&
-        thrown.spec.modifier === 0 &&
-        thrown.spec.more === undefined &&
-        (thrown.spec.times ?? 1) === 1 &&
-        thrown.faces.length === war.settings.dice;
-      const played = plain && !diceWarOver(war.game) ? throwWar(war, thrown.faces) : null;
-      // Dice that are not the table's end the game; a game that is over simply waits for a new one.
-      if (!plain) war = null;
-      else if (played !== null) war = played;
-    }
-    render();
-    diceBox.querySelectorAll(".kk-die").forEach((el, i) => {
-      if (thrown.held?.[i] !== true) el.classList.add("kk-land");
-    });
-    try {
-      win?.navigator.vibrate?.(12);
-    } catch {
-      // A browser that refuses vibration refuses silently; so does this.
-    }
-    options.onRoll?.(thrown);
-  }
-
-  tray.addEventListener("click", throwDice);
+  const session = bindSession(
+    {
+      options: () => options,
+      doc: () => doc,
+      win: () => win,
+      wordsFor: () => wordsFor,
+      locale: () => locale,
+      t: () => t,
+      storage: () => storage,
+      storageKey: () => storageKey,
+      animationMs: () => animationMs,
+      languageKey: () => languageKey,
+      hasSound: () => hasSound,
+      spec: () => spec,
+      game: () => game,
+      war: () => war,
+      warSettings: () => warSettings,
+      gameRolls: () => gameRolls,
+      turn: () => turn,
+      currentSet: () => currentSet,
+      gamesState: () => gamesState,
+      exportOpen: () => exportOpen,
+      exportSaid: () => exportSaid,
+      japanese: () => japanese,
+      TRAY_TIMES: () => TRAY_TIMES,
+      setsKey: () => setsKey,
+      sets: () => sets,
+      more: () => more,
+      realDie: () => realDie,
+      empty: () => empty,
+      lit: () => lit,
+      suggested: () => suggested,
+      history: () => history,
+      current: () => current,
+      showingShared: () => showingShared,
+      held: () => held,
+      rolling: () => rolling,
+      tab: () => tab,
+      goal: () => goal,
+      seed: () => seed,
+      source: () => source,
+      clearArmed: () => clearArmed,
+      storageWorks: () => storageWorks,
+      muted: () => muted,
+      ownSound: () => ownSound,
+      timers: () => timers,
+      controls: () => controls,
+      tray: () => tray,
+      diceBox: () => diceBox,
+      hint: () => hint,
+      mute: () => mute,
+      release: () => release,
+      felt: () => felt,
+      result: () => result,
+      warBox: () => warBox,
+      panels: () => panels,
+      said: () => said,
+      notation: () => notation,
+      kinds: () => kinds,
+      plainDie: () => plainDie,
+      showing: () => showing,
+      turnOver: () => turnOver,
+      holdable: () => holdable,
+      heldCount: () => heldCount,
+    },
+    {
+      locale: (value) => {
+        locale = value;
+      },
+      t: (value) => {
+        t = value;
+      },
+      spec: (value) => {
+        spec = value;
+      },
+      game: (value) => {
+        game = value;
+      },
+      war: (value) => {
+        war = value;
+      },
+      warSettings: (value) => {
+        warSettings = value;
+      },
+      gameRolls: (value) => {
+        gameRolls = value;
+      },
+      turn: (value) => {
+        turn = value;
+      },
+      currentSet: (value) => {
+        currentSet = value;
+      },
+      exportOpen: (value) => {
+        exportOpen = value;
+      },
+      exportSaid: (value) => {
+        exportSaid = value;
+      },
+      sets: (value) => {
+        sets = value;
+      },
+      empty: (value) => {
+        empty = value;
+      },
+      lit: (value) => {
+        lit = value;
+      },
+      suggested: (value) => {
+        suggested = value;
+      },
+      history: (value) => {
+        history = value;
+      },
+      current: (value) => {
+        current = value;
+      },
+      showingShared: (value) => {
+        showingShared = value;
+      },
+      held: (value) => {
+        held = value;
+      },
+      rolling: (value) => {
+        rolling = value;
+      },
+      tab: (value) => {
+        tab = value;
+      },
+      goal: (value) => {
+        goal = value;
+      },
+      seed: (value) => {
+        seed = value;
+      },
+      source: (value) => {
+        source = value;
+      },
+      clearArmed: (value) => {
+        clearArmed = value;
+      },
+      storageWorks: (value) => {
+        storageWorks = value;
+      },
+      ownSound: (value) => {
+        ownSound = value;
+      },
+    },
+    (session) => ({
+      later: (fn, ms) => laterOf(session, fn, ms),
+      segment: (label, values, chosen, name, pick, testId, dimmed, last, inPool, help) =>
+        segmentOf(session, label, values, chosen, name, pick, testId, dimmed, last, inPool, help),
+      settle: (before) => settleOf(session, before),
+      setKinds: (next, touched) => setKindsOf(session, next, touched),
+      changeSpec: (next) => changeSpecOf(session, next),
+      changeLit: (next) => changeLitOf(session, next),
+      addDie: (die, count) => addDieOf(session, die, count),
+      takeOne: (index) => takeOneOf(session, index),
+      renderControls: () => renderControlsOf(session),
+      setLocale: (next, remember) => setLocaleOf(session, next, remember),
+      chooseWar: () => chooseWarOf(session),
+      startWar: () => startWarOf(session),
+      renderWar: () => renderWarOf(session),
+      chooseGame: (preset) => chooseGameOf(session, preset),
+      useSeed: (next) => useSeedOf(session, next),
+      dieLabel: (group, die, isHeld) => dieLabelOf(session, group, die, isHeld),
+      dieElement: (group, die, index, first, hold) => dieElementOf(session, group, die, index, first, hold),
+      randomFace: (group) => randomFaceOf(session, group),
+      restingDice: () => restingDiceOf(session),
+      toggleHold: (index) => toggleHoldOf(session, index),
+      oddsNow: () => oddsNowOf(session),
+      renderTray: () => renderTrayOf(session),
+      sumLine: (r) => sumLineOf(session, r),
+      waiting: () => waitingOf(session),
+      linkTo: (query) => linkToOf(session, query),
+      copyLink: (url, button) => copyLinkOf(session, url, button),
+      renderResult: () => renderResultOf(session),
+      renderPanels: () => renderPanelsOf(session),
+      save: (name, type, text) => saveOf(session, name, type, text),
+      exportPanel: () => exportPanelOf(session),
+      restOf: () => restOfOf(session),
+      renderMute: () => renderMuteOf(session),
+      sound: (dice, landings) => soundOf(session, dice, landings),
+      render: () => renderOf(session),
+      throwDice: () => throwDiceOf(session),
+      land: (thrown, many) => landOf(session, thrown, many),
+    }),
+  );
+  tray.addEventListener("click", session.throwDice);
   release.addEventListener("click", () => {
     held = held.map(() => false);
-    goal = Math.round(expectedTotal(oddsNow()));
-    renderTray();
-    renderPanels();
+    goal = Math.round(expectedTotal(session.oddsNow()));
+    session.renderTray();
+    session.renderPanels();
   });
   mute.addEventListener("click", () => {
     muted = !muted;
@@ -1606,9 +596,9 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     } catch {
       // Not remembered on a device that keeps nothing; still muted for now.
     }
-    renderMute();
+    session.renderMute();
   });
-  renderMute();
+  session.renderMute();
   const onKey = (event: KeyboardEvent) => {
     if (event.key !== " " || event.defaultPrevented) return;
     const el = event.target as HTMLElement | null;
@@ -1617,21 +607,21 @@ export function mountRoller(target: HTMLElement, options: RollerOptions = {}): R
     if (options.keyboard === false && (el === null || !root.contains(el))) return;
     if (el?.closest("input, textarea, select, button, summary, [contenteditable]")) return;
     event.preventDefault();
-    throwDice();
+    session.throwDice();
   };
   doc.addEventListener("keydown", onKey);
-  render();
+  session.render();
 
   return {
-    roll: throwDice,
+    roll: session.throwDice,
     history: () => history,
     setSpec: (next) => {
       // Dice set from outside are their own roll, not a game's.
       game = null;
       war = null;
-      changeSpec(next);
+      session.changeSpec(next);
     },
-    setLocale: (next) => setLocale(next, false),
+    setLocale: (next) => session.setLocale(next, false),
     setCloth: (next) => {
       // The theme's own --kk-felt, where given, still wins; otherwise the old cloth's colours are taken off first.
       for (const name of ["--kk-felt", "--kk-felt-deep", "--kk-felt-ink"]) root.style.removeProperty(name);

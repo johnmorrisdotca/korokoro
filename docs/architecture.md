@@ -16,15 +16,21 @@ of dice and a named reading, rarely new code.
 src/
 ├── cli.ts             the command line as a pure function: arguments in, text and an exit code out
 ├── dice.ts            the dice the tray offers as buttons: the polyhedral set, the d30 and the percentile die
+├── diceInternal.ts    the face range and the rule-copying shared by the spec and the throw
+├── diceNormalize.ts   a spec checked and brought into range, and what one kind of die can come to
+├── diceRoll.ts        throwing a spec: one roll, a roll with dice held, and a set of rolls
 ├── diceWar.ts         Dice War: players, rounds, wars and scores, seeded and kept as text
 ├── element-define.ts  the "/element/define" entry: registers the custom element by being imported
 ├── element.ts         the "/element" entry: the tray as a custom element for any page
+├── elementDie.ts      one die as its own custom element
+├── elementShared.ts   the server-safe element base and the attribute helpers both elements use
 ├── export.ts          rolls written out as JSON, CSV or plain text, and read back
 ├── history.ts         the latest rolls, forgetting the oldest past a limit
 ├── index.ts           the main entry: dice, notation, odds, history and statistics, plus the tray to mount
 ├── loaded.ts          loaded dice, kept in plain sight: the weights are part of a die's name
 ├── math.ts            arithmetic over the kinds of dice in a roll
 ├── notation.ts        dice notation as a character sheet writes it, read into a spec and written back
+├── notationGroup.ts   one kind of dice read from the front of a notation, modifiers included
 ├── odds.ts            exact odds for a spec, worked out rather than simulated
 ├── random.ts          where the randomness comes from, and how a seed replaces it
 ├── react.tsx          the "/react" entry: the tray as a React component
@@ -35,7 +41,8 @@ src/
 ├── vue.ts             the "/vue" entry: the tray as a Vue component
 ├── games/  the board and tabletop games whose dice the tray can set up and read
 │   ├── odds.ts      exact odds for games that take more than one roll
-│   ├── presets.ts   each game as a preset: its dice and how it reads them, and finding one by name
+│   ├── presets.ts        each game as a preset: its dice and how it reads them, and finding one by name
+│   ├── presets.data.ts   the table of games: dice, readings and the English and Japanese lines
 │   ├── readings.ts  how a roll is read in a game: a small set of named functions
 │   └── words.ts     the words for every outcome of every reading, in English and Japanese
 └── ui/  the tray that draws and rolls the dice
@@ -46,11 +53,17 @@ src/
     ├── games.ts        the control for games: a search box and the games on their shelves
     ├── help.ts         one plain line for each option row, in both languages, for a page's Help switch
     ├── more.ts         everything one level down from the default tray: custom dice, loaded dice and saved sets
-    ├── mount.ts        the tray itself: mounting it on a page, and the options it takes
+    ├── mount.ts           the tray itself: mounting it on a page, and the options it takes
+    ├── mountBind.ts       joins the tray's closed-over fields to the functions that were split out
+    ├── mountControls.ts   the controls under the felt: dice, notation, seeds and the games
+    ├── mountResult.ts     the result, the history and the panels under a roll
+    ├── mountSession.ts    the tray's shared state, as the pieces of the tray see it
+    ├── mountThrow.ts      throwing the dice that are showing, and landing them
     ├── panels.ts       the panels under the tray, drawn fresh from the state they are handed
     ├── sound.ts        the sound of a roll
     ├── sounds-data.ts  the tray's recorded dice, as base64 AAC audio, for the "/sounds" entry
-    ├── strings.ts      every word the tray says, in English and Japanese
+    ├── strings.ts         every word the tray says, in English and Japanese
+    ├── strings.data.ts    the built-in English and Japanese words
     ├── style.ts        the tray's look, injected once per document
     └── war.ts          the Dice War panel under the felt: the table, the scores, the last throw and the choices
 ```

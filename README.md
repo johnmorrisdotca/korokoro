@@ -9,7 +9,7 @@ Tap dice to build a roll, up to ten in any mix from a d4 to a d100, or type any 
   <a href="./LICENSE"><img alt="MIT licence" src="https://img.shields.io/badge/licence-MIT-2f5d4a"></a>
   <img alt="No dependencies" src="https://img.shields.io/badge/dependencies-0-2f5d4a">
   <img alt="TypeScript" src="https://img.shields.io/badge/types-TypeScript-3178c6">
-  <a href="https://johnmorrisdotca.github.io/korokoro/docs/api/main/index.html"><img alt="101.0 kB minified and gzipped" src="https://img.shields.io/badge/min%2Bgzip-101.0%20kB-2f5d4a"></a>
+  <a href="https://johnmorrisdotca.github.io/korokoro/docs/api/main/index.html"><img alt="102.7 kB minified and gzipped" src="https://img.shields.io/badge/min%2Bgzip-102.7%20kB-2f5d4a"></a>
   <a href="https://www.npmjs.com/package/@johnmorrisdotca/korokoro#provenance"><img alt="Published with npm provenance" src="https://img.shields.io/badge/npm-provenance-2f5d4a"></a>
 </p>
 
