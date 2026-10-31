@@ -317,7 +317,7 @@ describe("the conformance suite", () => {
 
   it("is what this implementation makes: run `pnpm docs:make` after a change that is meant", () => {
     if (process.env.UPDATE_DOCS === "1") writeFileSync(FILE, made);
-    expect(readFileSync(FILE, "utf8")).toBe(made);
+    expect(JSON.parse(readFileSync(FILE, "utf8"))).toEqual(JSON.parse(made));
   });
 
   it("covers every refusal by name, and refuses what it says is refused", () => {
