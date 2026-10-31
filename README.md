@@ -1028,7 +1028,7 @@ Please follow the [code of conduct](./CODE_OF_CONDUCT.md).
 
 ## Changes
 
-See [CHANGELOG.md](./CHANGELOG.md), and [docs/migrating.md](./docs/migrating.md) for the one change so far that needs a second look: what `r` means. The latest release, 1.16.0, adds the embed builder, the standard attributes and properties of the tray and die elements, and the documentation site with a checked example for every export.
+See [CHANGELOG.md](./CHANGELOG.md), and [docs/migrating.md](./docs/migrating.md) for the one change so far that needs a second look: what `r` means. The latest release, 1.16.1, changes nothing a player sees.
 
 ## Licence
 
