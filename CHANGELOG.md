@@ -6,6 +6,11 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+### Changed
+
+- Biome replaces ESLint as the formatter and linter, with the family's shared settings in `scripts/biome-family.json`; `pnpm lint` checks formatting too, and `pnpm format` applies it. The code is formatted once to 120 columns. Nothing a user of the package sees has changed.
+- TypeScript targets ES2022, treats an indexed read as possibly missing, and refuses switch fallthrough and unmarked overrides.
+
 ## [1.16.0] - 2026-10-14
 
 The tray and the single die take the family's standard embed attributes, the package has an English and Japanese documentation site, and every public export has a checked example. Rolls, odds, notation, seeds and shared links are unchanged.
