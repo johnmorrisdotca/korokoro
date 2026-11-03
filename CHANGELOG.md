@@ -6,6 +6,7 @@ All notable changes to this project are written here. The format follows
 
 ## [Unreleased]
 
+- Source files over 500 lines are split by what they do (dice, odds, Dice War, the command line, the tray and its panels, and their tests), with the same exports and no change to the package. `pnpm check` now runs `scripts/check-max-lines.mjs`, which fails a file over 500 lines.
 - The README opens with the package's thumbnail, and the demo carries it as its link preview (og:image) and publishes the card, a dark card and an icon on Pages at `thumbnail.png`, `thumbnail-dark.png` and `icon.png`.
 
 ## [1.16.1] - 2026-10-31
