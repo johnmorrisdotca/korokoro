@@ -153,4 +153,17 @@ await takePictures({
       target: '[data-testid="solo-dice"]',
     },
   ],
+  // The family's thumbnail, dark thumbnail and icon (scripts/family-thumbnail.mjs): four kinds of die, thrown, off
+  // the felt; the icon is the d6.
+  thumbnail: {
+    url: address(),
+    ready: TRAY,
+    target: ".kk-dice",
+    icon: { target: '[data-testid="kk-die"][data-sides="6"]' },
+    label: "Korokoro コロコロ",
+    async prepare(page) {
+      await roll({ notation: "1d4+1d6+1d12+1d20" })(page);
+      await page.locator(TRAY).evaluate((tray) => tray.style.setProperty("background", "transparent", "important"));
+    },
+  },
 });

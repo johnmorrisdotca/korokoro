@@ -1,3 +1,5 @@
+<p align="center"><a href="https://johnmorrisdotca.github.io/korokoro/"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/johnmorrisdotca/korokoro/main/docs/images/thumbnail-dark.png"><img src="https://raw.githubusercontent.com/johnmorrisdotca/korokoro/main/docs/images/thumbnail.png" alt="Korokoro: a d4, a d6, a d12 and a d20, thrown, drawn as SVG." width="1200"></picture></a></p>
+
 <h1 align="center">Korokoro <sub>コロコロ</sub> — Dice roller with notation and exact odds</h1>
 
 <p align="center"><strong>Fair dice for the table, with the odds of every throw.</strong><br>

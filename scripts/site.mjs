@@ -12,6 +12,7 @@ import {
   familyHeader,
   familyUnreviewed,
 } from "./family-template.mjs";
+import { publishThumbnails, thumbnailHead } from "./family-thumbnail.mjs";
 
 rmSync("site", { recursive: true, force: true });
 mkdirSync("site", { recursive: true });
@@ -19,6 +20,7 @@ cpSync("demo", "site", { recursive: true });
 cpSync("dist", "site/dist", { recursive: true });
 
 const id = "korokoro";
+const ALT = "Korokoro: a d4, a d6, a d12 and a d20, thrown, drawn as SVG.";
 const parts = {
   "<!-- family:header -->": familyHeader({
     id,
@@ -30,6 +32,7 @@ const parts = {
   "<!-- family:unreviewed -->": familyUnreviewed({ id }),
   "<!-- family:footer -->": familyFooter({ id }),
   "/* family:script */": FAMILY_SCRIPT,
+  "<!-- family:thumbnail -->": thumbnailHead(JSON.parse(readFileSync("package.json", "utf8")), { alt: ALT }),
 };
 let page = readFileSync("demo/index.html", "utf8");
 for (const [mark, part] of Object.entries(parts)) {
@@ -37,6 +40,8 @@ for (const [mark, part] of Object.entries(parts)) {
   page = page.replace(mark, () => part);
 }
 writeFileSync("site/index.html", page);
+// The family's card, dark card and icon, at <site>/thumbnail.png, thumbnail-dark.png and icon.png.
+publishThumbnails(".", "site");
 // The API reference is made by `pnpm docs:site` into site/docs/api; the README and every package of the family link `api.html`.
 writeFileSync(
   "site/api.html",
