@@ -59,7 +59,7 @@ export default function docsCompatibility() {
     mkdirSync(dirname(file), { recursive: true });
     writeFileSync(
       file,
-      `<!doctype html>\n<html lang="${old.startsWith("ja/") ? "ja" : "en"}"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Korokoro documentation</title><link rel="canonical" href="${escapeHtml(address)}"><script>location.replace(${JSON.stringify(address)} + location.hash);</script></head><body><main><h1>Korokoro documentation</h1><p><a href="${escapeHtml(address)}">${escapeHtml(continuing)}</a></p></main></body></html>\n`,
+      `<!doctype html>\n<html lang="${old.startsWith("ja/") ? "ja" : "en"}"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Korokoro documentation</title><link rel="canonical" href="${escapeHtml(address)}"><script>location.replace(${JSON.stringify(address)} + location.hash);</script></head><body><a class="docs-skip" href="#content" style="position:absolute;left:-9999px">${old.startsWith("ja/") ? "本文へ移動" : "Skip to the content"}</a><main id="content"><h1>Korokoro documentation</h1><p><a href="${escapeHtml(address)}">${escapeHtml(continuing)}</a></p></main></body></html>\n`,
     );
   }
   console.log(`ok   ${aliases.size} published documentation addresses retained`);
